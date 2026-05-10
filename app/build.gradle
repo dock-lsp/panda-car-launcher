@@ -22,18 +22,10 @@ android {
             def keystoreFile = file('keystore/release.jks')
             if (keystoreFile.exists()) {
                 storeFile keystoreFile
-                storePassword project.hasProperty('KEYSTORE_PASSWORD') ? 
-                    project.property('KEYSTORE_PASSWORD') : 'qq900236'
-                keyAlias project.hasProperty('KEY_ALIAS') ? 
-                    project.property('KEY_ALIAS') : 'release'
-                keyPassword project.hasProperty('KEY_PASSWORD') ? 
-                    project.property('KEY_PASSWORD') : 'qq900236'
-            } else {
-                // CI 环境下由 GitHub Actions 处理签名
-                storeFile file('keystore/release.jks')
-                storePassword 'android'
-                keyAlias 'androiddebugkey'
-                keyPassword 'android'
+                // 优先使用环境变量，其次使用默认密码
+                storePassword System.getenv("KEYSTORE_PASSWORD") ?: 'android'
+                keyAlias System.getenv("KEY_ALIAS") ?: 'androiddebugkey'
+                keyPassword System.getenv("KEY_PASSWORD") ?: 'android'
             }
         }
     }
@@ -43,7 +35,12 @@ android {
             minifyEnabled false
             shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.release
+            // 如果 release 签名配置有效，使用它；否则使用 debug 签名
+            if (signingConfigs.release.storeFile?.exists()) {
+                signingConfig signingConfigs.release
+            } else {
+                signingConfig signingConfigs.debug
+            }
         }
         debug {
             applicationIdSuffix '.debug'

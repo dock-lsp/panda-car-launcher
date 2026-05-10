@@ -105,9 +105,6 @@ jobs:
         run: |
           mkdir -p app/keystore
           cp ~/.android/debug.keystore app/keystore/release.jks || true
-          # 修改 build.gradle 使用 debug 签名
-          sed -i 's/storePassword .*/storePassword '\''android'\''/' app/build.gradle || true
-          sed -i 's/keyPassword .*/keyPassword '\''android'\''/' app/build.gradle || true
 
       - name: Build Release APK
         run: ./gradlew assembleRelease --stacktrace
