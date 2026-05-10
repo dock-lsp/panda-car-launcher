@@ -3,8 +3,9 @@ package com.pandora.carlauncher.modules.appmanager
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
-import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -13,6 +14,19 @@ import androidx.recyclerview.widget.RecyclerView
 import com.pandora.carlauncher.R
 import com.pandora.carlauncher.databinding.ActivityAppManagerBinding
 import kotlinx.coroutines.*
+
+/**
+ * 应用信息数据类
+ */
+data class AppInfo(
+    val packageName: String,
+    val appName: String,
+    val icon: android.graphics.drawable.Drawable,
+    val isSystemApp: Boolean,
+    val versionName: String,
+    val size: Long,
+    val installTime: Long = 0L
+)
 
 /**
  * 应用管理器Activity
@@ -27,6 +41,9 @@ class AppManagerActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "AppManagerActivity"
+        const val FILTER_ALL = 0
+        const val FILTER_SYSTEM = 1
+        const val FILTER_USER = 2
     }
     
     private lateinit var binding: ActivityAppManagerBinding
@@ -38,13 +55,7 @@ class AppManagerActivity : AppCompatActivity() {
     
     private var currentFilter = FILTER_ALL
 
-    companion object {
-        const val FILTER_ALL = 0
-        const val FILTER_SYSTEM = 1
-        const val FILTER_USER = 2
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
+    override fun onCreate(savedInstanceState: android.os.Bundle?) {
         super.onCreate(savedInstanceState)
         
         binding = ActivityAppManagerBinding.inflate(layoutInflater)
@@ -78,7 +89,7 @@ class AppManagerActivity : AppCompatActivity() {
         binding.chipUser.setOnClickListener { filterApps(FILTER_USER) }
         
         // 搜索框
-        binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+        binding.searchView.setOnQueryTextListener(object : androidx.appcompat.widget.SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 filterApps(currentFilter)
                 return true
@@ -112,7 +123,8 @@ class AppManagerActivity : AppCompatActivity() {
                         icon = pm.getApplicationIcon(appInfo),
                         isSystemApp = (appInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0,
                         versionName = getVersionName(appInfo.packageName),
-                        size = getApkSize(appInfo.packageName)
+                        size = getApkSize(appInfo.packageName),
+                        installTime = getInstallTime(appInfo.packageName)
                     ))
                 }
             }
@@ -176,6 +188,17 @@ class AppManagerActivity : AppCompatActivity() {
         return try {
             val appInfo = packageManager.getApplicationInfo(packageName, 0)
             java.io.File(appInfo.sourceDir).length()
+        } catch (e: Exception) {
+            0L
+        }
+    }
+
+    /**
+     * 获取安装时间
+     */
+    private fun getInstallTime(packageName: String): Long {
+        return try {
+            packageManager.getPackageInfo(packageName, 0).firstInstallTime
         } catch (e: Exception) {
             0L
         }
@@ -251,18 +274,6 @@ class AppManagerActivity : AppCompatActivity() {
         scope.cancel()
     }
 }
-
-/**
- * 应用信息数据类
- */
-data class AppInfo(
-    val packageName: String,
-    val appName: String,
-    val icon: android.graphics.drawable.Drawable,
-    val isSystemApp: Boolean,
-    val versionName: String,
-    val size: Long
-)
 
 /**
  * 应用列表适配器

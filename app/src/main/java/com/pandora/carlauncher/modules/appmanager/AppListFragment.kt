@@ -4,34 +4,18 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
-import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.os.Bundle
-import android.os.Process
 import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
-import androidx.cardview.widget.CardView
 import androidx.fragment.app.Fragment
 import com.google.android.material.tabs.TabLayout
 import com.pandora.carlauncher.R
 import kotlinx.coroutines.*
-
-/**
- * 应用信息数据类
- */
-data class AppInfo(
-    val packageName: String,
-    val appName: String,
-    val icon: android.graphics.drawable.Drawable,
-    val isSystemApp: Boolean,
-    val versionName: String,
-    val installTime: Long
-)
 
 /**
  * 应用列表Fragment
@@ -68,7 +52,7 @@ class AppListFragment : Fragment() {
     // 数据
     private val allApps = mutableListOf<AppInfo>()
     private val filteredApps = mutableListOf<AppInfo>()
-    private lateinit var appAdapter: AppListAdapter
+    private lateinit var appAdapter: AppListAdapterFragment
     
     // 当前分类
     private var currentCategory = CATEGORY_ALL
@@ -100,7 +84,7 @@ class AppListFragment : Fragment() {
         emptyText = view.findViewById(R.id.tv_empty)
 
         // 初始化适配器
-        appAdapter = AppListAdapter(requireContext(), filteredApps)
+        appAdapter = AppListAdapterFragment(requireContext(), filteredApps)
         appListView.adapter = appAdapter
         
         // 设置分类标签
@@ -180,6 +164,7 @@ class AppListFragment : Fragment() {
                         icon = pm.getApplicationIcon(appInfo),
                         isSystemApp = isSystemApp && !isUpdatedSystemApp,
                         versionName = getAppVersion(appInfo.packageName),
+                        size = getAppSize(appInfo.packageName),
                         installTime = getAppInstallTime(appInfo.packageName)
                     )
                     allApps.add(app)
@@ -210,6 +195,18 @@ class AppListFragment : Fragment() {
             pInfo.versionName ?: "未知"
         } catch (e: Exception) {
             "未知"
+        }
+    }
+
+    /**
+     * 获取应用大小
+     */
+    private fun getAppSize(packageName: String): Long {
+        return try {
+            val appInfo = requireContext().packageManager.getApplicationInfo(packageName, 0)
+            java.io.File(appInfo.sourceDir).length()
+        } catch (e: Exception) {
+            0L
         }
     }
 
@@ -357,9 +354,9 @@ class AppListFragment : Fragment() {
 }
 
 /**
- * 应用列表适配器
+ * 应用列表适配器 (Fragment 版本)
  */
-class AppListAdapter(
+class AppListAdapterFragment(
     private val context: Context,
     private val apps: List<AppInfo>
 ) : BaseAdapter() {

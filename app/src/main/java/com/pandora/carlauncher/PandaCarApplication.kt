@@ -104,7 +104,7 @@ class PandaCarApplication : Application() {
                     return@launch
                 }
                 
-                carService = Car.createCar(this@PandaCarApplication, object : Car.CarConnectionCallback {
+                setCarService(Car.createCar(this@PandaCarApplication, object : Car.CarConnectionCallback {
                     override fun onConnected(car: Car) {
                         Log.i(TAG, "Car服务已连接")
                         carConnectionManager.onCarConnected(car)
@@ -113,7 +113,7 @@ class PandaCarApplication : Application() {
                     override fun onDisconnected(car: Car) {
                         Log.i(TAG, "Car服务已断开")
                     }
-                })
+                }))
                 
             } catch (e: Exception) {
                 Log.e(TAG, "Car服务连接失败", e)
@@ -167,7 +167,7 @@ class PandaCarApplication : Application() {
         
         // 断开Car服务
         carService?.disconnect()
-        carService = null
+        setCarService(null)
     }
     
     override fun onLowMemory() {
