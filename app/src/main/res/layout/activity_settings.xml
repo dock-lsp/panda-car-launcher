@@ -292,7 +292,7 @@
                 <ImageView
                     android:layout_width="@dimen/icon_size_large"
                     android:layout_height="@dimen/icon_size_large"
-                    android:src="@android:drawable/ic_menu_archive"
+                    android:src="@android:drawable/ic_menu_save"
                     app:tint="@color/primary" />
 
                 <TextView

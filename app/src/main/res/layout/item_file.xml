@@ -12,7 +12,7 @@
         android:id="@+id/iv_icon"
         android:layout_width="@dimen/item_icon_size"
         android:layout_height="@dimen/item_icon_size"
-        android:src="@android:drawable/ic_menu_document"
+        android:src="@android:drawable/ic_menu_edit"
         app:tint="@color/text_secondary" />
 
     <LinearLayout
