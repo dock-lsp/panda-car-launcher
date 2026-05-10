@@ -18,7 +18,7 @@
             android:id="@+id/status_bar_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/status_bar"
+            android:background="@drawable/bg_status_bar_gradient"
             android:padding="@dimen/spacing_small" />
 
         <!-- 主内容ViewPager -->
@@ -38,11 +38,12 @@
             android:layout_marginTop="@dimen/spacing_small"
             app:tabBackground="@drawable/selector_page_indicator"
             app:tabGravity="center"
+            app:tabIndicatorColor="@color/primary"
             app:tabIndicatorHeight="0dp"
             app:tabMaxWidth="16dp"
             app:tabMinWidth="16dp"
-            app:tabPaddingEnd="4dp"
-            app:tabPaddingStart="4dp" />
+            app:tabPaddingEnd="6dp"
+            app:tabPaddingStart="6dp" />
 
         <!-- 底部Dock -->
         <FrameLayout

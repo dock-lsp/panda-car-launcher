@@ -18,7 +18,7 @@
             android:layout_height="wrap_content"
             app:navigationIcon="@android:drawable/ic_menu_preferences"
             app:title="@string/settings"
-            app:titleTextColor="@color/text_primary" />
+            app:titleTextColor="@color/primary" />
 
         <!-- WiFi设置卡片 -->
         <androidx.cardview.widget.CardView
@@ -333,7 +333,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="熊猫车机桌面"
-                    android:textColor="@color/text_primary"
+                    android:textColor="@color/primary"
                     android:textSize="@dimen/text_size_title" />
 
                 <TextView

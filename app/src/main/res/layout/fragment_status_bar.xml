@@ -13,7 +13,8 @@
         android:id="@+id/tv_time"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="@color/text_primary"
+        android:letterSpacing="0.05"
+        android:textColor="@color/primary"
         android:textSize="@dimen/text_size_title"
         android:textStyle="bold" />
 
@@ -32,32 +33,29 @@
         android:textSize="@dimen/text_size_caption" />
 
     <!-- 网络图标 -->
-    <TextView
+    <ImageView
         android:id="@+id/icon_network"
         android:layout_width="@dimen/icon_size"
         android:layout_height="@dimen/icon_size"
         android:layout_marginEnd="@dimen/spacing_small"
-        android:gravity="center"
-        android:text="📶"
-        android:textSize="@dimen/text_size_body" />
+        android:src="@android:drawable/ic_menu_share"
+        app:tint="@color/primary" />
 
     <!-- 蓝牙图标 -->
-    <TextView
+    <ImageView
         android:id="@+id/icon_bluetooth"
         android:layout_width="@dimen/icon_size"
         android:layout_height="@dimen/icon_size"
         android:layout_marginEnd="@dimen/spacing_small"
-        android:gravity="center"
-        android:text="📱"
-        android:textSize="@dimen/text_size_body" />
+        android:src="@android:drawable/ic_menu_call"
+        app:tint="@color/text_secondary" />
 
     <!-- GPS图标 -->
-    <TextView
+    <ImageView
         android:id="@+id/icon_gps"
         android:layout_width="@dimen/icon_size"
         android:layout_height="@dimen/icon_size"
-        android:gravity="center"
-        android:text="🛰️"
-        android:textSize="@dimen/text_size_body" />
+        android:src="@android:drawable/ic_menu_compass"
+        app:tint="@color/text_secondary" />
 
 </LinearLayout>

@@ -15,9 +15,9 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        app:cardBackgroundColor="@color/card_background"
+        app:cardBackgroundColor="@android:color/transparent"
         app:cardCornerRadius="@dimen/corner_radius_large"
-        app:cardElevation="@dimen/elevation_low">
+        app:cardElevation="0dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -27,17 +27,17 @@
             android:padding="@dimen/spacing_small">
 
             <ImageView
-                android:layout_width="@dimen/dock_icon_size"
-                android:layout_height="@dimen/dock_icon_size"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
                 android:src="@android:drawable/ic_menu_compass"
-                app:tint="@color/text_primary" />
+                app:tint="@color/primary" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/spacing_xs"
                 android:text="主页"
-                android:textColor="@color/text_secondary"
+                android:textColor="@color/dock_text"
                 android:textSize="@dimen/text_size_small" />
         </LinearLayout>
     </androidx.cardview.widget.CardView>
@@ -47,11 +47,11 @@
         android:id="@+id/dock_navigation"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/spacing_small"
+        android:layout_marginStart="@dimen/spacing_xs"
         android:layout_weight="1"
-        app:cardBackgroundColor="@color/card_background"
+        app:cardBackgroundColor="@android:color/transparent"
         app:cardCornerRadius="@dimen/corner_radius_large"
-        app:cardElevation="@dimen/elevation_low">
+        app:cardElevation="0dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -61,17 +61,17 @@
             android:padding="@dimen/spacing_small">
 
             <ImageView
-                android:layout_width="@dimen/dock_icon_size"
-                android:layout_height="@dimen/dock_icon_size"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
                 android:src="@android:drawable/ic_menu_directions"
-                app:tint="@color/text_primary" />
+                app:tint="@color/primary" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/spacing_xs"
                 android:text="导航"
-                android:textColor="@color/text_secondary"
+                android:textColor="@color/dock_text"
                 android:textSize="@dimen/text_size_small" />
         </LinearLayout>
     </androidx.cardview.widget.CardView>
@@ -81,11 +81,11 @@
         android:id="@+id/dock_media"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/spacing_small"
+        android:layout_marginStart="@dimen/spacing_xs"
         android:layout_weight="1"
-        app:cardBackgroundColor="@color/card_background"
+        app:cardBackgroundColor="@android:color/transparent"
         app:cardCornerRadius="@dimen/corner_radius_large"
-        app:cardElevation="@dimen/elevation_low">
+        app:cardElevation="0dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -95,17 +95,17 @@
             android:padding="@dimen/spacing_small">
 
             <ImageView
-                android:layout_width="@dimen/dock_icon_size"
-                android:layout_height="@dimen/dock_icon_size"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
                 android:src="@android:drawable/ic_media_play"
-                app:tint="@color/text_primary" />
+                app:tint="@color/primary" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/spacing_xs"
                 android:text="媒体"
-                android:textColor="@color/text_secondary"
+                android:textColor="@color/dock_text"
                 android:textSize="@dimen/text_size_small" />
         </LinearLayout>
     </androidx.cardview.widget.CardView>
@@ -115,11 +115,11 @@
         android:id="@+id/dock_hvac"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/spacing_small"
+        android:layout_marginStart="@dimen/spacing_xs"
         android:layout_weight="1"
-        app:cardBackgroundColor="@color/card_background"
+        app:cardBackgroundColor="@android:color/transparent"
         app:cardCornerRadius="@dimen/corner_radius_large"
-        app:cardElevation="@dimen/elevation_low">
+        app:cardElevation="0dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -129,17 +129,17 @@
             android:padding="@dimen/spacing_small">
 
             <ImageView
-                android:layout_width="@dimen/dock_icon_size"
-                android:layout_height="@dimen/dock_icon_size"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
                 android:src="@android:drawable/ic_menu_manage"
-                app:tint="@color/text_primary" />
+                app:tint="@color/primary" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/spacing_xs"
                 android:text="空调"
-                android:textColor="@color/text_secondary"
+                android:textColor="@color/dock_text"
                 android:textSize="@dimen/text_size_small" />
         </LinearLayout>
     </androidx.cardview.widget.CardView>
@@ -149,11 +149,11 @@
         android:id="@+id/dock_apps"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/spacing_small"
+        android:layout_marginStart="@dimen/spacing_xs"
         android:layout_weight="1"
-        app:cardBackgroundColor="@color/card_background"
+        app:cardBackgroundColor="@android:color/transparent"
         app:cardCornerRadius="@dimen/corner_radius_large"
-        app:cardElevation="@dimen/elevation_low">
+        app:cardElevation="0dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -163,17 +163,17 @@
             android:padding="@dimen/spacing_small">
 
             <ImageView
-                android:layout_width="@dimen/dock_icon_size"
-                android:layout_height="@dimen/dock_icon_size"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
                 android:src="@android:drawable/ic_menu_agenda"
-                app:tint="@color/text_primary" />
+                app:tint="@color/primary" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/spacing_xs"
                 android:text="应用"
-                android:textColor="@color/text_secondary"
+                android:textColor="@color/dock_text"
                 android:textSize="@dimen/text_size_small" />
         </LinearLayout>
     </androidx.cardview.widget.CardView>
@@ -183,11 +183,11 @@
         android:id="@+id/dock_settings"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/spacing_small"
+        android:layout_marginStart="@dimen/spacing_xs"
         android:layout_weight="1"
-        app:cardBackgroundColor="@color/card_background"
+        app:cardBackgroundColor="@android:color/transparent"
         app:cardCornerRadius="@dimen/corner_radius_large"
-        app:cardElevation="@dimen/elevation_low">
+        app:cardElevation="0dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -197,17 +197,17 @@
             android:padding="@dimen/spacing_small">
 
             <ImageView
-                android:layout_width="@dimen/dock_icon_size"
-                android:layout_height="@dimen/dock_icon_size"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
                 android:src="@android:drawable/ic_menu_preferences"
-                app:tint="@color/text_primary" />
+                app:tint="@color/primary" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/spacing_xs"
                 android:text="设置"
-                android:textColor="@color/text_secondary"
+                android:textColor="@color/dock_text"
                 android:textSize="@dimen/text_size_small" />
         </LinearLayout>
     </androidx.cardview.widget.CardView>

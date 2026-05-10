@@ -12,7 +12,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/quick_settings"
-        android:textColor="@color/text_primary"
+        android:textColor="@color/primary"
         android:textSize="@dimen/text_size_title"
         android:textStyle="bold" />
 
@@ -299,7 +299,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="12:00"
-                android:textColor="@color/text_primary"
+                android:textColor="@color/primary"
                 android:textSize="@dimen/text_size_display"
                 android:textStyle="bold" />
 
@@ -324,6 +324,6 @@
         android:layout_marginTop="@dimen/spacing_large"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:src="@android:drawable/ic_menu_preferences"
-        app:tint="@color/text_secondary" />
+        app:tint="@color/primary" />
 
 </LinearLayout>
