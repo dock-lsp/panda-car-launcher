@@ -56,18 +56,29 @@ class CarConnectionManager(private val context: Context) {
                 return
             }
             
-            car = Car.createCar(context) { carInstance ->
-                Log.i(TAG, "Car服务连接状态: ${carInstance.isConnected}")
-                if (carInstance.isConnected) {
-                    onConnected(carInstance)
-                } else {
+            car = Car.createCar(context, object : Car.CarConnectionCallback {
+                override fun onConnected(carInstance: Car) {
+                    Log.i(TAG, "Car服务连接状态: ${carInstance.isConnected}")
+                    if (carInstance.isConnected) {
+                        onConnected(carInstance)
+                    }
+                }
+                
+                override fun onDisconnected(carInstance: Car) {
                     onDisconnected()
                 }
-            }
+            })
             
         } catch (e: Exception) {
             Log.e(TAG, "Car服务连接失败", e)
         }
+    }
+    
+    /**
+     * Car服务连接成功回调（从 PandaCarApplication 调用）
+     */
+    fun onCarConnected(carInstance: Car) {
+        onConnected(carInstance)
     }
 
     /**
@@ -79,40 +90,40 @@ class CarConnectionManager(private val context: Context) {
         
         // 获取各个管理器
         try {
-            carPropertyManager = carInstance.getCarManager(CarPropertyManager::class) 
-                as CarPropertyManager
+            carPropertyManager = carInstance.getCarManager(CarPropertyManager::class.java) 
+                as? CarPropertyManager
             Log.d(TAG, "CarPropertyManager已获取")
         } catch (e: Exception) {
             Log.e(TAG, "获取CarPropertyManager失败", e)
         }
         
         try {
-            carClimateManager = carInstance.getCarManager(CarClimateManager::class) 
-                as CarClimateManager
+            carClimateManager = carInstance.getCarManager(CarClimateManager::class.java) 
+                as? CarClimateManager
             Log.d(TAG, "CarClimateManager已获取")
         } catch (e: Exception) {
             Log.e(TAG, "获取CarClimateManager失败", e)
         }
         
         try {
-            carAudioManager = carInstance.getCarManager(CarAudioManager::class) 
-                as CarAudioManager
+            carAudioManager = carInstance.getCarManager(CarAudioManager::class.java) 
+                as? CarAudioManager
             Log.d(TAG, "CarAudioManager已获取")
         } catch (e: Exception) {
             Log.e(TAG, "获取CarAudioManager失败", e)
         }
         
         try {
-            carNavigationManager = carInstance.getCarManager(CarNavigationManager::class) 
-                as CarNavigationManager
+            carNavigationManager = carInstance.getCarManager(CarNavigationManager::class.java) 
+                as? CarNavigationManager
             Log.d(TAG, "CarNavigationManager已获取")
         } catch (e: Exception) {
             Log.e(TAG, "获取CarNavigationManager失败", e)
         }
         
         try {
-            carSpeedManager = carInstance.getCarManager(CarSpeedManager::class) 
-                as CarSpeedManager
+            carSpeedManager = carInstance.getCarManager(CarSpeedManager::class.java) 
+                as? CarSpeedManager
             Log.d(TAG, "CarSpeedManager已获取")
             
             // 开始监听车速
@@ -138,7 +149,7 @@ class CarConnectionManager(private val context: Context) {
             override fun run() {
                 if (_isConnected.value && carSpeedManager != null) {
                     try {
-                        val speed = carSpeedManager?.getCarSpeedDisplayValue() ?: 0f
+                        val speed = carSpeedManager?.speed ?: 0f
                         _vehicleSpeed.value = speed
                     } catch (e: Exception) {
                         // 忽略

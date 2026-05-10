@@ -23,6 +23,10 @@ public class Car {
 
     public void disconnect() {}
 
+    public Object getCarManager(Class<?> serviceClass) {
+        return null;
+    }
+
     public interface CarConnectionCallback {
         void onConnected(Car car);
         void onDisconnected(Car car);

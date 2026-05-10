@@ -104,13 +104,17 @@ class CarConnectionService : Service() {
                 return
             }
             
-            car = Car.createCar(this) { carInstance ->
-                if (carInstance.isConnected) {
-                    onCarConnected(carInstance)
-                } else {
+            car = Car.createCar(this, object : Car.CarConnectionCallback {
+                override fun onConnected(carInstance: Car) {
+                    if (carInstance.isConnected) {
+                        onCarConnected(carInstance)
+                    }
+                }
+                
+                override fun onDisconnected(carInstance: Car) {
                     onCarDisconnected()
                 }
-            }
+            })
             
             // 设置超时
             Thread {

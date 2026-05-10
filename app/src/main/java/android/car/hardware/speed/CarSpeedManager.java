@@ -11,4 +11,6 @@ public class CarSpeedManager {
     public float getSpeed() {
         return 0f;
     }
+    
+    public float speed = 0f;
 }
