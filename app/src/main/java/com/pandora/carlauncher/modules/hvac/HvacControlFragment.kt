@@ -49,7 +49,7 @@ class HvacControlFragment : Fragment() {
     private lateinit var fanSpeedSeekBar: SeekBar
     private lateinit var acButton: ImageButton
     private lateinit var autoButton: ImageButton
-    private lateinit var recycleButton: ImageButton
+    private lateinit var recirculationButton: ImageButton
     
     // 状态
     private var driverTemp = 220  // 22℃
@@ -86,7 +86,7 @@ class HvacControlFragment : Fragment() {
         fanSpeedSeekBar = view.findViewById(R.id.seek_fan_speed)
         acButton = view.findViewById(R.id.btn_ac)
         autoButton = view.findViewById(R.id.btn_auto)
-        recycleButton = view.findViewById(R.id.btn_recirculation)
+        recirculationButton = view.findViewById(R.id.btn_recirculation)
     }
     
     /**
@@ -142,7 +142,7 @@ class HvacControlFragment : Fragment() {
         }
         
         // 循环模式
-        recycleButton.setOnClickListener {
+        recirculationButton.setOnClickListener {
             isRecycleOn = !isRecycleOn
             updateRecycleButton()
         }
@@ -206,6 +206,6 @@ class HvacControlFragment : Fragment() {
      * 更新循环模式按钮
      */
     private fun updateRecycleButton() {
-        recycleButton.isSelected = isRecycleOn
+        recirculationButton.isSelected = isRecycleOn
     }
 }

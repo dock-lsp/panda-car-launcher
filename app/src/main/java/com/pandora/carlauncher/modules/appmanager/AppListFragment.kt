@@ -13,6 +13,8 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.tabs.TabLayout
 import com.pandora.carlauncher.R
 import kotlinx.coroutines.*
@@ -24,7 +26,6 @@ import kotlinx.coroutines.*
  * - 显示已安装应用列表
  * - 应用搜索
  * - 应用卸载
- * - 强制停止应用
  * - 显示应用详情
  */
 class AppListFragment : Fragment() {
@@ -44,7 +45,7 @@ class AppListFragment : Fragment() {
 
     // UI控件
     private lateinit var searchEditText: EditText
-    private lateinit var appListView: ListView
+    private lateinit var appListView: RecyclerView
     private lateinit var loadingProgress: ProgressBar
     private lateinit var categoryTabs: TabLayout
     private lateinit var emptyText: TextView
@@ -83,8 +84,11 @@ class AppListFragment : Fragment() {
         categoryTabs = view.findViewById(R.id.tab_category)
         emptyText = view.findViewById(R.id.tv_empty)
 
-        // 初始化适配器
-        appAdapter = AppListAdapterFragment(requireContext(), filteredApps)
+        // 初始化 RecyclerView
+        appListView.layoutManager = LinearLayoutManager(requireContext())
+        appAdapter = AppListAdapterFragment(requireContext(), filteredApps) { app ->
+            showAppOptions(app)
+        }
         appListView.adapter = appAdapter
         
         // 设置分类标签
@@ -122,19 +126,6 @@ class AppListFragment : Fragment() {
                 filterApps()
             }
         })
-
-        // 应用列表项点击
-        appListView.setOnItemClickListener { _, _, position, _ ->
-            val app = filteredApps[position]
-            openApp(app)
-        }
-
-        // 应用列表项长按
-        appListView.setOnItemLongClickListener { _, _, position, _ ->
-            val app = filteredApps[position]
-            showAppOptions(app)
-            true
-        }
     }
 
     /**
@@ -261,6 +252,32 @@ class AppListFragment : Fragment() {
     }
 
     /**
+     * 显示应用选项对话框
+     */
+    private fun showAppOptions(app: AppInfo) {
+        val options = mutableListOf<String>()
+        options.add("打开")
+        
+        // 非系统应用可以卸载
+        if (!app.isSystemApp) {
+            options.add("卸载")
+        }
+        
+        options.add("应用信息")
+
+        AlertDialog.Builder(requireContext())
+            .setTitle(app.appName)
+            .setItems(options.toTypedArray()) { _, which ->
+                when (options[which]) {
+                    "打开" -> openApp(app)
+                    "卸载" -> uninstallApp(app)
+                    "应用信息" -> showAppInfo(app)
+                }
+            }
+            .show()
+    }
+    
+    /**
      * 打开应用
      */
     private fun openApp(app: AppInfo) {
@@ -274,34 +291,6 @@ class AppListFragment : Fragment() {
         } catch (e: Exception) {
             Toast.makeText(context, "无法打开应用", Toast.LENGTH_SHORT).show()
         }
-    }
-
-    /**
-     * 显示应用选项对话框
-     */
-    private fun showAppOptions(app: AppInfo) {
-        val options = mutableListOf<String>()
-        options.add("打开")
-        
-        // 非系统应用可以卸载
-        if (!app.isSystemApp) {
-            options.add("卸载")
-        }
-        
-        options.add("应用信息")
-        options.add("强制停止")
-
-        AlertDialog.Builder(requireContext())
-            .setTitle(app.appName)
-            .setItems(options.toTypedArray()) { _, which ->
-                when (options[which]) {
-                    "打开" -> openApp(app)
-                    "卸载" -> uninstallApp(app)
-                    "应用信息" -> showAppInfo(app)
-                    "强制停止" -> forceStopApp(app)
-                }
-            }
-            .show()
     }
 
     /**
@@ -326,27 +315,6 @@ class AppListFragment : Fragment() {
         }
     }
 
-    /**
-     * 强制停止应用
-     */
-    private fun forceStopApp(app: AppInfo) {
-        AlertDialog.Builder(requireContext())
-            .setTitle("强制停止")
-            .setMessage("确定要强制停止 ${app.appName} 吗？")
-            .setPositiveButton("确定") { _, _ ->
-                try {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        requireContext().packageManager
-                        // 注意：普通应用无法强制停止其他应用，需要系统权限
-                    }
-                } catch (e: Exception) {
-                    Toast.makeText(context, "无法停止应用", Toast.LENGTH_SHORT).show()
-                }
-            }
-            .setNegativeButton("取消", null)
-            .show()
-    }
-
     override fun onDestroyView() {
         super.onDestroyView()
         scope.cancel()
@@ -354,37 +322,45 @@ class AppListFragment : Fragment() {
 }
 
 /**
- * 应用列表适配器 (Fragment 版本)
+ * 应用列表适配器 (RecyclerView 版本)
  */
 class AppListAdapterFragment(
     private val context: Context,
-    private val apps: List<AppInfo>
-) : BaseAdapter() {
+    private val apps: List<AppInfo>,
+    private val onItemClick: (AppInfo) -> Unit
+) : RecyclerView.Adapter<AppListAdapterFragment.ViewHolder>() {
 
-    private val inflater = LayoutInflater.from(context)
-
-    override fun getCount(): Int = apps.size
-
-    override fun getItem(position: Int): AppInfo = apps[position]
-
-    override fun getItemId(position: Int): Long = position.toLong()
-
-    override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
-        val view = convertView ?: inflater.inflate(R.layout.item_app, parent, false)
-        val app = getItem(position)
-
-        view.findViewById<ImageView>(R.id.iv_app_icon).setImageDrawable(app.icon)
-        view.findViewById<TextView>(R.id.tv_app_name).text = app.appName
-        view.findViewById<TextView>(R.id.tv_package_name).text = app.packageName
-        
-        val systemBadge = view.findViewById<TextView>(R.id.tv_system_badge)
-        if (app.isSystemApp) {
-            systemBadge.visibility = View.VISIBLE
-            systemBadge.text = "系统"
-        } else {
-            systemBadge.visibility = View.GONE
-        }
-
-        return view
+    class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val icon: ImageView = view.findViewById(R.id.iv_app_icon)
+        val name: TextView = view.findViewById(R.id.tv_app_name)
+        val packageName: TextView = view.findViewById(R.id.tv_package_name)
+        val systemBadge: TextView = view.findViewById(R.id.tv_system_badge)
     }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val view = LayoutInflater.from(parent.context)
+            .inflate(R.layout.item_app, parent, false)
+        return ViewHolder(view)
+    }
+
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val app = apps[position]
+
+        holder.icon.setImageDrawable(app.icon)
+        holder.name.text = app.appName
+        holder.packageName.text = app.packageName
+        
+        if (app.isSystemApp) {
+            holder.systemBadge.visibility = View.VISIBLE
+            holder.systemBadge.text = "系统"
+        } else {
+            holder.systemBadge.visibility = View.GONE
+        }
+        
+        holder.itemView.setOnClickListener {
+            onItemClick(app)
+        }
+    }
+
+    override fun getItemCount(): Int = apps.size
 }

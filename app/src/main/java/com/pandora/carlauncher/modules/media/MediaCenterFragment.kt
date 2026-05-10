@@ -125,9 +125,10 @@ class MediaCenterFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
+        // 先初始化音频管理器（initViews 中会使用）
+        initAudioManager()
         initViews(view)
         initMediaSession()
-        initAudioManager()
         setupListeners()
         scanMediaFiles()
     }
