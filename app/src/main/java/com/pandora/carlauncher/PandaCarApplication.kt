@@ -100,31 +100,21 @@ class PandaCarApplication : Application() {
                     return@launch
                 }
                 
-                carService = Car.createCar(this@PandaCarApplication) { car ->
-                    Log.i(TAG, "Car服务连接状态: ${car.isConnected}")
-                    if (car.isConnected) {
-                        onCarConnected(car)
+                carService = Car.createCar(this@PandaCarApplication, object : Car.CarConnectionCallback {
+                    override fun onConnected(car: Car) {
+                        Log.i(TAG, "Car服务已连接")
+                        carConnectionManager.onCarConnected(car)
                     }
-                }
-                
-                // 设置超时
-                Thread.sleep(5000)
-                if (carService?.isConnected == false) {
-                    Log.w(TAG, "Car服务连接超时")
-                }
+                    
+                    override fun onDisconnected(car: Car) {
+                        Log.i(TAG, "Car服务已断开")
+                    }
+                })
                 
             } catch (e: Exception) {
                 Log.e(TAG, "Car服务连接失败", e)
             }
         }
-    }
-    
-    /**
-     * Car服务连接成功后的回调
-     */
-    private fun onCarConnected(car: Car) {
-        Log.i(TAG, "Car服务已连接")
-        carConnectionManager.onCarConnected(car)
     }
     
     /**
