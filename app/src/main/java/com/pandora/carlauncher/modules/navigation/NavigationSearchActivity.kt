@@ -4,7 +4,9 @@ import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
@@ -58,9 +60,14 @@ class NavigationSearchActivity : AppCompatActivity() {
      */
     private fun setupUI() {
         // 历史记录列表
-        historyAdapter = SearchHistoryAdapter(searchHistory) { keyword ->
-            search(keyword)
-        }
+        historyAdapter = SearchHistoryAdapter(
+            history = searchHistory,
+            onItemClick = { keyword -> search(keyword) },
+            onDeleteClick = { position ->
+                searchHistory.removeAt(position)
+                historyAdapter.notifyDataSetChanged()
+            }
+        )
         binding.recyclerHistory.layoutManager = LinearLayoutManager(this)
         binding.recyclerHistory.adapter = historyAdapter
         
@@ -266,7 +273,8 @@ data class SearchSuggestion(
  */
 class SearchHistoryAdapter(
     private val history: List<String>,
-    private val onItemClick: (String) -> Unit
+    private val onItemClick: (String) -> Unit,
+    private val onDeleteClick: (Int) -> Unit
 ) : RecyclerView.Adapter<SearchHistoryAdapter.ViewHolder>() {
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -285,8 +293,7 @@ class SearchHistoryAdapter(
         holder.tvKeyword.text = keyword
         holder.tvKeyword.setOnClickListener { onItemClick(keyword) }
         holder.btnDelete.setOnClickListener {
-            history.removeAt(position)
-            notifyDataSetChanged()
+            onDeleteClick(position)
         }
     }
 

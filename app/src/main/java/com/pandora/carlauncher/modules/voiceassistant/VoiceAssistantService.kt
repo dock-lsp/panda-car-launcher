@@ -6,6 +6,7 @@ import android.media.AudioFormat
 import android.media.AudioManager
 import android.media.AudioRecord
 import android.media.MediaRecorder
+import android.media.RingtoneManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -51,6 +52,24 @@ class VoiceAssistantService : android.app.Service() {
         const val CMD_CLOSE_AC = "close_ac"
         const val CMD_CALL = "call"
         const val CMD_UNKNOWN = "unknown"
+        
+        // 广播Action
+        const val ACTION_START_LISTENING = "com.pandora.carlauncher.START_LISTENING"
+        const val ACTION_STOP_LISTENING = "com.pandora.carlauncher.STOP_LISTENING"
+        const val ACTION_WAKE_WORD_DETECTED = "com.pandora.carlauncher.WAKE_WORD_DETECTED"
+        const val ACTION_VOICE_STATE_CHANGED = "com.pandora.carlauncher.VOICE_STATE_CHANGED"
+        
+        const val EXTRA_STATE = "state"
+        
+        // 状态常量
+        const val STATE_IDLE = 0
+        const val STATE_LISTENING = 1
+        const val STATE_PROCESSING = 2
+        const val STATE_SPEAKING = 3
+        
+        // 通知相关
+        private const val CHANNEL_ID = "voice_assistant_channel"
+        private const val NOTIFICATION_ID = 1001
     }
     
     // 协程作用域
@@ -439,23 +458,5 @@ class VoiceAssistantService : android.app.Service() {
      */
     inner class VoiceBinder : android.os.Binder() {
         fun getService(): VoiceAssistantService = this@VoiceAssistantService
-    }
-
-    // 广播Action和常量
-    companion object {
-        const val ACTION_START_LISTENING = "com.pandora.carlauncher.START_LISTENING"
-        const val ACTION_STOP_LISTENING = "com.pandora.carlauncher.STOP_LISTENING"
-        const val ACTION_WAKE_WORD_DETECTED = "com.pandora.carlauncher.WAKE_WORD_DETECTED"
-        const val ACTION_VOICE_STATE_CHANGED = "com.pandora.carlauncher.VOICE_STATE_CHANGED"
-        
-        const val EXTRA_STATE = "state"
-        
-        const val STATE_IDLE = 0
-        const val STATE_LISTENING = 1
-        const val STATE_PROCESSING = 2
-        const val STATE_SPEAKING = 3
-        
-        private const val CHANNEL_ID = "voice_assistant_channel"
-        private const val NOTIFICATION_ID = 1001
     }
 }

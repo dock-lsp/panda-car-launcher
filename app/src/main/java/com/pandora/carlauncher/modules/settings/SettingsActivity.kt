@@ -16,7 +16,6 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
-import androidx.preference.PreferenceFragmentCompat
 import com.pandora.carlauncher.BuildConfig
 import com.pandora.carlauncher.PandaCarApplication
 import com.pandora.carlauncher.R

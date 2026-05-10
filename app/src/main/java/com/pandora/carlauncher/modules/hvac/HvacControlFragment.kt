@@ -2,7 +2,6 @@ package com.pandora.carlauncher.modules.hvac
 
 import android.car.Car
 import android.car.hardware.CarPropertyManager
-import android.car.hardware.climate.CarClimateManager
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
@@ -59,9 +58,6 @@ class HvacControlFragment : Fragment() {
     private var isAcOn = false
     private var isAutoMode = false
     private var isRecycleOn = false
-    
-    // Car服务
-    private var carClimateManager: CarClimateManager? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -76,7 +72,6 @@ class HvacControlFragment : Fragment() {
         
         initViews(view)
         setupListeners()
-        initClimateManager()
         updateUI()
     }
     
@@ -86,31 +81,12 @@ class HvacControlFragment : Fragment() {
     private fun initViews(view: View) {
         driverTempText = view.findViewById(R.id.tv_driver_temp)
         passengerTempText = view.findViewById(R.id.tv_passenger_temp)
-        driverTempSeekBar = view.findViewById(R.id.seekbar_driver_temp)
-        passengerTempSeekBar = view.findViewById(R.id.seekbar_passenger_temp)
-        fanSpeedSeekBar = view.findViewById(R.id.seekbar_fan_speed)
+        driverTempSeekBar = view.findViewById(R.id.seek_driver_temp)
+        passengerTempSeekBar = view.findViewById(R.id.seek_passenger_temp)
+        fanSpeedSeekBar = view.findViewById(R.id.seek_fan_speed)
         acButton = view.findViewById(R.id.btn_ac)
         autoButton = view.findViewById(R.id.btn_auto)
-        recycleButton = view.findViewById(R.id.btn_recycle)
-    }
-    
-    /**
-     * 初始化空调管理器
-     */
-    private fun initClimateManager() {
-        try {
-            val app = PandaCarApplication.getInstance()
-            val car = app.carService
-            
-            if (car != null && car.isConnected) {
-                carClimateManager = car.getCarManager(CarClimateManager::class.java) as? CarClimateManager
-                Log.i(TAG, "CarClimateManager初始化成功")
-            } else {
-                Log.w(TAG, "Car服务未连接，使用模拟模式")
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "CarClimateManager初始化失败", e)
-        }
+        recycleButton = view.findViewById(R.id.btn_recirculation)
     }
     
     /**
