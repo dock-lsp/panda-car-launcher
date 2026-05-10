@@ -403,6 +403,9 @@ class VoiceAssistantService : android.app.Service() {
         sendBroadcast(intent)
     }
 
+    // TTS实例
+    private var ttsEngine: android.speech.tts.TextToSpeech? = null
+
     /**
      * 语音播报
      */
@@ -410,11 +413,15 @@ class VoiceAssistantService : android.app.Service() {
         scope.launch {
             try {
                 // 使用TTS进行语音播报
-                val tts = android.speech.tts.TextToSpeech(this@VoiceAssistantService) { status ->
-                    if (status == android.speech.tts.TextToSpeech.SUCCESS) {
-                        tts.language = java.util.Locale.CHINESE
-                        tts.speak(text, android.speech.tts.QUEUE_FLUSH, null, "tts_id")
+                if (ttsEngine == null) {
+                    ttsEngine = android.speech.tts.TextToSpeech(this@VoiceAssistantService) { status ->
+                        if (status == android.speech.tts.TextToSpeech.SUCCESS) {
+                            ttsEngine?.language = java.util.Locale.CHINESE
+                            ttsEngine?.speak(text, android.speech.tts.TextToSpeech.QUEUE_FLUSH, null, "tts_id")
+                        }
                     }
+                } else {
+                    ttsEngine?.speak(text, android.speech.tts.TextToSpeech.QUEUE_FLUSH, null, "tts_id")
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "TTS播报失败", e)
@@ -432,17 +439,10 @@ class VoiceAssistantService : android.app.Service() {
     )
 
     /**
-     * NLU引擎接口
-     */
-    interface NLUEngine {
-        suspend fun process(audioData: ByteArray): VoiceCommand
-    }
-
-    /**
      * NLU引擎实现
      */
-    class NLUEngine(private val context: android.content.Context) : VoiceAssistantService.NLUEngine {
-        override suspend fun process(audioData: ByteArray): VoiceCommand {
+    class NLUEngine(private val context: android.content.Context) {
+        suspend fun process(audioData: ByteArray): VoiceCommand {
             // 这里应该调用实际的语音识别和语义理解服务
             // 暂时返回模拟结果
             return VoiceCommand(

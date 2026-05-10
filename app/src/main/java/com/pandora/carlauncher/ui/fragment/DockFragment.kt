@@ -11,6 +11,7 @@ import android.widget.TextView
 import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.viewpager2.widget.ViewPager2
 import com.pandora.carlauncher.R
 import com.pandora.carlauncher.ui.activity.MainLauncherActivity
 import com.pandora.carlauncher.modules.settings.SettingsActivity
@@ -83,7 +84,26 @@ class DockFragment : Fragment() {
     private fun navigateTo(page: Int) {
         activity?.let { act ->
             if (act is MainLauncherActivity) {
-                act.findViewById<ViewPager2>(R.id.main_view_pager)?.currentItem = page
+                act.switchToPage(page)
+            }
+        }
+    }
+    
+    /**
+     * 更新选中状态
+     */
+    fun updateSelection(position: Int) {
+        view?.let { v ->
+            val items = listOf(
+                R.id.dock_home to MainLauncherActivity.PAGE_HOME,
+                R.id.dock_navigation to MainLauncherActivity.PAGE_NAVIGATION,
+                R.id.dock_media to MainLauncherActivity.PAGE_MEDIA,
+                R.id.dock_hvac to MainLauncherActivity.PAGE_HVAC,
+                R.id.dock_apps to MainLauncherActivity.PAGE_APPS
+            )
+            
+            items.forEach { (id, page) ->
+                v.findViewById<CardView>(id)?.isSelected = (position == page)
             }
         }
     }

@@ -89,8 +89,8 @@ class MediaPlayService : Service() {
     var currentPosition: Long = 0
         private set
     
-    var duration: Long = 0
-        internal set
+    private var _duration: Long = 0
+    val duration: Long get() = _duration
     
     // 回调监听器
     private val listeners = mutableListOf<PlaybackListener>()
@@ -207,8 +207,8 @@ class MediaPlayService : Service() {
                     .build()
             )
             
-            setOnPreparedListener {
-                duration = it.duration.toLong()
+            setOnPreparedListener { mp ->
+                _duration = mp.duration.toLong()
                 notifyDurationChanged()
                 startProgressUpdates()
             }

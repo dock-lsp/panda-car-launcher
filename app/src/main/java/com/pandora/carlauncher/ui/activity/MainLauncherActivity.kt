@@ -48,7 +48,6 @@ import com.pandora.carlauncher.modules.settings.QuickSettingsFragment
 import com.pandora.carlauncher.modules.appmanager.AppListFragment
 import com.pandora.carlauncher.ui.fragment.DockFragment
 import com.pandora.carlauncher.ui.fragment.StatusBarFragment
-import com.pandora.carlauncher.utils.PermissionHelper
 import kotlinx.coroutines.*
 
 /**
@@ -84,6 +83,9 @@ class MainLauncherActivity : AppCompatActivity() {
     
     // ViewPager适配器
     private lateinit var pagerAdapter: MainPagerAdapter
+    
+    // Dock Fragment引用
+    private var dockFragment: DockFragment? = null
     
     // 权限Launcher
     private val permissionLauncher = registerForActivityResult(
@@ -263,22 +265,16 @@ class MainLauncherActivity : AppCompatActivity() {
      * 设置底部Dock
      */
     private fun setupDock() {
+        dockFragment = DockFragment()
         supportFragmentManager.beginTransaction()
-            .replace(R.id.dock_container, DockFragment())
+            .replace(R.id.dock_container, dockFragment!!)
             .commit()
-        
-        // 设置Dock点击监听
-        binding.dockHome.setOnClickListener { switchToPage(PAGE_HOME) }
-        binding.dockNavigation.setOnClickListener { switchToPage(PAGE_NAVIGATION) }
-        binding.dockMedia.setOnClickListener { switchToPage(PAGE_MEDIA) }
-        binding.dockHvac.setOnClickListener { switchToPage(PAGE_HVAC) }
-        binding.dockApps.setOnClickListener { switchToPage(PAGE_APPS) }
     }
     
     /**
      * 切换到指定页面
      */
-    private fun switchToPage(position: Int) {
+    fun switchToPage(position: Int) {
         binding.mainViewPager.currentItem = position
     }
     
@@ -286,12 +282,8 @@ class MainLauncherActivity : AppCompatActivity() {
      * 更新Dock选中状态
      */
     private fun updateDockSelection(position: Int) {
-        // 重置所有Dock项
-        binding.dockHome.isSelected = position == PAGE_HOME
-        binding.dockNavigation.isSelected = position == PAGE_NAVIGATION
-        binding.dockMedia.isSelected = position == PAGE_MEDIA
-        binding.dockHvac.isSelected = position == PAGE_HVAC
-        binding.dockApps.isSelected = position == PAGE_APPS
+        // 通过Dock Fragment更新选中状态
+        dockFragment?.updateSelection(position)
     }
     
     /**
