@@ -88,4 +88,7 @@ dependencies {
     
     // Android Car Library
     implementation 'androidx.car.app:app:1.4.0'
+    
+    // Media Library
+    implementation 'androidx.media:media:1.7.0'
 }

@@ -1,7 +1,5 @@
 package com.pandora.carlauncher.modules.media
 
-import android.car.media.CarAudioManager
-import android.car.media.CarMediaManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -27,7 +25,6 @@ import androidx.core.app.NotificationCompat
 import androidx.fragment.app.Fragment
 import com.pandora.carlauncher.PandaCarApplication
 import com.pandora.carlauncher.R
-import com.pandora.carlauncher.core.service.MediaPlayService
 import kotlinx.coroutines.*
 import java.io.File
 
@@ -604,11 +601,10 @@ class MediaListAdapter(
         val view = convertView ?: inflater.inflate(R.layout.item_media, parent, false)
         val item = getItem(position)
 
-        view.findViewById<TextView>(R.id.tv_title).text = item.title
-        view.findViewById<TextView>(R.id.tv_artist).text = item.artist
-        view.findViewById<TextView>(R.id.tv_duration).text = formatDuration(item.duration)
+        view.findViewById<TextView>(R.id.tv_name).text = item.title
+        view.findViewById<TextView>(R.id.tv_info).text = "${item.artist} - ${formatDuration(item.duration)}"
 
-        val albumArt = view.findViewById<ImageView>(R.id.iv_album_art)
+        val albumArt = view.findViewById<ImageView>(R.id.iv_icon)
         if (item.albumArt != null) {
             albumArt.setImageBitmap(item.albumArt)
         } else {

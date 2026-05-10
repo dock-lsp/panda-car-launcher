@@ -90,7 +90,7 @@ class MediaPlayService : Service() {
         private set
     
     var duration: Long = 0
-        private set
+        internal set
     
     // 回调监听器
     private val listeners = mutableListOf<PlaybackListener>()
