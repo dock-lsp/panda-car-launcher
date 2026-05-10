@@ -72,11 +72,6 @@
             android:name=".modules.filemanager.FileManagerActivity"
             android:exported="false" />
 
-        <!-- 媒体播放全屏 -->
-        <activity
-            android:name=".modules.media.MediaPlayerActivity"
-            android:exported="false" />
-
         <!-- 导航搜索 -->
         <activity
             android:name=".modules.navigation.NavigationSearchActivity"

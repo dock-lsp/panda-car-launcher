@@ -16,19 +16,6 @@ import com.pandora.carlauncher.databinding.ActivityAppManagerBinding
 import kotlinx.coroutines.*
 
 /**
- * 应用信息数据类
- */
-data class AppInfo(
-    val packageName: String,
-    val appName: String,
-    val icon: android.graphics.drawable.Drawable,
-    val isSystemApp: Boolean,
-    val versionName: String,
-    val size: Long,
-    val installTime: Long = 0L
-)
-
-/**
  * 应用管理器Activity
  * 
  * 提供应用管理功能：

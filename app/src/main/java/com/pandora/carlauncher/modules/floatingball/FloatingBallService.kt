@@ -191,7 +191,7 @@ class FloatingBallService : android.app.Service() {
                 MotionEvent.ACTION_UP -> {
                     if (isMoving) {
                         // 吸附到边缘
-                       吸附ToEdge()
+                       snapToEdge()
                     }
                     true
                 }
@@ -326,7 +326,7 @@ class FloatingBallService : android.app.Service() {
     /**
      * 吸附到边缘
      */
-    private fun 吸附ToEdge() {
+    private fun snapToEdge() {
         val screenWidth = getScreenWidth()
         val targetX: Int
         
