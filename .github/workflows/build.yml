@@ -132,8 +132,8 @@ jobs:
       - name: Get version info
         id: version
         run: |
-          VERSION_NAME=$(grep "versionName" app/build.gradle | sed 's/.*versionName[[:space:]]*["\x27]\([^"\x27]*\)["\x27].*/\1/')
-          VERSION_CODE=$(grep "versionCode" app/build.gradle | sed 's/.*versionCode[[:space:]]*\([0-9]*\).*/\1/')
+          VERSION_NAME=$(grep "^[[:space:]]*versionName[[:space:]]" app/build.gradle | sed 's/.*versionName[[:space:]]*["\x27]\([^"\x27]*\)["\x27].*/\1/')
+          VERSION_CODE=$(grep "^[[:space:]]*versionCode[[:space:]]" app/build.gradle | sed 's/.*versionCode[[:space:]]*\([0-9]*\).*/\1/')
           BUILD_DATE=$(date +'%Y%m%d')
           BUILD_TIME=$(date +'%H%M%S')
           echo "version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
