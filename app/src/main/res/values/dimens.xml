@@ -80,6 +80,7 @@
     <!-- 间距 -->
     <dimen name="spacing_xs">4dp</dimen>
     <dimen name="spacing_small">8dp</dimen>
+    <dimen name="spacing_medium">12dp</dimen>
     <dimen name="spacing">16dp</dimen>
     <dimen name="spacing_large">24dp</dimen>
     <dimen name="spacing_xl">32dp</dimen>
