@@ -1,5 +1,6 @@
 package com.pandora.carlauncher.modules.appmanager
 
+import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
@@ -8,6 +9,7 @@ import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.os.Bundle
 import android.os.Process
+import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,8 +17,21 @@ import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.cardview.widget.CardView
 import androidx.fragment.app.Fragment
+import com.google.android.material.tabs.TabLayout
 import com.pandora.carlauncher.R
 import kotlinx.coroutines.*
+
+/**
+ * 应用信息数据类
+ */
+data class AppInfo(
+    val packageName: String,
+    val appName: String,
+    val icon: android.graphics.drawable.Drawable,
+    val isSystemApp: Boolean,
+    val versionName: String,
+    val installTime: Long
+)
 
 /**
  * 应用列表Fragment
@@ -32,6 +47,12 @@ class AppListFragment : Fragment() {
 
     companion object {
         private const val TAG = "AppListFragment"
+        
+        // 分类常量
+        const val CATEGORY_ALL = 0
+        const val CATEGORY_SYSTEM = 1
+        const val CATEGORY_USER = 2
+        const val CATEGORY_FREQUENT = 3
     }
 
     // 协程作用域
@@ -51,14 +72,6 @@ class AppListFragment : Fragment() {
     
     // 当前分类
     private var currentCategory = CATEGORY_ALL
-
-    // 分类常量
-    companion object {
-        const val CATEGORY_ALL = 0
-        const val CATEGORY_SYSTEM = 1
-        const val CATEGORY_USER = 2
-        const val CATEGORY_FREQUENT = 3
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -342,18 +355,6 @@ class AppListFragment : Fragment() {
         scope.cancel()
     }
 }
-
-/**
- * 应用信息数据类
- */
-data class AppInfo(
-    val packageName: String,
-    val appName: String,
-    val icon: android.graphics.drawable.Drawable,
-    val isSystemApp: Boolean,
-    val versionName: String,
-    val installTime: Long
-)
 
 /**
  * 应用列表适配器

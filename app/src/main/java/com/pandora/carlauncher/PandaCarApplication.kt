@@ -40,8 +40,12 @@ class PandaCarApplication : Application() {
         private set
     
     // Car服务实例
-    var carService: Car? = null
-        private set
+    private var _carService: Car? = null
+    val carService: Car? get() = _carService
+    
+    fun setCarService(car: Car?) {
+        _carService = car
+    }
     
     // 驾驶状态标志
     var isDriving: Boolean = false

@@ -45,6 +45,16 @@ class MediaPlayService : Service() {
         const val STATE_PLAYING = 1
         const val STATE_PAUSED = 2
         const val STATE_STOPPED = 3
+        
+        // 广播Action
+        const val ACTION_PLAY = "com.pandora.carlauncher.media.PLAY"
+        const val ACTION_PAUSE = "com.pandora.carlauncher.media.PAUSE"
+        const val ACTION_STOP = "com.pandora.carlauncher.media.STOP"
+        const val ACTION_NEXT = "com.pandora.carlauncher.media.NEXT"
+        const val ACTION_PREV = "com.pandora.carlauncher.media.PREV"
+        const val ACTION_SEEK = "com.pandora.carlauncher.media.SEEK"
+        
+        const val EXTRA_POSITION = "position"
     }
     
     // Binder
@@ -495,17 +505,5 @@ class MediaPlayService : Service() {
         fun onPlaybackStateChanged(state: Int)
         fun onPositionChanged(position: Long)
         fun onDurationChanged(duration: Long)
-    }
-
-    // 广播Action
-    companion object {
-        const val ACTION_PLAY = "com.pandora.carlauncher.media.PLAY"
-        const val ACTION_PAUSE = "com.pandora.carlauncher.media.PAUSE"
-        const val ACTION_STOP = "com.pandora.carlauncher.media.STOP"
-        const val ACTION_NEXT = "com.pandora.carlauncher.media.NEXT"
-        const val ACTION_PREV = "com.pandora.carlauncher.media.PREV"
-        const val ACTION_SEEK = "com.pandora.carlauncher.media.SEEK"
-        
-        const val EXTRA_POSITION = "position"
     }
 }
