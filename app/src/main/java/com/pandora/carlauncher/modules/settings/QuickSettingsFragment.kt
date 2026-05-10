@@ -13,6 +13,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import androidx.appcompat.widget.SwitchCompat
 import androidx.cardview.widget.CardView
 import androidx.fragment.app.Fragment
 import com.pandora.carlauncher.PandaCarApplication
@@ -34,22 +35,22 @@ import com.pandora.carlauncher.modules.settings.SettingsActivity
 class QuickSettingsFragment : Fragment() {
 
     // UI控件
-    private lateinit var wifiSwitch: Switch
-    private lateinit var bluetoothSwitch: Switch
+    private lateinit var wifiSwitch: SwitchCompat
+    private lateinit var bluetoothSwitch: SwitchCompat
     private lateinit var volumeSeekBar: SeekBar
     private lateinit var volumeText: TextView
     private lateinit var brightnessSeekBar: SeekBar
     private lateinit var brightnessText: TextView
-    private lateinit var drivingModeSwitch: Switch
-    private lateinit var nightModeSwitch: Switch
+    private lateinit var drivingModeSwitch: SwitchCompat
+    private lateinit var nightModeSwitch: SwitchCompat
     private lateinit var settingsButton: ImageButton
     private lateinit var timeText: TextView
     private lateinit var dateText: TextView
     
     // 系统服务
-    private lateinit var wifiManager: WifiManager
+    private var wifiManager: WifiManager? = null
     private lateinit var audioManager: AudioManager
-    private lateinit var bluetoothAdapter: BluetoothAdapter
+    private var bluetoothAdapter: BluetoothAdapter? = null
     
     // 广播接收器
     private var networkReceiver: BroadcastReceiver? = null
@@ -77,10 +78,20 @@ class QuickSettingsFragment : Fragment() {
      * 初始化系统服务
      */
     private fun initServices() {
-        wifiManager = requireContext().applicationContext
-            .getSystemService(Context.WIFI_SERVICE) as WifiManager
+        try {
+            wifiManager = requireContext().applicationContext
+                .getSystemService(Context.WIFI_SERVICE) as? WifiManager
+        } catch (e: Exception) {
+            // WiFi 不可用
+        }
+        
         audioManager = requireContext().getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+        
+        try {
+            bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+        } catch (e: Exception) {
+            // 蓝牙不可用
+        }
     }
 
     /**
@@ -174,27 +185,35 @@ class QuickSettingsFragment : Fragment() {
      * 注册广播接收器
      */
     private fun registerReceivers() {
-        // 网络状态接收器
-        networkReceiver = object : BroadcastReceiver() {
-            override fun onReceive(context: Context?, intent: Intent?) {
-                updateWifiStatus()
+        try {
+            // 网络状态接收器
+            networkReceiver = object : BroadcastReceiver() {
+                override fun onReceive(context: Context?, intent: Intent?) {
+                    updateWifiStatus()
+                }
             }
+            requireContext().registerReceiver(
+                networkReceiver,
+                IntentFilter(WifiManager.WIFI_STATE_CHANGED_ACTION)
+            )
+        } catch (e: Exception) {
+            // 忽略
         }
-        requireContext().registerReceiver(
-            networkReceiver,
-            IntentFilter(WifiManager.WIFI_STATE_CHANGED_ACTION)
-        )
 
-        // 蓝牙状态接收器
-        bluetoothReceiver = object : BroadcastReceiver() {
-            override fun onReceive(context: Context?, intent: Intent?) {
-                updateBluetoothStatus()
+        try {
+            // 蓝牙状态接收器
+            bluetoothReceiver = object : BroadcastReceiver() {
+                override fun onReceive(context: Context?, intent: Intent?) {
+                    updateBluetoothStatus()
+                }
             }
+            requireContext().registerReceiver(
+                bluetoothReceiver,
+                IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
+            )
+        } catch (e: Exception) {
+            // 忽略
         }
-        requireContext().registerReceiver(
-            bluetoothReceiver,
-            IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
-        )
     }
 
     /**
@@ -212,7 +231,7 @@ class QuickSettingsFragment : Fragment() {
      * 更新WiFi状态
      */
     private fun updateWifiStatus() {
-        wifiSwitch.isChecked = wifiManager.isWifiEnabled
+        wifiSwitch.isChecked = wifiManager?.isWifiEnabled == true
     }
 
     /**
@@ -228,7 +247,8 @@ class QuickSettingsFragment : Fragment() {
     private fun updateVolumeDisplay() {
         val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
         val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-        volumeText.text = "${(currentVolume * 100 / maxVolume)}%"
+        val percent = if (maxVolume > 0) (currentVolume * 100 / maxVolume) else 0
+        volumeText.text = "$percent%"
     }
 
     /**
@@ -256,7 +276,7 @@ class QuickSettingsFragment : Fragment() {
      * 设置WiFi开关
      */
     private fun setWifiEnabled(enabled: Boolean) {
-        wifiManager.isWifiEnabled = enabled
+        wifiManager?.isWifiEnabled = enabled
     }
 
     /**
@@ -265,9 +285,9 @@ class QuickSettingsFragment : Fragment() {
     private fun setBluetoothEnabled(enabled: Boolean) {
         if (bluetoothAdapter != null) {
             if (enabled) {
-                bluetoothAdapter.enable()
+                bluetoothAdapter?.enable()
             } else {
-                bluetoothAdapter.disable()
+                bluetoothAdapter?.disable()
             }
         }
     }
@@ -320,11 +340,9 @@ class QuickSettingsFragment : Fragment() {
      */
     private fun setNightMode(enabled: Boolean) {
         if (enabled) {
-            // 切换到深色主题
-            requireContext().setTheme(R.style.Theme_PandaCarLauncher_Night)
+            requireActivity().setTheme(R.style.Theme_PandaCarLauncher_Night)
         } else {
-            // 切换到浅色主题
-            requireContext().setTheme(R.style.Theme_PandaCarLauncher)
+            requireActivity().setTheme(R.style.Theme_PandaCarLauncher)
         }
         
         // 需要重启Activity才能生效

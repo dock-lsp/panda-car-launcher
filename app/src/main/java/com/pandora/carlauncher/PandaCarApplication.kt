@@ -31,11 +31,11 @@ class PandaCarApplication : Application() {
     // 应用级别协程作用域
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     
-    // 首选项管理器
+    // 首选项管理器（主线程初始化，避免竞态）
     lateinit var preferencesManager: PreferencesManager
         private set
     
-    // 车辆连接管理器
+    // 车辆连接管理器（主线程初始化，避免竞态）
     lateinit var carConnectionManager: CarConnectionManager
         private set
     
@@ -62,39 +62,42 @@ class PandaCarApplication : Application() {
         Log.i(TAG, "========== 熊猫车机桌面启动 ==========")
         Log.i(TAG, "应用版本: ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
         Log.i(TAG, "Android版本: ${android.os.Build.VERSION.RELEASE}")
-        Log.i(TAG, "CarLibrary版本: ${CarVersion.getCarLibraryVersion()}")
         
-        // 初始化各模块
+        try {
+            Log.i(TAG, "CarLibrary版本: ${CarVersion.getCarLibraryVersion()}")
+        } catch (e: Exception) {
+            Log.w(TAG, "无法获取CarLibrary版本")
+        }
+        
+        // 在主线程同步初始化核心模块（避免 lateinit 竞态）
         initializeModules()
         
-        // 连接车辆服务
+        // 异步连接车辆服务
         connectToCarService()
         
         Log.i(TAG, "应用初始化完成")
     }
     
     /**
-     * 初始化各功能模块
+     * 初始化各功能模块（主线程同步执行）
      */
     private fun initializeModules() {
-        applicationScope.launch(Dispatchers.IO) {
-            try {
-                // 初始化首选项管理器
-                preferencesManager = PreferencesManager(this@PandaCarApplication)
-                Log.d(TAG, "首选项管理器初始化完成")
-                
-                // 初始化车辆连接管理器
-                carConnectionManager = CarConnectionManager(this@PandaCarApplication)
-                Log.d(TAG, "车辆连接管理器初始化完成")
-                
-            } catch (e: Exception) {
-                Log.e(TAG, "模块初始化失败", e)
-            }
+        try {
+            // 初始化首选项管理器
+            preferencesManager = PreferencesManager(this)
+            Log.d(TAG, "首选项管理器初始化完成")
+            
+            // 初始化车辆连接管理器
+            carConnectionManager = CarConnectionManager(this)
+            Log.d(TAG, "车辆连接管理器初始化完成")
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "模块初始化失败", e)
         }
     }
     
     /**
-     * 连接Android Automotive车辆服务
+     * 连接Android Automotive车辆服务（异步）
      */
     private fun connectToCarService() {
         applicationScope.launch(Dispatchers.IO) {
@@ -149,8 +152,6 @@ class PandaCarApplication : Application() {
      */
     private fun enableDrivingMode() {
         Log.d(TAG, "启用驾驶模式")
-        // 通知各个模块进入驾驶模式
-        // 限制视频播放、复杂操作等
     }
     
     /**
@@ -158,7 +159,6 @@ class PandaCarApplication : Application() {
      */
     private fun disableDrivingMode() {
         Log.d(TAG, "禁用驾驶模式")
-        // 恢复所有功能
     }
     
     override fun onTerminate() {

@@ -6,6 +6,7 @@ import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import com.pandora.carlauncher.R
@@ -26,9 +27,9 @@ class StatusBarFragment : Fragment() {
 
     private lateinit var timeText: TextView
     private lateinit var dateText: TextView
-    private lateinit var networkIcon: TextView
-    private lateinit var bluetoothIcon: TextView
-    private lateinit var gpsIcon: TextView
+    private lateinit var networkIcon: ImageView
+    private lateinit var bluetoothIcon: ImageView
+    private lateinit var gpsIcon: ImageView
     
     private val handler = Handler(Looper.getMainLooper())
     private val updateTimeRunnable = object : Runnable {
@@ -76,25 +77,28 @@ class StatusBarFragment : Fragment() {
      * 更新时间显示
      */
     private fun updateTime() {
-        val calendar = Calendar.getInstance()
-        
-        // 格式化时间
-        val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-        val dateFormat = SimpleDateFormat("MM月dd日 E", Locale.getDefault())
-        
-        timeText.text = timeFormat.format(calendar.time)
-        dateText.text = dateFormat.format(calendar.time)
+        try {
+            val calendar = Calendar.getInstance()
+            
+            // 格式化时间
+            val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+            val dateFormat = SimpleDateFormat("MM月dd日 E", Locale.getDefault())
+            
+            timeText.text = timeFormat.format(calendar.time)
+            dateText.text = dateFormat.format(calendar.time)
+        } catch (e: Exception) {
+            // 忽略
+        }
     }
     
     /**
      * 更新状态图标
      */
     private fun updateStatusIcons() {
-        // 实际项目中应该监听广播或检查系统状态
-        // 这里使用占位图标
-        networkIcon.text = "📶"
-        bluetoothIcon.text = "📱"
-        gpsIcon.text = "🛰️"
+        // 默认隐藏状态图标，后续通过广播监听更新
+        networkIcon.visibility = View.INVISIBLE
+        bluetoothIcon.visibility = View.INVISIBLE
+        gpsIcon.visibility = View.INVISIBLE
     }
     
     override fun onDestroyView() {
