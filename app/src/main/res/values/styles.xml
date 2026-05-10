@@ -15,7 +15,6 @@
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:colorControlHighlight">@color/ripple_color</item>
         <item name="android:colorControlActivated">@color/primary</item>
-        <item name="android:colorEdgeEffect">@color/glow_primary</item>
     </style>
 
     <style name="Theme.PandaCarLauncher.Home" parent="Theme.PandaCarLauncher">
@@ -120,15 +119,12 @@
         <item name="android:progressTint">@color/glow_primary</item>
         <item name="android:progressBackgroundTint">@color/switch_track</item>
         <item name="android:thumbTint">@color/glow_primary</item>
-        <item name="android:indeterminateTint">@color/glow_primary</item>
     </style>
 
     <!-- ===== 开关样式 ===== -->
     <style name="SwitchStyle" parent="Widget.MaterialComponents.CompoundButton.Switch">
         <item name="trackTint">@color/switch_track</item>
         <item name="thumbTint">@color/switch_thumb</item>
-        <item name="track">@drawable/switch_track</item>
-        <item name="thumb">@drawable/switch_thumb</item>
     </style>
 
     <!-- ===== 标签样式 ===== -->
@@ -139,15 +135,12 @@
         <item name="chipStrokeColor">@color/border_subtle</item>
         <item name="chipStrokeWidth">1dp</item>
         <item name="rippleColor">@color/ripple_color</item>
-        <item name="selectedChipBackgroundColor">@color/primary</item>
-        <item name="selectedTextColor">@color/black</item>
     </style>
 
     <!-- ===== 列表项样式 ===== -->
     <style name="ListItemStyle">
         <item name="android:padding">@dimen/item_padding</item>
         <item name="android:background">?attr/selectableItemBackground</item>
-        <item name="android:foreground">?attr/selectableItemBackgroundBorderless</item>
     </style>
 
     <!-- ===== Dock样式 ===== -->
@@ -162,17 +155,12 @@
     <style name="DialogStyle" parent="ThemeOverlay.MaterialComponents.Dialog.Alert">
         <item name="android:background">@color/dialog_background</item>
         <item name="android:textColor">@color/text_primary</item>
-        <item name="android:colorAccent">@color/primary</item>
-        <item name="android:colorControlActivated">@color/primary</item>
+        <item name="colorAccent">@color/primary</item>
     </style>
 
     <!-- ===== Ripple 效果样式 ===== -->
     <style name="RippleStyle">
         <item name="android:colorControlHighlight">@color/ripple_color</item>
         <item name="android:foreground">?attr/selectableItemBackgroundBorderless</item>
-    </style>
-
-    <style name="RippleStyle.Rounded">
-        <item name="android:colorControlHighlight">@color/ripple_color</item>
     </style>
 </resources>
