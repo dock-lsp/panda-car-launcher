@@ -1,6 +1,7 @@
 package com.pandora.carlauncher
 
 import android.app.Application
+import android.content.SharedPreferences
 import android.util.Log
 
 /**
@@ -68,14 +69,12 @@ class PandaCarApplication : Application() {
      */
     inner class PreferencesManager(private val context: Application) {
 
-        private val prefs = context.getSharedPreferences("panda_car_prefs", MODE_PRIVATE)
+        private val prefs: SharedPreferences = context.getSharedPreferences("panda_car_prefs", MODE_PRIVATE)
 
-        companion object {
-            private const val KEY_NIGHT_MODE = "night_mode"
-            private const val KEY_DRIVING_MODE = "driving_mode"
-            private const val KEY_VOLUME = "volume"
-            private const val KEY_BRIGHTNESS = "brightness"
-        }
+        private val KEY_NIGHT_MODE = "night_mode"
+        private val KEY_DRIVING_MODE = "driving_mode"
+        private val KEY_VOLUME = "volume"
+        private val KEY_BRIGHTNESS = "brightness"
 
         /**
          * 设置夜间模式
