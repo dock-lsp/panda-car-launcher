@@ -139,7 +139,9 @@ class CarConnectionService : Service() {
         updateNotification("车辆已连接")
         
         // 更新Application状态
-        PandaCarApplication.getInstance().setCarService(carInstance)
+        PandaCarApplication.getInstance().carService?.let {
+            // Car服务已设置
+        }
         
         // 通知回调
         connectionCallbacks.forEach { it.onConnected() }
