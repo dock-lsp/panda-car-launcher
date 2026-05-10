@@ -17,19 +17,37 @@ android {
 
     signingConfigs {
         release {
-            storeFile file('keystore/release.jks')
-            storePassword 'qq900236'
-            keyAlias 'release'
-            keyPassword 'qq900236'
+            // 从环境变量读取签名配置（GitHub Actions）
+            // 本地开发时使用 keystore 文件
+            def keystoreFile = file('keystore/release.jks')
+            if (keystoreFile.exists()) {
+                storeFile keystoreFile
+                storePassword project.hasProperty('KEYSTORE_PASSWORD') ? 
+                    project.property('KEYSTORE_PASSWORD') : 'qq900236'
+                keyAlias project.hasProperty('KEY_ALIAS') ? 
+                    project.property('KEY_ALIAS') : 'release'
+                keyPassword project.hasProperty('KEY_PASSWORD') ? 
+                    project.property('KEY_PASSWORD') : 'qq900236'
+            } else {
+                // CI 环境下由 GitHub Actions 处理签名
+                storeFile file('keystore/release.jks')
+                storePassword 'android'
+                keyAlias 'androiddebugkey'
+                keyPassword 'android'
+            }
         }
     }
 
     buildTypes {
         release {
             minifyEnabled false
+            shrinkResources false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
         }
         debug {
+            applicationIdSuffix '.debug'
+            versionNameSuffix '-debug'
             signingConfig signingConfigs.debug
         }
     }
@@ -45,6 +63,17 @@ android {
 
     buildFeatures {
         viewBinding true
+    }
+
+    // 输出 APK 文件名格式
+    applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            def appName = "PandaCarLauncher"
+            def buildType = variant.buildType.name
+            def versionName = variant.versionName
+            def date = new Date().format('yyyyMMdd')
+            outputFileName = "${appName}-${buildType}-v${versionName}-${date}.apk"
+        }
     }
 }
 

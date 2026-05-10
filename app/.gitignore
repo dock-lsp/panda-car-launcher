@@ -1,0 +1,6 @@
+
+# 签名文件
+app/keystore/*.jks
+app/keystore/*.keystore
+*.jks
+*.keystore
