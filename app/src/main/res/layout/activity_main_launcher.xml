@@ -1,56 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/home_background"
-    tools:context=".ui.activity.MainLauncherActivity">
+    android:orientation="vertical"
+    android:gravity="center"
+    android:background="#FF1A1A2E">
 
-    <!-- 主内容区域 -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="熊猫车机桌面"
+        android:textColor="#FFFFFF"
+        android:textSize="32sp"
+        android:textStyle="bold" />
 
-        <!-- 顶部状态栏 -->
-        <FrameLayout
-            android:id="@+id/status_bar_container"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/bg_status_bar_gradient"
-            android:padding="@dimen/spacing_small" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="应用启动成功"
+        android:textColor="#00D4AA"
+        android:textSize="18sp" />
 
-        <!-- 主内容ViewPager -->
-        <androidx.viewpager2.widget.ViewPager2
-            android:id="@+id/main_view_pager"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:orientation="horizontal" />
-
-        <!-- 页面指示器 -->
-        <com.google.android.material.tabs.TabLayout
-            android:id="@+id/page_indicator"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="@dimen/spacing_small"
-            app:tabBackground="@drawable/selector_page_indicator"
-            app:tabGravity="center"
-            app:tabIndicatorColor="@color/primary"
-            app:tabIndicatorHeight="0dp"
-            app:tabMaxWidth="16dp"
-            app:tabMinWidth="16dp"
-            app:tabPaddingEnd="6dp"
-            app:tabPaddingStart="6dp" />
-
-        <!-- 底部Dock -->
-        <FrameLayout
-            android:id="@+id/dock_container"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-
-    </LinearLayout>
-
-</FrameLayout>
+</LinearLayout>
