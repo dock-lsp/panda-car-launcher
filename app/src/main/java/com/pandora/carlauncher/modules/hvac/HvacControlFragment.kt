@@ -130,7 +130,7 @@ class HvacControlFragment : Fragment() {
             val car = app.carService
             
             if (car != null && car.isConnected) {
-                carClimateManager = car.getCarManager(CarClimateManager.class) as CarClimateManager
+                carClimateManager = car.getCarManager(CarClimateManager::class.java) as? CarClimateManager
                 Log.i(TAG, "CarClimateManager初始化成功")
             } else {
                 Log.w(TAG, "Car服务未连接，使用模拟模式")

@@ -284,11 +284,10 @@ class AppListAdapter(
 ) : RecyclerView.Adapter<AppListAdapter.ViewHolder>() {
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val icon: ImageView = view.findViewById(R.id.iv_icon)
-        val name: TextView = view.findViewById(R.id.tv_name)
-        val packageName: TextView = view.findViewById(R.id.tv_package)
-        val version: TextView = view.findViewById(R.id.tv_version)
-        val systemBadge: TextView = view.findViewById(R.id.tv_system)
+        val icon: ImageView = view.findViewById(R.id.iv_app_icon)
+        val name: TextView = view.findViewById(R.id.tv_app_name)
+        val packageName: TextView = view.findViewById(R.id.tv_package_name)
+        val systemBadge: TextView = view.findViewById(R.id.tv_system_badge)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -303,7 +302,6 @@ class AppListAdapter(
         holder.icon.setImageDrawable(app.icon)
         holder.name.text = app.appName
         holder.packageName.text = app.packageName
-        holder.version.text = "v${app.versionName}"
         holder.systemBadge.visibility = if (app.isSystemApp) View.VISIBLE else View.GONE
         
         holder.itemView.setOnClickListener {

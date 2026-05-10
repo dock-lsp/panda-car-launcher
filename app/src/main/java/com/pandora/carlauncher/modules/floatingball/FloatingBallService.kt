@@ -235,11 +235,6 @@ class FloatingBallService : android.app.Service() {
             hideMenu()
         }
         
-        menuView.findViewById<View>(R.id.menu_recent)?.setOnClickListener {
-            openRecentApps()
-            hideMenu()
-        }
-        
         menuView.findViewById<View>(R.id.menu_voice)?.setOnClickListener {
             startVoiceAssistant()
             hideMenu()

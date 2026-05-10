@@ -4,6 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
+import android.util.Log
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
@@ -71,11 +72,6 @@ class FileManagerActivity : AppCompatActivity() {
      * 设置UI
      */
     private fun setupUI() {
-        // Toolbar
-        binding.toolbar.setNavigationOnClickListener {
-            onBackPressedDispatcher.onBackPressed()
-        }
-        
         // 路径显示
         updatePathDisplay()
         
@@ -116,13 +112,6 @@ class FileManagerActivity : AppCompatActivity() {
         binding.btnSort.setOnClickListener {
             showSortDialog()
         }
-        
-        // 文件类型选择
-        binding.chipAll.setOnClickListener { setFileType(TYPE_ALL) }
-        binding.chipImage.setOnClickListener { setFileType(TYPE_IMAGE) }
-        binding.chipAudio.setOnClickListener { setFileType(TYPE_AUDIO) }
-        binding.chipVideo.setOnClickListener { setFileType(TYPE_VIDEO) }
-        binding.chipDocument.setOnClickListener { setFileType(TYPE_DOCUMENT) }
     }
 
     /**
@@ -620,7 +609,7 @@ class FileListAdapter(
         
         holder.icon.setImageResource(
             if (item.isDirectory) android.R.drawable.ic_menu_agenda
-            else android.R.drawable.ic_menu_document
+            else android.R.drawable.ic_menu_edit
         )
         
         holder.name.text = item.name
