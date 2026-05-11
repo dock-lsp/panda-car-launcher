@@ -19,13 +19,16 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:orientation="vertical"
-        android:padding="@dimen/card_margin">
+        android:paddingStart="@dimen/card_margin"
+        android:paddingEnd="@dimen/card_margin"
+        android:paddingTop="@dimen/spacing_sm"
+        android:paddingBottom="@dimen/spacing_sm">
 
-        <!-- 主卡片区域：地图 + 音乐 -->
+        <!-- 主卡片区域：地图 + 音乐（占主要空间） -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="2"
+            android:layout_weight="3"
             android:orientation="horizontal"
             android:baselineAligned="false">
 
@@ -49,14 +52,13 @@
 
         </LinearLayout>
 
-        <!-- 应用网格区域 -->
-        <include
-            android:id="@+id/app_grid"
-            layout="@layout/layout_app_grid"
+        <!-- 应用网格区域（缩小占比） -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_app_grid"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:layout_marginTop="@dimen/card_margin" />
+            android:layout_marginTop="@dimen/spacing_sm" />
 
     </LinearLayout>
 
