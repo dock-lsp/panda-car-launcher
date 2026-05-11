@@ -2,7 +2,10 @@ package com.pandora.carlauncher
 
 import android.content.Context
 import android.content.pm.ApplicationInfo
+import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
+import android.os.Build
+import android.util.Log
 
 /**
  * 应用识别工具类
@@ -10,9 +13,8 @@ import android.content.pm.PackageManager
  */
 object AppRecognizer {
 
-    /**
-     * 应用分类
-     */
+    private const val TAG = "AppRecognizer"
+
     enum class AppCategory(val label: String) {
         NAVIGATION("导航"),
         MUSIC("音乐"),
@@ -23,114 +25,146 @@ object AppRecognizer {
     }
 
     /**
-     * 导航类应用包名列表（含共存版）
+     * 导航类应用基础包名（不含共存版后缀）
      */
-    private val NAVIGATION_PACKAGES = listOf(
-        // 高德地图
-        "com.autonavi.minimap",
-        "com.autonavi.minimap:1",           // 高德地图共存版
-        "com.autonavi.xmgd",                // 高德地图车机版
-        "com.autonavi.amapauto",            // 高德地图车机版(新版)
-        // 百度地图
-        "com.baidu.BaiduMap",
-        "com.baidu.BaiduMap:1",             // 百度地图共存版
-        "com.baidu.baidumap",               // 百度地图(备用包名)
-        // 腾讯地图
-        "com.tencent.map",
-        "com.tencent.map:1",                // 腾讯地图共存版
-        // Google Maps
-        "com.google.android.apps.maps",
-        // 搜狗地图
-        "com.sogou.map",
-        // 凯立德
-        "com.careland.ck100",
-        // 导航犬
-        "com.daodao.android"
+    private val NAVIGATION_BASE_PACKAGES = listOf(
+        "com.autonavi.minimap",          // 高德地图
+        "com.autonavi.xmgd",             // 高德地图车机版
+        "com.autonavi.amapauto",         // 高德地图车机版(新版)
+        "com.baidu.BaiduMap",            // 百度地图
+        "com.baidu.baidumap",            // 百度地图(备用)
+        "com.tencent.map",               // 腾讯地图
+        "com.google.android.apps.maps",  // Google Maps
+        "com.sogou.map",                 // 搜狗地图
+        "com.careland.ck100",            // 凯立德
+        "com.daodao.android",            // 导航犬
+        "com.autonavi.minimap.auto",     // 高德车机版(另一包名)
+        "com.baidu.navi",                // 百度导航
+        "com.tencent.navii",             // 腾讯车载导航
+        "com.gd.map",                    // 高德地图(部分设备)
+        "cn.gov.cnnavic",                // 中国交通通
+        "com.mapbar.android.preload",    // 图吧地图
+        "com.autonavi.auto",             // 高德汽车版
+        "com.baidu.carlife",             // 百度CarLife
+        "com.tencent.carlife"            // 腾讯CarLife
     )
 
     /**
-     * 音乐类应用包名列表（含共存版）
+     * 音乐类应用基础包名（不含共存版后缀）
      */
-    private val MUSIC_PACKAGES = listOf(
-        // 酷我音乐
-        "cn.kuwo.player",
-        "cn.kuwo.player:1",                // 酷我音乐共存版
-        "cn.kuwo.player:2",                // 酷我音乐共存版2
-        // QQ音乐
-        "com.tencent.qqmusic",
-        "com.tencent.qqmusic:1",           // QQ音乐共存版
-        "com.tencent.qqmusic:2",           // QQ音乐共存版2
-        // 网易云音乐
-        "com.netease.cloudmusic",
-        "com.netease.cloudmusic:1",        // 网易云音乐共存版
-        "com.netease.cloudmusic:2",        // 网易云音乐共存版2
-        // 酷狗音乐
-        "com.kugou.android",
-        "com.kugou.android:1",             // 酷狗音乐共存版
-        // 咪咕音乐
-        "cmccwm.mobilemusic",
-        // 汽水音乐
-        "com.ss.android.ugc.aweme.lite",    // 抖音汽水音乐
-        // Spotify
-        "com.spotify.music",
-        // Apple Music
-        "com.apple.android.music"
+    private val MUSIC_BASE_PACKAGES = listOf(
+        "cn.kuwo.player",                // 酷我音乐
+        "com.tencent.qqmusic",           // QQ音乐
+        "com.netease.cloudmusic",        // 网易云音乐
+        "com.kugou.android",             // 酷狗音乐
+        "cmccwm.mobilemusic",            // 咪咕音乐
+        "com.spotify.music",             // Spotify
+        "com.apple.android.music",       // Apple Music
+        "com.kuwo.player",               // 酷我音乐(备用包名)
+        "com.kugou.music",               // 酷狗音乐(备用)
+        "com.ting.mp3android",           // 蜻蜓FM
+        "fm.qingting.qtradio",           // 蜻蜓FM(备用)
+        "com.ximalaya.ting.android",     // 喜马拉雅
+        "air.tv.douyu.android",          // 斗鱼(音频)
+        "com.ss.android.ugc.aweme.lite",  // 汽水音乐
+        "com.himalaya.soft.player",      // 喜马拉雅(备用)
+        "com.tencent.qqmusiclite",       // QQ音乐轻享版
+        "com.netease.cloudmusic.lite",   // 网易云音乐概念版
+        "cn.kuwo.car",                   // 酷我音乐车机版
+        "com.tencent.qqmusic.car"        // QQ音乐车机版
     )
 
     /**
-     * 视频类应用包名列表
+     * 视频类应用包名
      */
     private val VIDEO_PACKAGES = listOf(
-        "com.tencent.qqlive",              // 腾讯视频
-        "com.qiyi.video",                  // 爱奇艺
-        "com.youku.phone",                 // 优酷
-        "tv.danmaku.bili",                 // 哔哩哔哩
-        "com.ss.android.ugc.aweme"         // 抖音
+        "com.tencent.qqlive",            // 腾讯视频
+        "com.qiyi.video",                // 爱奇艺
+        "com.youku.phone",               // 优酷
+        "tv.danmaku.bili",               // 哔哩哔哩
+        "com.ss.android.ugc.aweme",      // 抖音
+        "com.ss.android.ugc.livelite",   // 抖音直播
+        "com.kuaishou.nebula",           // 快手
+        "com.hunantv.imgo.activity",     // 芒果TV
+        "com.mgtv.tv",                   // 芒果TV(备用)
+        "com.pplive.androidphone",       // PPTV
+        "tv.pptv.hd",                    // PPTV(备用)
+        "com.leiniao.kiwitv",            // 樱花动漫
+        "com.bilibili.roid",             // B站(备用)
+        "com.qiyi.video.lite"            // 爱奇艺极速版
     )
 
     /**
-     * 获取已安装的导航类应用
+     * 获取所有已安装的 PackageInfo
      */
-    fun getInstalledNavigationApps(context: Context): List<AppInfo> {
-        return getInstalledAppsFromList(context, NAVIGATION_PACKAGES)
+    private fun getAllPackageInfos(context: Context): List<PackageInfo> {
+        val pm = context.packageManager
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            pm.getInstalledPackages(PackageManager.PackageInfoFlags.of(
+                PackageManager.MATCH_ALL.toLong()
+            ))
+        } else {
+            @Suppress("DEPRECATION")
+            pm.getInstalledPackages(PackageManager.GET_META_DATA or
+                PackageManager.GET_SHARED_LIBRARY_FILES or
+                PackageManager.MATCH_UNINSTALLED_PACKAGES or
+                PackageManager.MATCH_DISABLED_COMPONENTS)
+        }
     }
 
     /**
-     * 获取已安装的音乐类应用
+     * 获取已安装的导航类应用（自动识别共存版）
+     */
+    fun getInstalledNavigationApps(context: Context): List<AppInfo> {
+        return findAppsByBasePackages(context, NAVIGATION_BASE_PACKAGES, AppCategory.NAVIGATION)
+    }
+
+    /**
+     * 获取已安装的音乐类应用（自动识别共存版）
      */
     fun getInstalledMusicApps(context: Context): List<AppInfo> {
-        return getInstalledAppsFromList(context, MUSIC_PACKAGES)
+        return findAppsByBasePackages(context, MUSIC_BASE_PACKAGES, AppCategory.MUSIC)
     }
 
     /**
      * 获取已安装的视频类应用
      */
     fun getInstalledVideoApps(context: Context): List<AppInfo> {
-        return getInstalledAppsFromList(context, VIDEO_PACKAGES)
+        return findAppsByBasePackages(context, VIDEO_PACKAGES, AppCategory.VIDEO)
     }
 
     /**
-     * 从包名列表中筛选已安装的应用
+     * 根据基础包名列表查找已安装应用（含共存版）
+     * 共存版包名格式: com.xxx.app:1, com.xxx.app:2 等
      */
-    private fun getInstalledAppsFromList(
+    private fun findAppsByBasePackages(
         context: Context,
-        packageNames: List<String>
+        basePackages: List<String>,
+        category: AppCategory
     ): List<AppInfo> {
         val pm = context.packageManager
         val result = mutableListOf<AppInfo>()
-        for (pkg in packageNames) {
-            try {
-                val appInfo = pm.getApplicationInfo(pkg, 0)
-                result.add(
-                    AppInfo(
-                        packageName = pkg,
-                        appName = appInfo.loadLabel(pm).toString(),
-                        icon = appInfo.loadIcon(pm),
-                        isSystemApp = (appInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0
+        val allPackages = getAllPackageInfos(context)
+
+        for (pkgInfo in allPackages) {
+            val pkgName = pkgInfo.packageName
+            val baseName = pkgName.substringBefore(":")
+
+            if (basePackages.contains(baseName)) {
+                try {
+                    val appInfo = pm.getApplicationInfo(pkgName, 0)
+                    result.add(
+                        AppInfo(
+                            packageName = pkgName,
+                            appName = appInfo.loadLabel(pm).toString(),
+                            icon = appInfo.loadIcon(pm),
+                            isSystemApp = (appInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0,
+                            category = category
+                        )
                     )
-                )
-            } catch (e: PackageManager.NameNotFoundException) {
-                // 应用未安装，跳过
+                } catch (e: Exception) {
+                    Log.w(TAG, "获取应用信息失败: $pkgName", e)
+                }
             }
         }
         return result
@@ -140,21 +174,23 @@ object AppRecognizer {
      * 判断包名是否为共存版应用
      */
     fun isDualApp(packageName: String): Boolean {
-        return packageName.contains(":1") || packageName.contains(":2") || packageName.contains(":3")
+        val userId = packageName.substringAfter(":", "")
+        return userId.isNotEmpty() && userId.all { it.isDigit() }
     }
 
     /**
      * 获取应用分类
      */
     fun getCategory(packageName: String): AppCategory {
+        val baseName = packageName.substringBefore(":")
         return when {
-            NAVIGATION_PACKAGES.contains(packageName) -> AppCategory.NAVIGATION
-            MUSIC_PACKAGES.contains(packageName) -> AppCategory.MUSIC
-            VIDEO_PACKAGES.contains(packageName) -> AppCategory.VIDEO
-            packageName.contains("social") || packageName.contains("chat") || 
-                packageName.contains("wechat") || packageName.contains("qq") -> AppCategory.SOCIAL
-            packageName.contains("tool") || packageName.contains("file") ||
-                packageName.contains("clean") || packageName.contains("manager") -> AppCategory.TOOL
+            NAVIGATION_BASE_PACKAGES.contains(baseName) -> AppCategory.NAVIGATION
+            MUSIC_BASE_PACKAGES.contains(baseName) -> AppCategory.MUSIC
+            VIDEO_PACKAGES.contains(baseName) -> AppCategory.VIDEO
+            baseName.contains("social") || baseName.contains("chat") ||
+                baseName.contains("wechat") || baseName.contains(".qq") -> AppCategory.SOCIAL
+            baseName.contains("tool") || baseName.contains("file") ||
+                baseName.contains("clean") || baseName.contains("manager") -> AppCategory.TOOL
             else -> AppCategory.OTHER
         }
     }
@@ -164,18 +200,22 @@ object AppRecognizer {
      */
     fun getAllInstalledApps(context: Context): List<AppInfo> {
         val pm = context.packageManager
-        return pm.getInstalledApplications(PackageManager.GET_META_DATA)
-            .filter { 
-                (it.flags and ApplicationInfo.FLAG_SYSTEM) == 0 && it.packageName != context.packageName
+        val allPackages = getAllPackageInfos(context)
+        return allPackages
+            .filter {
+                val appInfo = it.applicationInfo
+                (appInfo.flags and ApplicationInfo.FLAG_SYSTEM) == 0 &&
+                it.packageName != context.packageName
             }
-            .sortedBy { it.loadLabel(pm).toString().lowercase() }
-            .map {
+            .sortedBy { it.applicationInfo.loadLabel(pm).toString().lowercase() }
+            .map { pkgInfo ->
+                val appInfo = pkgInfo.applicationInfo
                 AppInfo(
-                    packageName = it.packageName,
-                    appName = it.loadLabel(pm).toString(),
-                    icon = it.loadIcon(pm),
+                    packageName = pkgInfo.packageName,
+                    appName = appInfo.loadLabel(pm).toString(),
+                    icon = appInfo.loadIcon(pm),
                     isSystemApp = false,
-                    category = getCategory(it.packageName)
+                    category = getCategory(pkgInfo.packageName)
                 )
             }
     }
@@ -186,14 +226,11 @@ object AppRecognizer {
     fun searchApps(context: Context, query: String): List<AppInfo> {
         if (query.isBlank()) return getAllInstalledApps(context)
         return getAllInstalledApps(context).filter {
-            it.appName.contains(query, ignoreCase = true) || 
+            it.appName.contains(query, ignoreCase = true) ||
             it.packageName.contains(query, ignoreCase = true)
         }
     }
 
-    /**
-     * 应用信息
-     */
     data class AppInfo(
         val packageName: String,
         val appName: String,
@@ -202,6 +239,6 @@ object AppRecognizer {
         val category: AppCategory = AppCategory.OTHER
     ) {
         val isDualApp: Boolean
-            get() = packageName.contains(":")
+            get() = isDualApp(packageName)
     }
 }

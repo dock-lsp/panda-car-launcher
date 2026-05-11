@@ -1,5 +1,6 @@
 package com.pandora.carlauncher
 
+import android.Manifest
 import android.app.AlertDialog
 import android.app.Dialog
 import android.content.Context
@@ -8,9 +9,11 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.media.AudioManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.Environment
 import android.provider.Settings
 import android.util.Log
 import android.view.Gravity
@@ -18,6 +21,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import org.json.JSONArray
 import org.json.JSONObject
 import java.text.SimpleDateFormat
@@ -30,6 +35,7 @@ class MainActivity : AppCompatActivity() {
         const val PREF_NAME = "panda_launcher_prefs"
         const val KEY_CUSTOM_APPS = "custom_apps"
         const val MAX_CUSTOM_APPS = 5
+        private const val PERMISSION_REQUEST_CODE = 1001
     }
 
     private val handler = Handler(Looper.getMainLooper())
@@ -55,6 +61,7 @@ class MainActivity : AppCompatActivity() {
         updateTime()
         handler.post(updateTimeRunnable)
 
+        requestPermissions()
         loadCustomApps()
         setupBottomNavigation()
         setupCardClicks()
@@ -62,9 +69,49 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        // 从应用管理页返回时刷新自定义应用
         loadCustomApps()
         renderCustomApps()
+    }
+
+    /**
+     * 请求必要权限
+     */
+    private fun requestPermissions() {
+        val permissionsToRequest = mutableListOf<String>()
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+                permissionsToRequest.add(Manifest.permission.READ_EXTERNAL_STORAGE)
+            }
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+                permissionsToRequest.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            }
+        }
+
+        if (permissionsToRequest.isNotEmpty()) {
+            ActivityCompat.requestPermissions(
+                this,
+                permissionsToRequest.toTypedArray(),
+                PERMISSION_REQUEST_CODE
+            )
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            for (i in permissions.indices) {
+                if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
+                    Log.w(TAG, "权限被拒绝: ${permissions[i]}")
+                }
+            }
+        }
     }
 
     private fun updateTime() {
@@ -113,12 +160,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupCardClicks() {
-        // 地图卡片
         findViewById<View>(R.id.card_map)?.setOnClickListener {
             openFirstAvailableNavigation()
         }
 
-        // 音乐卡片
         findViewById<View>(R.id.card_music)?.setOnClickListener {
             openFirstAvailableMusic()
         }
@@ -132,7 +177,7 @@ class MainActivity : AppCompatActivity() {
         if (navApps.isNotEmpty()) {
             openApp(navApps[0].packageName, navApps[0].appName)
         } else {
-            Toast.makeText(this, "未安装导航应用", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "未检测到导航应用\n请确认已安装高德/百度/腾讯地图", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -144,7 +189,7 @@ class MainActivity : AppCompatActivity() {
         if (musicApps.isNotEmpty()) {
             openApp(musicApps[0].packageName, musicApps[0].appName)
         } else {
-            Toast.makeText(this, "未安装音乐应用", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "未检测到音乐应用\n请确认已安装酷我/QQ/网易云音乐", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -155,13 +200,7 @@ class MainActivity : AppCompatActivity() {
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 startActivity(intent)
             } else {
-                try {
-                    val marketIntent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName"))
-                    marketIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    startActivity(marketIntent)
-                } catch (e: Exception) {
-                    Toast.makeText(this, "$appName 未安装", Toast.LENGTH_SHORT).show()
-                }
+                Toast.makeText(this, "$appName 无法启动", Toast.LENGTH_SHORT).show()
             }
         } catch (e: Exception) {
             Log.e(TAG, "打开应用失败: $packageName", e)
@@ -225,21 +264,22 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
-        val installedApps = packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
-            .filter {
-                it.flags and ApplicationInfo.FLAG_SYSTEM == 0 && it.packageName != packageName
-            }
-            .sortedBy { it.loadLabel(packageManager).toString() }
+        // 使用 AppRecognizer 获取所有已安装应用
+        val allApps = AppRecognizer.getAllInstalledApps(this)
+        if (allApps.isEmpty()) {
+            Toast.makeText(this, "未检测到已安装应用", Toast.LENGTH_SHORT).show()
+            return
+        }
 
-        val appNames = installedApps.map { it.loadLabel(packageManager).toString() }.toTypedArray()
+        val appNames = allApps.map { it.appName }.toTypedArray()
 
         AlertDialog.Builder(this)
             .setTitle(R.string.custom_app_add_title)
             .setItems(appNames) { _, which ->
-                val appInfo = installedApps[which]
+                val appInfo = allApps[which]
                 val customApp = CustomApp(
                     packageName = appInfo.packageName,
-                    appName = appInfo.loadLabel(packageManager).toString()
+                    appName = appInfo.appName
                 )
                 customApps.add(customApp)
                 saveCustomApps()
