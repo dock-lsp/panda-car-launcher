@@ -1,4 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- 应用名称 -->
     <string name="app_name">熊猫车机桌面</string>
+    
+    <!-- 状态栏 -->
+    <string name="status_bar_time_format">HH:mm</string>
+    <string name="status_bar_date_format">MM月dd日 EEEE</string>
+    
+    <!-- 底部导航 -->
+    <string name="nav_home">主页</string>
+    <string name="nav_navigation">导航</string>
+    <string name="nav_music">音乐</string>
+    <string name="nav_car">车辆</string>
+    <string name="nav_settings">设置</string>
+    
+    <!-- 地图卡片 -->
+    <string name="map_card_title">高德地图</string>
+    <string name="map_card_slogan">连接真实世界</string>
+    <string name="map_card_subtitle">让出行更美好</string>
+    <string name="map_card_open">打开地图</string>
+    
+    <!-- 音乐卡片 -->
+    <string name="music_card_title">酷我音乐</string>
+    <string name="music_no_playing">暂无播放</string>
+    <string name="music_unknown_artist">未知歌手</string>
+    
+    <!-- 应用名称 -->
+    <string name="app_my_apps">我的应用</string>
+    <string name="app_settings">系统设置</string>
+    <string name="app_theme">主题中心</string>
+    <string name="app_music">酷我音乐</string>
+    <string name="app_store">应用商店</string>
+    <string name="app_car_service">车主服务</string>
+    <string name="app_file_manager">文件管理</string>
+    <string name="app_more">更多</string>
+    
+    <!-- 通用 -->
+    <string name="loading">加载中...</string>
+    <string name="no_data">暂无数据</string>
+    <string name="confirm">确定</string>
+    <string name="cancel">取消</string>
 </resources>

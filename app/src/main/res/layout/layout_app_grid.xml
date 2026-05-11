@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:columnCount="6"
+    android:rowCount="2"
+    android:alignmentMode="alignMargins"
+    android:columnOrderPreserved="false"
+    android:padding="@dimen/spacing_sm">
+
+    <!-- 我的应用 -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="1"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="@dimen/spacing_sm">
+
+        <ImageView
+            android:layout_width="@dimen/app_icon_size"
+            android:layout_height="@dimen/app_icon_size"
+            android:src="@drawable/ic_apps"
+            android:background="@drawable/bg_icon_blue"
+            android:padding="16dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_xs"
+            android:text="@string/app_my_apps"
+            android:textColor="@color/text_secondary"
+            android:textSize="@dimen/text_size_micro" />
+
+    </LinearLayout>
+
+    <!-- 系统设置 -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="1"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="@dimen/spacing_sm">
+
+        <ImageView
+            android:layout_width="@dimen/app_icon_size"
+            android:layout_height="@dimen/app_icon_size"
+            android:src="@drawable/ic_settings"
+            android:background="@drawable/bg_icon_orange"
+            android:padding="16dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_xs"
+            android:text="@string/app_settings"
+            android:textColor="@color/text_secondary"
+            android:textSize="@dimen/text_size_micro" />
+
+    </LinearLayout>
+
+    <!-- 主题中心 -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="1"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="@dimen/spacing_sm">
+
+        <ImageView
+            android:layout_width="@dimen/app_icon_size"
+            android:layout_height="@dimen/app_icon_size"
+            android:src="@drawable/ic_music"
+            android:background="@drawable/bg_icon_cyan"
+            android:padding="16dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_xs"
+            android:text="@string/app_theme"
+            android:textColor="@color/text_secondary"
+            android:textSize="@dimen/text_size_micro" />
+
+    </LinearLayout>
+
+    <!-- 酷我音乐 -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="1"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="@dimen/spacing_sm">
+
+        <ImageView
+            android:layout_width="@dimen/app_icon_size"
+            android:layout_height="@dimen/app_icon_size"
+            android:src="@drawable/ic_music"
+            android:background="@drawable/bg_icon_orange"
+            android:padding="16dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_xs"
+            android:text="@string/app_music"
+            android:textColor="@color/text_secondary"
+            android:textSize="@dimen/text_size_micro" />
+
+    </LinearLayout>
+
+    <!-- 应用商店 -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="1"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="@dimen/spacing_sm">
+
+        <ImageView
+            android:layout_width="@dimen/app_icon_size"
+            android:layout_height="@dimen/app_icon_size"
+            android:src="@drawable/ic_apps"
+            android:background="@drawable/bg_icon_green"
+            android:padding="16dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_xs"
+            android:text="@string/app_store"
+            android:textColor="@color/text_secondary"
+            android:textSize="@dimen/text_size_micro" />
+
+    </LinearLayout>
+
+    <!-- 车主服务 -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="1"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="@dimen/spacing_sm">
+
+        <ImageView
+            android:layout_width="@dimen/app_icon_size"
+            android:layout_height="@dimen/app_icon_size"
+            android:src="@drawable/ic_car"
+            android:background="@drawable/bg_icon_blue"
+            android:padding="16dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_xs"
+            android:text="@string/app_car_service"
+            android:textColor="@color/text_secondary"
+            android:textSize="@dimen/text_size_micro" />
+
+    </LinearLayout>
+
+</GridLayout>
