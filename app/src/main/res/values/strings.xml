@@ -13,6 +13,8 @@
     <string name="nav_music">音乐</string>
     <string name="nav_car">车辆</string>
     <string name="nav_settings">设置</string>
+    <string name="nav_volume">音量</string>
+    <string name="nav_add">添加</string>
     
     <!-- 地图卡片 -->
     <string name="map_card_title">高德地图</string>
@@ -35,9 +37,22 @@
     <string name="app_file_manager">文件管理</string>
     <string name="app_more">更多</string>
     
+    <!-- 自定义应用 -->
+    <string name="custom_app_add_title">添加应用</string>
+    <string name="custom_app_max_reached">最多只能添加5个自定义应用</string>
+    <string name="custom_app_delete_hint">长按删除</string>
+    <string name="custom_app_delete_confirm">确定删除此应用吗？</string>
+    
+    <!-- 音量调节 -->
+    <string name="volume_title">音量调节</string>
+    <string name="volume_media">媒体音量</string>
+    <string name="volume_ring">铃声音量</string>
+    <string name="volume_alarm">闹钟音量</string>
+    
     <!-- 通用 -->
     <string name="loading">加载中...</string>
     <string name="no_data">暂无数据</string>
     <string name="confirm">确定</string>
     <string name="cancel">取消</string>
+    <string name="delete">删除</string>
 </resources>

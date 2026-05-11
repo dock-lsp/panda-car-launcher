@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 中等屏幕适配 (手机横屏/小平板) -->
+<resources>
+    <dimen name="text_size_title">24sp</dimen>
+    <dimen name="text_size_large">20sp</dimen>
+    <dimen name="text_size_normal">16sp</dimen>
+    <dimen name="text_size_medium">14sp</dimen>
+    <dimen name="text_size_small">12sp</dimen>
+    <dimen name="text_size_micro">11sp</dimen>
+    
+    <dimen name="status_bar_height">44dp</dimen>
+    <dimen name="status_bar_time_size">28sp</dimen>
+    <dimen name="status_bar_date_size">14sp</dimen>
+    
+    <dimen name="card_corner_radius">14dp</dimen>
+    <dimen name="card_margin">10dp</dimen>
+    <dimen name="card_padding">14dp</dimen>
+    
+    <dimen name="app_icon_size">56dp</dimen>
+    <dimen name="app_icon_corner">11dp</dimen>
+    <dimen name="app_grid_spacing">14dp</dimen>
+    
+    <dimen name="bottom_nav_height">64dp</dimen>
+    <dimen name="bottom_nav_icon_size">24dp</dimen>
+    <dimen name="bottom_nav_item_width">56dp</dimen>
+    
+    <dimen name="spacing_xs">3dp</dimen>
+    <dimen name="spacing_sm">6dp</dimen>
+    <dimen name="spacing_md">10dp</dimen>
+    <dimen name="spacing_lg">16dp</dimen>
+    <dimen name="spacing_xl">20dp</dimen>
+</resources>

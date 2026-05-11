@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 超大屏幕适配 (大屏车机) -->
+<resources>
+    <dimen name="text_size_title">36sp</dimen>
+    <dimen name="text_size_large">30sp</dimen>
+    <dimen name="text_size_normal">24sp</dimen>
+    <dimen name="text_size_medium">20sp</dimen>
+    <dimen name="text_size_small">18sp</dimen>
+    <dimen name="text_size_micro">16sp</dimen>
+    
+    <dimen name="status_bar_height">64dp</dimen>
+    <dimen name="status_bar_time_size">48sp</dimen>
+    <dimen name="status_bar_date_size">20sp</dimen>
+    
+    <dimen name="card_corner_radius">20dp</dimen>
+    <dimen name="card_margin">20dp</dimen>
+    <dimen name="card_padding">24dp</dimen>
+    
+    <dimen name="app_icon_size">96dp</dimen>
+    <dimen name="app_icon_corner">16dp</dimen>
+    <dimen name="app_grid_spacing">24dp</dimen>
+    
+    <dimen name="bottom_nav_height">88dp</dimen>
+    <dimen name="bottom_nav_icon_size">34dp</dimen>
+    <dimen name="bottom_nav_item_width">80dp</dimen>
+    
+    <dimen name="spacing_xs">8dp</dimen>
+    <dimen name="spacing_sm">12dp</dimen>
+    <dimen name="spacing_md">20dp</dimen>
+    <dimen name="spacing_lg">28dp</dimen>
+    <dimen name="spacing_xl">40dp</dimen>
+</resources>
