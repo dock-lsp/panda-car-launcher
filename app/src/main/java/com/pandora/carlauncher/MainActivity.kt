@@ -152,41 +152,51 @@ class MainActivity : AppCompatActivity() {
      */
     private fun getGridApps(): List<GridApp> {
         val apps = mutableListOf<GridApp>()
-        val pm = packageManager
+        
+        try {
+            // 固定快捷入口
+            apps.add(GridApp(appName = "应用管理", iconRes = R.drawable.ic_apps, iconBg = R.drawable.bg_icon_blue) {
+                startActivity(Intent(this, AppManagerActivity::class.java))
+            })
+            apps.add(GridApp(appName = "系统设置", iconRes = R.drawable.ic_settings, iconBg = R.drawable.bg_icon_orange) {
+                startActivity(Intent(this, SettingsActivity::class.java))
+            })
+            apps.add(GridApp(appName = "主题中心", iconRes = R.drawable.ic_music, iconBg = R.drawable.bg_icon_cyan) {
+                Toast.makeText(this, "主题中心开发中", Toast.LENGTH_SHORT).show()
+            })
 
-        // 固定快捷入口
-        apps.add(GridApp(appName = "应用管理", iconRes = R.drawable.ic_apps, iconBg = R.drawable.bg_icon_blue) {
-            startActivity(Intent(this, AppManagerActivity::class.java))
-        })
-        apps.add(GridApp(appName = "系统设置", iconRes = R.drawable.ic_settings, iconBg = R.drawable.bg_icon_orange) {
-            startActivity(Intent(this, SettingsActivity::class.java))
-        })
-        apps.add(GridApp(appName = "主题中心", iconRes = R.drawable.ic_music, iconBg = R.drawable.bg_icon_cyan) {
-            Toast.makeText(this, "主题中心开发中", Toast.LENGTH_SHORT).show()
-        })
+            // 动态检测音乐应用
+            val musicApps = AppRecognizer.getInstalledMusicApps(this)
+            if (musicApps.isNotEmpty()) {
+                val musicApp = musicApps[0]
+                apps.add(GridApp(appName = musicApp.appName, icon = musicApp.icon, iconBg = R.drawable.bg_icon_orange) {
+                    openApp(musicApp.packageName, musicApp.appName)
+                })
+            }
 
-        // 动态检测音乐应用
-        val musicApps = AppRecognizer.getInstalledMusicApps(this)
-        if (musicApps.isNotEmpty()) {
-            val musicApp = musicApps[0]
-            apps.add(GridApp(appName = musicApp.appName, icon = musicApp.icon, iconBg = R.drawable.bg_icon_orange) {
-                openApp(musicApp.packageName, musicApp.appName)
+            // 动态检测导航应用
+            val navApps = AppRecognizer.getInstalledNavigationApps(this)
+            if (navApps.isNotEmpty()) {
+                val navApp = navApps[0]
+                apps.add(GridApp(appName = navApp.appName, icon = navApp.icon, iconBg = R.drawable.bg_icon_green) {
+                    openApp(navApp.packageName, navApp.appName)
+                })
+            }
+
+            // 文件管理
+            apps.add(GridApp(appName = "文件管理", iconRes = R.drawable.ic_file, iconBg = R.drawable.bg_icon_blue) {
+                openFileManager()
+            })
+        } catch (e: Exception) {
+            Log.e(TAG, "获取应用列表失败", e)
+            // 至少返回固定入口
+            apps.add(GridApp(appName = "应用管理", iconRes = R.drawable.ic_apps, iconBg = R.drawable.bg_icon_blue) {
+                startActivity(Intent(this, AppManagerActivity::class.java))
+            })
+            apps.add(GridApp(appName = "系统设置", iconRes = R.drawable.ic_settings, iconBg = R.drawable.bg_icon_orange) {
+                startActivity(Intent(this, SettingsActivity::class.java))
             })
         }
-
-        // 动态检测导航应用
-        val navApps = AppRecognizer.getInstalledNavigationApps(this)
-        if (navApps.isNotEmpty()) {
-            val navApp = navApps[0]
-            apps.add(GridApp(appName = navApp.appName, icon = navApp.icon, iconBg = R.drawable.bg_icon_green) {
-                openApp(navApp.packageName, navApp.appName)
-            })
-        }
-
-        // 文件管理
-        apps.add(GridApp(appName = "文件管理", iconRes = R.drawable.ic_file, iconBg = R.drawable.bg_icon_blue) {
-            openFileManager()
-        })
 
         return apps
     }
