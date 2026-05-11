@@ -1,9 +1,7 @@
 package com.pandora.carlauncher
 
-import android.Manifest
 import android.app.AlertDialog
 import android.app.Dialog
-import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
@@ -18,11 +16,8 @@ import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import org.json.JSONArray
 import org.json.JSONObject
 import java.text.SimpleDateFormat
@@ -32,26 +27,18 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "MainActivity"
-        private const val PREF_NAME = "panda_launcher_prefs"
-        private const val KEY_CUSTOM_APPS = "custom_apps"
-        private const val MAX_CUSTOM_APPS = 5
-        
-        // 常用应用包名
-        private const val PACKAGE_AMAP = "com.autonavi.minimap" // 高德地图
-        private const val PACKAGE_KUWO = "cn.kuwo.player" // 酷我音乐
-        private const val PACKAGE_QQMUSIC = "com.tencent.qqmusic" // QQ音乐
-        private const val PACKAGE_NETEASE_MUSIC = "com.netease.cloudmusic" // 网易云音乐
-        private const val PACKAGE_FILE_MANAGER = "com.android.documentsui" // 文件管理
-        private const val PACKAGE_APP_STORE = "com.android.vending" // Google Play
+        const val PREF_NAME = "panda_launcher_prefs"
+        const val KEY_CUSTOM_APPS = "custom_apps"
+        const val MAX_CUSTOM_APPS = 5
     }
 
     private val handler = Handler(Looper.getMainLooper())
     private val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
     private val dateFormat = SimpleDateFormat("MM月dd日 EEEE", Locale.getDefault())
-    
+
     private lateinit var audioManager: AudioManager
     private var customApps = mutableListOf<CustomApp>()
-    
+
     private val updateTimeRunnable = object : Runnable {
         override fun run() {
             updateTime()
@@ -62,21 +49,22 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        
+
         audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        
-        // 初始化时间显示
+
         updateTime()
         handler.post(updateTimeRunnable)
-        
-        // 加载自定义应用
+
         loadCustomApps()
-        
-        // 设置底部导航栏
         setupBottomNavigation()
-        
-        // 设置卡片点击事件
         setupCardClicks()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // 从应用管理页返回时刷新自定义应用
+        loadCustomApps()
+        renderCustomApps()
     }
 
     private fun updateTime() {
@@ -86,72 +74,77 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupBottomNavigation() {
-        // 主页按钮 - 刷新当前页面
+        // 主页按钮
         findViewById<LinearLayout>(R.id.nav_home)?.setOnClickListener {
             Toast.makeText(this, "主页", Toast.LENGTH_SHORT).show()
         }
-        
-        // 导航按钮 - 打开高德地图
+
+        // 导航按钮 - 支持共存版识别
         findViewById<LinearLayout>(R.id.nav_navigation)?.setOnClickListener {
-            openApp(PACKAGE_AMAP, "高德地图")
+            openFirstAvailableNavigation()
         }
-        
-        // 音乐按钮 - 打开音乐应用
+
+        // 音乐按钮 - 支持共存版识别
         findViewById<LinearLayout>(R.id.nav_music)?.setOnClickListener {
-            // 优先打开酷我，其次QQ音乐，再网易云音乐
-            val musicPackages = listOf(PACKAGE_KUWO, PACKAGE_QQMUSIC, PACKAGE_NETEASE_MUSIC)
-            var opened = false
-            for (pkg in musicPackages) {
-                if (isAppInstalled(pkg)) {
-                    openApp(pkg, "音乐")
-                    opened = true
-                    break
-                }
-            }
-            if (!opened) {
-                Toast.makeText(this, "未安装音乐应用", Toast.LENGTH_SHORT).show()
-            }
+            openFirstAvailableMusic()
         }
-        
-        // 应用商店按钮
+
+        // 应用管理按钮
         findViewById<LinearLayout>(R.id.nav_app_store)?.setOnClickListener {
-            openApp(PACKAGE_APP_STORE, "应用商店")
+            startActivity(Intent(this, AppManagerActivity::class.java))
         }
-        
+
         // 文件管理按钮
         findViewById<LinearLayout>(R.id.nav_file_manager)?.setOnClickListener {
             openFileManager()
         }
-        
+
         // 音量调节按钮
         findViewById<LinearLayout>(R.id.nav_volume)?.setOnClickListener {
             showVolumeDialog()
         }
-        
+
         // 添加按钮
         findViewById<LinearLayout>(R.id.nav_add)?.setOnClickListener {
             showAddAppDialog()
         }
-        
-        // 渲染自定义应用
+
         renderCustomApps()
     }
 
     private fun setupCardClicks() {
-        // 地图卡片 - 打开地图
+        // 地图卡片
         findViewById<View>(R.id.card_map)?.setOnClickListener {
-            openApp(PACKAGE_AMAP, "高德地图")
+            openFirstAvailableNavigation()
         }
-        
-        // 音乐卡片 - 打开音乐
+
+        // 音乐卡片
         findViewById<View>(R.id.card_music)?.setOnClickListener {
-            val musicPackages = listOf(PACKAGE_KUWO, PACKAGE_QQMUSIC, PACKAGE_NETEASE_MUSIC)
-            for (pkg in musicPackages) {
-                if (isAppInstalled(pkg)) {
-                    openApp(pkg, "音乐")
-                    break
-                }
-            }
+            openFirstAvailableMusic()
+        }
+    }
+
+    /**
+     * 打开第一个可用的导航应用（支持共存版）
+     */
+    private fun openFirstAvailableNavigation() {
+        val navApps = AppRecognizer.getInstalledNavigationApps(this)
+        if (navApps.isNotEmpty()) {
+            openApp(navApps[0].packageName, navApps[0].appName)
+        } else {
+            Toast.makeText(this, "未安装导航应用", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /**
+     * 打开第一个可用的音乐应用（支持共存版）
+     */
+    private fun openFirstAvailableMusic() {
+        val musicApps = AppRecognizer.getInstalledMusicApps(this)
+        if (musicApps.isNotEmpty()) {
+            openApp(musicApps[0].packageName, musicApps[0].appName)
+        } else {
+            Toast.makeText(this, "未安装音乐应用", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -162,7 +155,6 @@ class MainActivity : AppCompatActivity() {
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 startActivity(intent)
             } else {
-                // 应用未安装，打开应用市场搜索
                 try {
                     val marketIntent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName"))
                     marketIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -179,14 +171,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun openFileManager() {
         try {
-            // 尝试打开系统文件管理器
             val intent = Intent(Intent.ACTION_VIEW).apply {
                 setDataAndType(Uri.parse("content://com.android.externalstorage.documents"), "vnd.android.document/root")
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
             startActivity(intent)
         } catch (e: Exception) {
-            // 备用方案
             try {
                 val intent = Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS)
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -202,62 +192,31 @@ class MainActivity : AppCompatActivity() {
         dialog.setContentView(R.layout.dialog_volume)
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
         dialog.window?.setGravity(Gravity.BOTTOM)
-        
-        // 媒体音量
-        val seekMedia = dialog.findViewById<SeekBar>(R.id.seek_media_volume)
-        val tvMedia = dialog.findViewById<TextView>(R.id.tv_media_volume)
-        val maxMedia = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-        seekMedia?.max = maxMedia
-        seekMedia?.progress = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-        tvMedia?.text = "${seekMedia?.progress}/${maxMedia}"
-        seekMedia?.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                if (fromUser) {
-                    audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, progress, 0)
-                    tvMedia?.text = "$progress/$maxMedia"
-                }
-            }
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
-        })
-        
-        // 铃声音量
-        val seekRing = dialog.findViewById<SeekBar>(R.id.seek_ring_volume)
-        val tvRing = dialog.findViewById<TextView>(R.id.tv_ring_volume)
-        val maxRing = audioManager.getStreamMaxVolume(AudioManager.STREAM_RING)
-        seekRing?.max = maxRing
-        seekRing?.progress = audioManager.getStreamVolume(AudioManager.STREAM_RING)
-        tvRing?.text = "${seekRing?.progress}/${maxRing}"
-        seekRing?.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                if (fromUser) {
-                    audioManager.setStreamVolume(AudioManager.STREAM_RING, progress, 0)
-                    tvRing?.text = "$progress/$maxRing"
-                }
-            }
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
-        })
-        
-        // 闹钟音量
-        val seekAlarm = dialog.findViewById<SeekBar>(R.id.seek_alarm_volume)
-        val tvAlarm = dialog.findViewById<TextView>(R.id.tv_alarm_volume)
-        val maxAlarm = audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM)
-        seekAlarm?.max = maxAlarm
-        seekAlarm?.progress = audioManager.getStreamVolume(AudioManager.STREAM_ALARM)
-        tvAlarm?.text = "${seekAlarm?.progress}/${maxAlarm}"
-        seekAlarm?.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                if (fromUser) {
-                    audioManager.setStreamVolume(AudioManager.STREAM_ALARM, progress, 0)
-                    tvAlarm?.text = "$progress/$maxAlarm"
-                }
-            }
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
-        })
-        
+
+        setupVolumeSeek(dialog, R.id.seek_media_volume, R.id.tv_media_volume, AudioManager.STREAM_MUSIC)
+        setupVolumeSeek(dialog, R.id.seek_ring_volume, R.id.tv_ring_volume, AudioManager.STREAM_RING)
+        setupVolumeSeek(dialog, R.id.seek_alarm_volume, R.id.tv_alarm_volume, AudioManager.STREAM_ALARM)
+
         dialog.show()
+    }
+
+    private fun setupVolumeSeek(dialog: Dialog, seekId: Int, tvId: Int, streamType: Int) {
+        val seek = dialog.findViewById<SeekBar>(seekId)
+        val tv = dialog.findViewById<TextView>(tvId)
+        val max = audioManager.getStreamMaxVolume(streamType)
+        seek?.max = max
+        seek?.progress = audioManager.getStreamVolume(streamType)
+        tv?.text = "${seek?.progress}/$max"
+        seek?.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                if (fromUser) {
+                    audioManager.setStreamVolume(streamType, progress, 0)
+                    tv?.text = "$progress/$max"
+                }
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
     }
 
     private fun showAddAppDialog() {
@@ -265,17 +224,15 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, R.string.custom_app_max_reached, Toast.LENGTH_SHORT).show()
             return
         }
-        
-        // 获取已安装应用列表
+
         val installedApps = packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
-            .filter { 
-                // 过滤掉系统应用和本应用
+            .filter {
                 it.flags and ApplicationInfo.FLAG_SYSTEM == 0 && it.packageName != packageName
             }
             .sortedBy { it.loadLabel(packageManager).toString() }
-        
+
         val appNames = installedApps.map { it.loadLabel(packageManager).toString() }.toTypedArray()
-        
+
         AlertDialog.Builder(this)
             .setTitle(R.string.custom_app_add_title)
             .setItems(appNames) { _, which ->
@@ -296,27 +253,23 @@ class MainActivity : AppCompatActivity() {
     private fun renderCustomApps() {
         val container = findViewById<LinearLayout>(R.id.custom_apps_container) ?: return
         container.removeAllViews()
-        
+
         for ((index, app) in customApps.withIndex()) {
             val itemView = LayoutInflater.from(this).inflate(R.layout.item_custom_app, container, false)
-            
-            // 设置图标
+
             try {
                 val icon = packageManager.getApplicationIcon(app.packageName)
                 itemView.findViewById<ImageView>(R.id.iv_icon)?.setImageDrawable(icon)
             } catch (e: Exception) {
                 itemView.findViewById<ImageView>(R.id.iv_icon)?.setImageResource(R.drawable.ic_apps)
             }
-            
-            // 设置名称
+
             itemView.findViewById<TextView>(R.id.tv_name)?.text = app.appName
-            
-            // 点击打开应用
+
             itemView.setOnClickListener {
                 openApp(app.packageName, app.appName)
             }
-            
-            // 长按删除
+
             itemView.setOnLongClickListener {
                 AlertDialog.Builder(this)
                     .setTitle(R.string.delete)
@@ -331,21 +284,13 @@ class MainActivity : AppCompatActivity() {
                     .show()
                 true
             }
-            
+
             container.addView(itemView)
         }
     }
 
-    private fun isAppInstalled(packageName: String): Boolean {
-        return try {
-            packageManager.getPackageInfo(packageName, 0)
-            true
-        } catch (e: Exception) {
-            false
-        }
-    }
-
     private fun loadCustomApps() {
+        customApps.clear()
         val prefs = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
         val json = prefs.getString(KEY_CUSTOM_APPS, "[]") ?: "[]"
         try {
@@ -378,7 +323,7 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
         handler.removeCallbacks(updateTimeRunnable)
     }
-    
+
     data class CustomApp(
         val packageName: String,
         val appName: String

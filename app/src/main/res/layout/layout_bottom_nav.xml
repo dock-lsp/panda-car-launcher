@@ -83,7 +83,7 @@
 
     </LinearLayout>
 
-    <!-- 应用商店 -->
+    <!-- 应用管理 -->
     <LinearLayout
         android:id="@+id/nav_app_store"
         android:layout_width="@dimen/bottom_nav_item_width"
@@ -102,7 +102,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
-            android:text="@string/app_store"
+            android:text="@string/app_my_apps"
             android:textColor="@color/text_secondary"
             android:textSize="@dimen/text_size_micro" />
 
