@@ -57,20 +57,32 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setupFullScreen()
-        setContentView(R.layout.activity_main)
+        try {
+            super.onCreate(savedInstanceState)
+            setupFullScreen()
+            setContentView(R.layout.activity_main)
 
-        audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+            audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
-        updateTime()
-        handler.post(updateTimeRunnable)
+            updateTime()
+            handler.post(updateTimeRunnable)
 
-        requestPermissions()
-        loadCustomApps()
-        setupAppGrid()
-        setupBottomNavigation()
-        setupCardClicks()
+            requestPermissions()
+            loadCustomApps()
+            setupAppGrid()
+            setupBottomNavigation()
+            setupCardClicks()
+        } catch (e: Exception) {
+            Log.e(TAG, "onCreate 崩溃", e)
+            // 尝试最小化布局
+            try {
+                super.onCreate(savedInstanceState)
+                setContentView(R.layout.activity_main)
+            } catch (e2: Exception) {
+                Log.e(TAG, "最小化布局也失败", e2)
+                Toast.makeText(this, "启动失败: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
     }
 
     override fun onResume() {
