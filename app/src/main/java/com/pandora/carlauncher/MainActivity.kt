@@ -399,7 +399,8 @@ class MainActivity : AppCompatActivity() {
             .setItems(appNames) { _, which ->
                 val appInfo = allApps[which]
                 customApps.add(CustomApp(appInfo.packageName, appInfo.appName))
-                saveCustomApps(); renderCustomApps()
+                saveCustomApps()
+                setupBottomAppsRecyclerView() // 刷新底部应用列表
                 Toast.makeText(this, "已添加: ${appInfo.appName}", Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton(R.string.cancel, null).show()
