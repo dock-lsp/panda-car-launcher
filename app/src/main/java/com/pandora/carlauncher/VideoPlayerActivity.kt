@@ -219,20 +219,6 @@ class VideoPlayerActivity : AppCompatActivity(), SurfaceHolder.Callback {
      * duration 为 0 时延迟重试获取
      */
     private fun retryGetDuration() {
-        durationRetryRunnable?.let { handler.removeCallbacks(it) }
-        durationRetryRunnable = object : Runnable {
-            override fun run() {
-                val duration = mediaPlayer?.duration ?: 0
-                if (duration > 0) {
-                    videoDuration = duration
-                    Log.d(TAG, "retryGetDuration: duration=${videoDuration}ms")
-                    updateDurationDisplay()
-                } else {
-                    // 最多重试 10 次（每次 500ms，共 5 秒）
-                    handler.postDelayed(this, 500)
-                }
-            }
-        }
         var retryCount = 0
         val retryTask = object : Runnable {
             override fun run() {
@@ -249,6 +235,7 @@ class VideoPlayerActivity : AppCompatActivity(), SurfaceHolder.Callback {
                 }
             }
         }
+        durationRetryRunnable = retryTask
         handler.postDelayed(retryTask, 500)
     }
 
