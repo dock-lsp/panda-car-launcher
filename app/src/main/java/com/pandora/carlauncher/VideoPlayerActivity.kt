@@ -1,7 +1,6 @@
 package com.pandora.carlauncher
 
 import android.Manifest
-import android.animation.ObjectAnimator
 import android.app.AlertDialog
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -17,17 +16,15 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.provider.Settings
 import android.util.Log
-import android.view.Gravity
 import android.view.KeyEvent
+import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import java.io.File
 
 /**
  * 视频播放器
@@ -38,6 +35,7 @@ class VideoPlayerActivity : AppCompatActivity() {
     companion object {
         private const val TAG = "VideoPlayer"
         private const val SPEED_LIMIT_KMH = 5.0f
+        private const val SEEK_TIME_MS = 10000 // 快进快退10秒
         const val EXTRA_VIDEO_URI = "extra_video_uri"
         const val EXTRA_VIDEO_TITLE = "extra_video_title"
     }
@@ -48,18 +46,24 @@ class VideoPlayerActivity : AppCompatActivity() {
     private var ivLock: ImageView? = null
     private var ivPlayPause: ImageView? = null
     private var ivBack: ImageView? = null
+    private var ivRewind: ImageView? = null
+    private var ivForward: ImageView? = null
     private var seekBar: SeekBar? = null
     private var tvCurrentTime: TextView? = null
     private var tvTotalTime: TextView? = null
     private var controlPanel: View? = null
     private var lockPanel: View? = null
+    private var lockTouchArea: View? = null
+    private var ivLockUnlock: ImageView? = null
 
     private var isLocked = false
     private var isPlaying = false
     private var currentSpeed = 0f
+    private var isDraggingSeekBar = false
     private var locationManager: LocationManager? = null
     private val handler = Handler(Looper.getMainLooper())
     private var updateRunnable: Runnable? = null
+    private var hideControlRunnable: Runnable? = null
 
     private val speedReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -87,46 +91,64 @@ class VideoPlayerActivity : AppCompatActivity() {
         ivLock = findViewById(R.id.iv_lock)
         ivPlayPause = findViewById(R.id.iv_play_pause)
         ivBack = findViewById(R.id.iv_back)
+        ivRewind = findViewById(R.id.iv_rewind)
+        ivForward = findViewById(R.id.iv_forward)
         seekBar = findViewById(R.id.seek_bar)
         tvCurrentTime = findViewById(R.id.tv_current_time)
         tvTotalTime = findViewById(R.id.tv_total_time)
         controlPanel = findViewById(R.id.control_panel)
         lockPanel = findViewById(R.id.lock_panel)
+        lockTouchArea = findViewById(R.id.lock_touch_area)
+        ivLockUnlock = findViewById(R.id.iv_lock_unlock)
 
         val title = intent.getStringExtra(EXTRA_VIDEO_TITLE) ?: "视频播放"
         tvTitle?.text = title
 
+        // 返回按钮
+        ivBack?.setOnClickListener { finish() }
+
         // 锁屏按钮
-        ivLock?.setOnClickListener {
-            isLocked = !isLocked
-            updateLockState()
-        }
+        ivLock?.setOnClickListener { lockScreen() }
 
         // 播放/暂停
-        ivPlayPause?.setOnClickListener {
-            togglePlayPause()
-        }
+        ivPlayPause?.setOnClickListener { togglePlayPause() }
 
-        // 返回
-        ivBack?.setOnClickListener {
-            finish()
-        }
+        // 快退10秒
+        ivRewind?.setOnClickListener { seekRelative(-SEEK_TIME_MS) }
+
+        // 快进10秒
+        ivForward?.setOnClickListener { seekRelative(SEEK_TIME_MS) }
 
         // 进度条
         seekBar?.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                if (fromUser) videoView?.seekTo(progress)
+                if (fromUser) {
+                    tvCurrentTime?.text = formatTime(progress / 1000)
+                }
             }
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {
+                isDraggingSeekBar = true
+            }
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                isDraggingSeekBar = false
+                videoView?.seekTo(seekBar?.progress ?: 0)
+            }
         })
 
-        // 点击视频区域切换控制面板
-        videoView?.setOnClickListener {
-            if (!isLocked) {
-                toggleControlPanel()
+        // 锁屏面板点击区域 - 点击显示解锁按钮
+        lockTouchArea?.setOnClickListener {
+            if (isLocked) {
+                showUnlockButton()
             }
         }
+
+        // 解锁按钮点击
+        ivLockUnlock?.setOnClickListener {
+            unlockScreen()
+        }
+
+        // 自动隐藏控制面板
+        startHideControlTimer()
     }
 
     private fun setupVideo() {
@@ -139,10 +161,9 @@ class VideoPlayerActivity : AppCompatActivity() {
         val uri = Uri.parse(uriStr)
         videoView?.setVideoURI(uri)
         videoView?.setOnPreparedListener { mp ->
-            mp.isLooping = true
-            mp.start()
+            mp.isLooping = false
             isPlaying = true
-            ivPlayPause?.setImageResource(R.drawable.ic_pause)
+            updatePlayPauseIcon()
             val duration = mp.duration / 1000
             tvTotalTime?.text = formatTime(duration)
             seekBar?.max = mp.duration
@@ -152,6 +173,10 @@ class VideoPlayerActivity : AppCompatActivity() {
             Log.e(TAG, "播放错误: what=$what extra=$extra")
             Toast.makeText(this, "视频播放失败", Toast.LENGTH_SHORT).show()
             true
+        }
+        videoView?.setOnCompletionListener {
+            isPlaying = false
+            updatePlayPauseIcon()
         }
         videoView?.start()
     }
@@ -178,39 +203,85 @@ class VideoPlayerActivity : AppCompatActivity() {
     private fun togglePlayPause() {
         if (isPlaying) {
             videoView?.pause()
-            ivPlayPause?.setImageResource(R.drawable.ic_play)
         } else {
             videoView?.start()
-            ivPlayPause?.setImageResource(R.drawable.ic_pause)
         }
         isPlaying = !isPlaying
+        updatePlayPauseIcon()
+        resetHideControlTimer()
     }
 
-    private fun toggleControlPanel() {
-        val isVisible = controlPanel?.visibility == View.VISIBLE
-        controlPanel?.visibility = if (isVisible) View.GONE else View.VISIBLE
+    private fun updatePlayPauseIcon() {
+        ivPlayPause?.setImageResource(if (isPlaying) R.drawable.ic_pause else R.drawable.ic_play)
+    }
+
+    private fun seekRelative(deltaMs: Int) {
+        videoView?.let {
+            val newPosition = (it.currentPosition + deltaMs).coerceIn(0, it.duration)
+            it.seekTo(newPosition)
+            seekBar?.progress = newPosition
+            tvCurrentTime?.text = formatTime(newPosition / 1000)
+        }
+        resetHideControlTimer()
+    }
+
+    // ===== 锁屏功能 =====
+
+    private fun lockScreen() {
+        isLocked = true
+        controlPanel?.visibility = View.GONE
+        lockPanel?.visibility = View.VISIBLE
+        ivLockUnlock?.visibility = View.GONE // 初始隐藏解锁按钮
+        window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+    }
+
+    private fun unlockScreen() {
+        isLocked = false
         lockPanel?.visibility = View.GONE
+        controlPanel?.visibility = View.VISIBLE
+        ivLock?.setImageResource(R.drawable.ic_unlock)
+        window.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+        resetHideControlTimer()
     }
 
-    private fun updateLockState() {
-        if (isLocked) {
-            controlPanel?.visibility = View.GONE
-            lockPanel?.visibility = View.VISIBLE
-            ivLock?.setImageResource(R.drawable.ic_lock)
-            // 锁屏时隐藏状态栏和导航栏
-            window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
-        } else {
-            lockPanel?.visibility = View.GONE
+    private fun showUnlockButton() {
+        ivLockUnlock?.visibility = View.VISIBLE
+        // 3秒后自动隐藏
+        handler.postDelayed({
+            ivLockUnlock?.visibility = View.GONE
+        }, 3000)
+    }
+
+    // ===== 控制面板自动隐藏 =====
+
+    private fun startHideControlTimer() {
+        hideControlRunnable = Runnable {
+            if (!isLocked && !isDraggingSeekBar) {
+                controlPanel?.visibility = View.GONE
+            }
+        }
+        handler.postDelayed(hideControlRunnable!!, 5000)
+    }
+
+    private fun resetHideControlTimer() {
+        hideControlRunnable?.let { handler.removeCallbacks(it) }
+        handler.postDelayed(hideControlRunnable!!, 5000)
+    }
+
+    private fun showControlPanel() {
+        if (!isLocked) {
             controlPanel?.visibility = View.VISIBLE
-            ivLock?.setImageResource(R.drawable.ic_unlock)
+            resetHideControlTimer()
         }
     }
+
+    // ===== 进度更新 =====
 
     private fun startProgressUpdate() {
         updateRunnable = object : Runnable {
             override fun run() {
                 videoView?.let {
-                    if (it.isPlaying) {
+                    if (it.isPlaying && !isDraggingSeekBar) {
                         seekBar?.progress = it.currentPosition
                         tvCurrentTime?.text = formatTime(it.currentPosition / 1000)
                     }
@@ -230,7 +301,6 @@ class VideoPlayerActivity : AppCompatActivity() {
     // ===== 车速监测 =====
 
     private fun setupSpeedMonitor() {
-        // 启动车速监测服务
         val serviceIntent = Intent(this, SpeedMonitorService::class.java)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(serviceIntent)
@@ -238,7 +308,6 @@ class VideoPlayerActivity : AppCompatActivity() {
             startService(serviceIntent)
         }
 
-        // 同时使用GPS直接获取速度
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
             try {
@@ -249,6 +318,17 @@ class VideoPlayerActivity : AppCompatActivity() {
         } else {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 2001)
         }
+    }
+
+    private val locationListenerGps = object : LocationListener {
+        override fun onLocationChanged(location: Location) {
+            currentSpeed = location.speed * 3.6f
+            tvSpeed?.text = "车速: ${"%.1f".format(currentSpeed)} km/h"
+            checkSpeedLimit()
+        }
+        override fun onStatusChanged(provider: String?, status: Int, extras: android.os.Bundle?) {}
+        override fun onProviderEnabled(provider: String) {}
+        override fun onProviderDisabled(provider: String) {}
     }
 
     private fun registerSpeedReceiver() {
@@ -262,7 +342,6 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     private fun checkSpeedLimit() {
         if (currentSpeed > SPEED_LIMIT_KMH) {
-            // 车速超过5km/h，关闭视频
             videoView?.stopPlayback()
             isPlaying = false
             isLocked = false
@@ -276,39 +355,51 @@ class VideoPlayerActivity : AppCompatActivity() {
         }
     }
 
-    // ===== 按键控制 =====
+    // ===== 按键和触摸控制 =====
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        if (isLocked) {
-            // 锁屏时只允许解锁
-            if (keyCode == KeyEvent.KEYCODE_BACK) {
-                return true // 拦截返回键
-            }
-            return super.onKeyDown(keyCode, event)
-        }
         when (keyCode) {
-            KeyEvent.KEYCODE_BACK -> { finish(); return true }
-            KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_SPACE -> { togglePlayPause(); return true }
+            KeyEvent.KEYCODE_BACK -> {
+                if (isLocked) {
+                    showUnlockButton()
+                    return true
+                }
+                finish()
+                return true
+            }
+            KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_SPACE -> {
+                togglePlayPause()
+                return true
+            }
+            KeyEvent.KEYCODE_DPAD_LEFT -> {
+                seekRelative(-SEEK_TIME_MS)
+                return true
+            }
+            KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                seekRelative(SEEK_TIME_MS)
+                return true
+            }
         }
         return super.onKeyDown(keyCode, event)
     }
 
+    override fun onTouchEvent(event: MotionEvent?): Boolean {
+        if (event?.action == MotionEvent.ACTION_DOWN) {
+            if (isLocked) {
+                showUnlockButton()
+            } else {
+                showControlPanel()
+            }
+        }
+        return super.onTouchEvent(event)
+    }
+
     override fun onDestroy() {
         super.onDestroy()
-        handler.removeCallbacks(updateRunnable ?: return)
+        updateRunnable?.let { handler.removeCallbacks(it) }
+        hideControlRunnable?.let { handler.removeCallbacks(it) }
         try { unregisterReceiver(speedReceiver) } catch (_: Exception) {}
         try { locationManager?.removeUpdates(locationListenerGps) } catch (_: Exception) {}
         stopService(Intent(this, SpeedMonitorService::class.java))
-    }
-
-    private val locationListenerGps = object : LocationListener {
-        override fun onLocationChanged(location: Location) {
-            currentSpeed = location.speed * 3.6f
-            tvSpeed?.text = "车速: ${"%.1f".format(currentSpeed)} km/h"
-            checkSpeedLimit()
-        }
-        override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
-        override fun onProviderEnabled(provider: String) {}
-        override fun onProviderDisabled(provider: String) {}
     }
 }

@@ -12,11 +12,10 @@
         android:layout_gravity="center" />
 
     <!-- 控制面板 -->
-    <LinearLayout
+    <FrameLayout
         android:id="@+id/control_panel"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
         android:background="#80000000"
         android:visibility="visible">
 
@@ -26,12 +25,13 @@
             android:layout_height="48dp"
             android:paddingStart="12dp"
             android:paddingEnd="12dp"
-            android:gravity="center_vertical">
+            android:layout_gravity="top">
 
             <ImageView
                 android:id="@+id/iv_back"
                 android:layout_width="36dp"
                 android:layout_height="36dp"
+                android:layout_centerVertical="true"
                 android:src="@drawable/ic_back"
                 android:padding="6dp"
                 android:background="?android:attr/selectableItemBackgroundBorderless" />
@@ -41,6 +41,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_toEndOf="@id/iv_back"
+                android:layout_centerVertical="true"
                 android:layout_marginStart="8dp"
                 android:text="视频播放"
                 android:textColor="#FFFFFF"
@@ -53,25 +54,48 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
                 android:text="车速: 0.0 km/h"
                 android:textColor="#FF5722"
                 android:textSize="12sp" />
 
         </RelativeLayout>
 
-        <!-- 中间播放按钮 -->
+        <!-- 中间控制区：快退/播放/快进 -->
         <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_weight="1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
             android:gravity="center"
             android:orientation="horizontal">
 
+            <!-- 快退10秒 -->
+            <ImageView
+                android:id="@+id/iv_rewind"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:src="@drawable/ic_rewind"
+                android:padding="8dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless" />
+
+            <!-- 播放/暂停 -->
             <ImageView
                 android:id="@+id/iv_play_pause"
-                android:layout_width="64dp"
-                android:layout_height="64dp"
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:layout_marginStart="32dp"
+                android:layout_marginEnd="32dp"
                 android:src="@drawable/ic_play"
+                android:padding="8dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless" />
+
+            <!-- 快进10秒 -->
+            <ImageView
+                android:id="@+id/iv_forward"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:src="@drawable/ic_forward"
+                android:padding="8dp"
                 android:background="?android:attr/selectableItemBackgroundBorderless" />
 
         </LinearLayout>
@@ -80,11 +104,12 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:paddingStart="12dp"
             android:paddingEnd="12dp"
-            android:paddingBottom="12dp">
+            android:paddingBottom="16dp">
 
             <TextView
                 android:id="@+id/tv_current_time"
@@ -123,27 +148,34 @@
 
         </LinearLayout>
 
-    </LinearLayout>
+    </FrameLayout>
 
-    <!-- 锁屏面板 -->
-    <LinearLayout
+    <!-- 锁屏面板：点击屏幕显示解锁按钮 -->
+    <FrameLayout
         android:id="@+id/lock_panel"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:gravity="bottom"
-        android:padding="24dp"
         android:visibility="gone">
 
+        <!-- 点击区域：点击显示解锁按钮 -->
+        <View
+            android:id="@+id/lock_touch_area"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/transparent" />
+
+        <!-- 解锁按钮：左侧显示 -->
         <ImageView
             android:id="@+id/iv_lock_unlock"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_gravity="end"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_gravity="start|center_vertical"
+            android:layout_marginStart="24dp"
             android:src="@drawable/ic_lock"
-            android:padding="8dp"
-            android:background="?android:attr/selectableItemBackgroundBorderless" />
+            android:padding="12dp"
+            android:background="@drawable/bg_lock_button"
+            android:visibility="gone" />
 
-    </LinearLayout>
+    </FrameLayout>
 
 </FrameLayout>
