@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: write
+  actions: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -46,6 +50,8 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
 
     steps:
     - uses: actions/checkout@v4
@@ -56,10 +62,16 @@ jobs:
         name: debug-apk
         path: ./apk
 
+    - name: Download Release APK
+      uses: actions/download-artifact@v4
+      with:
+        name: release-apk
+        path: ./apk
+
     - name: Get version
       id: version
       run: |
-        VERSION=$(grep "versionName" app/build.gradle | sed 's/.*versionName[[:space:]]*["\x27]\([^"\x27]*\)["\x27].*/\1/')
+        VERSION=$(grep "versionName" app/build.gradle | sed 's/.*versionName[[[:space:]]]*["\x27]\([^"\x27]*\)["\x27].*/\1/')
         DATE=$(date +'%Y%m%d')
         echo "tag=v${VERSION}-${DATE}" >> $GITHUB_OUTPUT
 
