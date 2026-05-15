@@ -51,27 +51,84 @@ object AppRecognizer {
 
     /**
      * 音乐类应用基础包名（不含共存版后缀）
+     * 包含标准版、车机版、IoT版等所有已知变体
+     * 共存版通过 substringBefore(":") 自动匹配
      */
     private val MUSIC_BASE_PACKAGES = listOf(
-        "cn.kuwo.player",                // 酷我音乐
-        "com.tencent.qqmusic",           // QQ音乐
-        "com.netease.cloudmusic",        // 网易云音乐
-        "com.kugou.android",             // 酷狗音乐
+        // ===== 酷我音乐 =====
+        "cn.kuwo.player",                // 酷我音乐(标准版)
+        "cn.kuwo.kwmusiccar",            // 酷我音乐车机版
+        "cn.kuwo.car",                   // 酷我音乐车机版(旧)
+        "com.kuwo.player",               // 酷我音乐(备用包名)
+
+        // ===== QQ音乐 =====
+        "com.tencent.qqmusic",           // QQ音乐(标准版)
+        "com.tencent.qqmusic.car",       // QQ音乐车机版
+        "com.tencent.qqmusiclite",       // QQ音乐轻享版
+        "com.tencent.qqmusic.iot",       // QQ音乐IoT版
+
+        // ===== 网易云音乐 =====
+        "com.netease.cloudmusic",        // 网易云音乐(标准版)
+        "com.netease.cloudmusic.lite",   // 网易云音乐概念版
+        "com.netease.cloudmusic.iot",    // 网易云音乐车机版/IoT版
+
+        // ===== 酷狗音乐 =====
+        "com.kugou.android",             // 酷狗音乐(标准版)
+        "com.kugou.music",               // 酷狗音乐(备用)
+        "com.kugou.car",                 // 酷狗音乐车机版
+
+        // ===== 咪咕音乐 =====
         "cmccwm.mobilemusic",            // 咪咕音乐
+        "cmccwm.music.cmcc",             // 咪咕音乐(新版)
+
+        // ===== 在线音乐 =====
         "com.spotify.music",             // Spotify
         "com.apple.android.music",       // Apple Music
-        "com.kuwo.player",               // 酷我音乐(备用包名)
-        "com.kugou.music",               // 酷狗音乐(备用)
+        "com.google.android.apps.youtube.music", // YouTube Music
+        "com.amazon.mp3",                // Amazon Music
+        "deezer.android.app",            // Deezer
+
+        // ===== 有声/电台 =====
+        "com.ximalaya.ting.android",     // 喜马拉雅
+        "com.himalaya.soft.player",      // 喜马拉雅(备用)
         "com.ting.mp3android",           // 蜻蜓FM
         "fm.qingting.qtradio",           // 蜻蜓FM(备用)
-        "com.ximalaya.ting.android",     // 喜马拉雅
+
+        // ===== 短视频音乐 =====
+        "com.ss.android.ugc.aweme.lite",  // 汽水音乐(抖音)
         "air.tv.douyu.android",          // 斗鱼(音频)
-        "com.ss.android.ugc.aweme.lite",  // 汽水音乐
-        "com.himalaya.soft.player",      // 喜马拉雅(备用)
-        "com.tencent.qqmusiclite",       // QQ音乐轻享版
-        "com.netease.cloudmusic.lite",   // 网易云音乐概念版
-        "cn.kuwo.car",                   // 酷我音乐车机版
-        "com.tencent.qqmusic.car"        // QQ音乐车机版
+
+        // ===== 车机专用音乐 =====
+        "com.kugou.kugoucar",             // 酷狗音乐车机版(新版)
+        "cn.kugou.car",                  // 酷狗音乐车机版(另一包名)
+        "com.tencent.qqmusic.vehicle",   // QQ音乐车载版
+        "com.netease.cloudmusic.vehicle",// 网易云音乐车载版
+        "com.kuwo.vehicle",              // 酷我音乐车载版
+
+        // ===== 其他常见音乐 =====
+        "com.meizu.media.music",         // 魅族音乐
+        "com.samsung.android.music",     // 三星音乐
+        "com.miui.player",               // 小米音乐
+        "com.android.music",             // Android 原生音乐
+        "com.htc.music",                 // HTC音乐
+        "com.asus.music",                // 华硕音乐
+        "com.huawei.music",              // 华为音乐
+        "com.vivo.music",                // vivo音乐
+        "com.oppo.music",                // OPPO音乐
+        "com.coloros.music",             // ColorOS音乐
+        "com.heytap.music",              // realme音乐
+        "com.zte.music",                 // 中兴音乐
+        "com.flyme.music",               // Flyme音乐
+        "com.coolapk.market",            // 酷安(含音乐功能)
+        "com.ruanmei.ichoose",           // 酷安(备用)
+        "player.music.mp3",              // 通用MP3播放器
+        "com.estrongs.android.pop",      // ES文件管理器(含音乐)
+        "com.maxmpz.audioplayer",        // Poweramp
+        "com.mp3.audioplayer",           // MP3播放器
+        "com.andrew.apollo",             // Apollo音乐
+        "com.kmplayer",                  // KMPlayer
+        "com.mxtech.videoplayer.ad",     // MX Player(含音频)
+        "com.mxtech.videoplayer.pro"     // MX Player Pro
     )
 
     /**

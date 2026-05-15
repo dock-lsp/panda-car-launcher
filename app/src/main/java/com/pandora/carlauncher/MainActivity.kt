@@ -242,20 +242,45 @@ class MainActivity : AppCompatActivity() {
 
     private fun openFirstAvailableNavigation() {
         val navApps = AppRecognizer.getInstalledNavigationApps(this)
-        if (navApps.isNotEmpty()) {
-            openApp(navApps[0].packageName, navApps[0].appName)
-        } else {
-            Toast.makeText(this, "未检测到导航应用\n请确认已安装高德/百度/腾讯地图", Toast.LENGTH_LONG).show()
+        if (navApps.isEmpty()) {
+            Toast.makeText(this, "未检测到导航应用\n请确认已安装导航软件", Toast.LENGTH_LONG).show()
+            return
         }
+        if (navApps.size == 1) {
+            openApp(navApps[0].packageName, navApps[0].appName)
+            return
+        }
+        val names = navApps.map {
+            "${it.appName}${if (it.isDualApp) " (共存版)" else ""}"
+        }.toTypedArray()
+        AlertDialog.Builder(this)
+            .setTitle("选择导航应用")
+            .setItems(names) { _, which ->
+                openApp(navApps[which].packageName, navApps[which].appName)
+            }
+            .show()
     }
 
     private fun openFirstAvailableMusic() {
         val musicApps = AppRecognizer.getInstalledMusicApps(this)
-        if (musicApps.isNotEmpty()) {
-            openApp(musicApps[0].packageName, musicApps[0].appName)
-        } else {
-            Toast.makeText(this, "未检测到音乐应用\n请确认已安装酷我/QQ/网易云音乐", Toast.LENGTH_LONG).show()
+        if (musicApps.isEmpty()) {
+            Toast.makeText(this, "未检测到音乐应用\n请确认已安装音乐软件", Toast.LENGTH_LONG).show()
+            return
         }
+        if (musicApps.size == 1) {
+            openApp(musicApps[0].packageName, musicApps[0].appName)
+            return
+        }
+        // 多个音乐应用，弹出选择列表
+        val names = musicApps.map { 
+            "${it.appName}${if (it.isDualApp) " (共存版)" else ""}" 
+        }.toTypedArray()
+        AlertDialog.Builder(this)
+            .setTitle("选择音乐应用")
+            .setItems(names) { _, which ->
+                openApp(musicApps[which].packageName, musicApps[which].appName)
+            }
+            .show()
     }
 
     private fun openApp(packageName: String, appName: String) {
