@@ -20,6 +20,7 @@ import android.util.Log
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.SurfaceHolder
+import android.view.SurfaceView
 import android.view.View
 import android.view.WindowManager
 import android.widget.*
@@ -43,7 +44,6 @@ class VideoPlayerActivity : AppCompatActivity(), SurfaceHolder.Callback {
 
     private var surfaceView: SurfaceView? = null
     private var mediaPlayer: MediaPlayer? = null
-    private var surfaceHolder: SurfaceHolder? = null
     private var videoUri: Uri? = null
     private var videoDuration = 0
 
@@ -92,7 +92,7 @@ class VideoPlayerActivity : AppCompatActivity(), SurfaceHolder.Callback {
     }
 
     private fun initViews() {
-        surfaceView = findViewById(R.id.surface_view)
+        surfaceView = findViewById<SurfaceView>(R.id.surface_view)
         tvTitle = findViewById(R.id.tv_video_title)
         tvSpeed = findViewById(R.id.tv_speed)
         ivLock = findViewById(R.id.iv_lock)
@@ -112,8 +112,7 @@ class VideoPlayerActivity : AppCompatActivity(), SurfaceHolder.Callback {
         tvTitle?.text = title
 
         // SurfaceView 回调
-        surfaceHolder = surfaceView?.holder
-        surfaceHolder?.addCallback(this)
+        surfaceView?.holder?.addCallback(this)
 
         // 返回
         ivBack?.setOnClickListener { finish() }
@@ -165,9 +164,7 @@ class VideoPlayerActivity : AppCompatActivity(), SurfaceHolder.Callback {
 
     override fun surfaceCreated(holder: SurfaceHolder) {
         isSurfaceCreated = true
-        surfaceHolder = holder
-        // 如果已有 URI，开始播放
-        videoUri?.let { prepareAndPlay(it) }
+        videoUri?.let { prepareAndPlay(it, holder) }
     }
 
     override fun surfaceChanged(holder: SurfaceHolder, format: Int, w: Int, h: Int) {}
@@ -179,12 +176,12 @@ class VideoPlayerActivity : AppCompatActivity(), SurfaceHolder.Callback {
 
     // ===== 播放器核心 =====
 
-    private fun prepareAndPlay(uri: Uri) {
+    private fun prepareAndPlay(uri: Uri, holder: SurfaceHolder) {
         releasePlayer()
         try {
             mediaPlayer = MediaPlayer().apply {
                 setDataSource(this@VideoPlayerActivity, uri)
-                setDisplay(surfaceHolder)
+                setDisplay(holder)
                 setOnPreparedListener { mp ->
                     videoDuration = mp.duration
                     Log.d(TAG, "onPrepared: duration=${videoDuration}ms")
@@ -279,7 +276,10 @@ class VideoPlayerActivity : AppCompatActivity(), SurfaceHolder.Callback {
         }
         videoUri = Uri.parse(uriStr)
         if (isSurfaceCreated) {
-            prepareAndPlay(videoUri!!)
+            val holder = surfaceView?.holder
+            if (holder != null) {
+                prepareAndPlay(videoUri!!, holder)
+            }
         }
         // 如果 Surface 还没创建好，等 surfaceCreated 回调中播放
     }
@@ -298,7 +298,10 @@ class VideoPlayerActivity : AppCompatActivity(), SurfaceHolder.Callback {
         if (requestCode == 1001 && resultCode == RESULT_OK && data?.data != null) {
             videoUri = data.data
             if (isSurfaceCreated) {
-                prepareAndPlay(videoUri!!)
+                val holder = surfaceView?.holder
+                if (holder != null) {
+                    prepareAndPlay(videoUri!!, holder)
+                }
             }
         } else {
             finish()
