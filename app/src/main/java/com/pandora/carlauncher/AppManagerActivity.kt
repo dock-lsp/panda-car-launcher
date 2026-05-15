@@ -1,17 +1,24 @@
 package com.pandora.carlauncher
 
 import android.app.AlertDialog
+import android.app.Dialog
+import android.content.DialogInterface
 import android.content.Intent
+import android.content.pm.PackageInfo
+import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -152,31 +159,122 @@ class AppManagerActivity : AppCompatActivity() {
                     ivIcon.setImageResource(R.drawable.ic_apps)
                 }
 
+                // 点击显示详细信息弹窗
                 itemView.setOnClickListener {
-                    openApp(app.packageName)
-                }
-
-                itemView.setOnLongClickListener {
-                    showAppOptions(app)
-                    true
+                    showAppInfoDialog(app)
                 }
             }
         }
     }
 
-    private fun showAppOptions(app: AppRecognizer.AppInfo) {
-        val options = arrayOf("打开应用", "添加到桌面", "卸载应用")
-        AlertDialog.Builder(this)
-            .setTitle(app.appName)
-            .setItems(options) { _, which ->
-                when (which) {
-                    0 -> openApp(app.packageName)
-                    1 -> addToDesktop(app)
-                    2 -> uninstallApp(app)
-                }
+    /**
+     * 显示应用详细信息弹窗
+     */
+    private fun showAppInfoDialog(app: AppRecognizer.AppInfo) {
+        val dialog = Dialog(this, android.R.style.Theme_Black_NoTitleBar_Fullscreen)
+        dialog.setContentView(R.layout.dialog_app_info)
+        dialog.window?.setGravity(Gravity.CENTER)
+        dialog.window?.setLayout(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+
+        // 设置应用图标
+        dialog.findViewById<ImageView>(R.id.iv_app_icon)?.let {
+            if (app.icon != null) {
+                it.setImageDrawable(app.icon)
+            } else {
+                it.setImageResource(R.drawable.ic_apps)
             }
-            .setNegativeButton("取消", null)
-            .show()
+        }
+
+        // 设置应用名称
+        dialog.findViewById<TextView>(R.id.tv_app_name)?.text = app.appName
+
+        // 设置包名
+        dialog.findViewById<TextView>(R.id.tv_package_name)?.text = "包名: ${app.packageName}"
+
+        // 获取应用详细信息
+        try {
+            val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                packageManager.getPackageInfo(app.packageName, PackageManager.PackageInfoFlags.of(0))
+            } else {
+                @Suppress("DEPRECATION")
+                packageManager.getPackageInfo(app.packageName, 0)
+            }
+
+            // 版本信息
+            val versionName = packageInfo.versionName ?: "未知"
+            val versionCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                packageInfo.longVersionCode.toString()
+            } else {
+                @Suppress("DEPRECATION")
+                packageInfo.versionCode.toString()
+            }
+            dialog.findViewById<TextView>(R.id.tv_version)?.text = "版本: $versionName ($versionCode)"
+
+            // 安装时间
+            val firstInstallTime = packageInfo.firstInstallTime
+            val installDate = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault())
+                .format(java.util.Date(firstInstallTime))
+            dialog.findViewById<TextView>(R.id.tv_install_time)?.text = "安装时间: $installDate"
+
+            // 更新时间和包大小
+            val lastUpdateTime = packageInfo.lastUpdateTime
+            val updateDate = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault())
+                .format(java.util.Date(lastUpdateTime))
+            dialog.findViewById<TextView>(R.id.tv_update_time)?.text = "更新时间: $updateDate"
+
+        } catch (e: Exception) {
+            dialog.findViewById<TextView>(R.id.tv_version)?.text = "版本: 获取失败"
+            dialog.findViewById<TextView>(R.id.tv_install_time)?.text = "安装时间: 获取失败"
+            dialog.findViewById<TextView>(R.id.tv_update_time)?.text = "更新时间: 获取失败"
+        }
+
+        // 启动按钮
+        dialog.findViewById<LinearLayout>(R.id.btn_launch)?.setOnClickListener {
+            dialog.dismiss()
+            openApp(app.packageName)
+        }
+
+        // 卸载按钮
+        dialog.findViewById<LinearLayout>(R.id.btn_uninstall)?.setOnClickListener {
+            dialog.dismiss()
+            uninstallApp(app)
+        }
+
+        // 应用详情按钮
+        dialog.findViewById<LinearLayout>(R.id.btn_app_info)?.setOnClickListener {
+            dialog.dismiss()
+            showAppDetails(app)
+        }
+
+        // 添加到桌面按钮
+        dialog.findViewById<LinearLayout>(R.id.btn_add_desktop)?.setOnClickListener {
+            dialog.dismiss()
+            addToDesktop(app)
+        }
+
+        // 关闭按钮
+        dialog.findViewById<ImageView>(R.id.btn_close)?.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
+
+    /**
+     * 显示应用详情页面（系统设置页面）
+     */
+    private fun showAppDetails(app: AppRecognizer.AppInfo) {
+        try {
+            val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+            intent.data = Uri.parse("package:${app.packageName}")
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(intent)
+        } catch (e: Exception) {
+            Toast.makeText(this, "无法打开应用详情", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun openApp(packageName: String) {

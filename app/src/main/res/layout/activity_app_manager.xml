@@ -5,61 +5,80 @@
     android:orientation="vertical"
     android:background="@color/background">
 
-    <!-- 顶部标题栏 -->
-    <RelativeLayout
+    <!-- 顶部栏：返回 + 标题 + 搜索框（同一行） -->
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:paddingStart="@dimen/spacing_md"
-        android:paddingEnd="@dimen/spacing_md"
-        android:gravity="center_vertical">
+        android:layout_height="44dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp">
 
+        <!-- 返回按钮 -->
         <ImageView
             android:id="@+id/btn_back"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:src="@drawable/ic_back"
-            android:padding="8dp"
+            android:padding="6dp"
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:contentDescription="返回" />
 
+        <!-- 标题 -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_toEndOf="@id/btn_back"
-            android:layout_marginStart="@dimen/spacing_sm"
+            android:layout_marginStart="8dp"
             android:text="应用管理"
             android:textColor="@color/text_primary"
-            android:textSize="@dimen/text_size_large"
+            android:textSize="@dimen/text_size_normal"
             android:textStyle="bold" />
 
-    </RelativeLayout>
+        <!-- 搜索框 -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_weight="1"
+            android:layout_marginStart="12dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_card"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp">
 
-    <!-- 搜索栏 -->
-    <EditText
-        android:id="@+id/et_search"
-        android:layout_width="match_parent"
-        android:layout_height="44dp"
-        android:layout_marginStart="@dimen/spacing_md"
-        android:layout_marginEnd="@dimen/spacing_md"
-        android:layout_marginBottom="@dimen/spacing_sm"
-        android:background="@drawable/bg_card"
-        android:hint="搜索应用..."
-        android:textColorHint="@color/text_hint"
-        android:textColor="@color/text_primary"
-        android:textSize="@dimen/text_size_normal"
-        android:paddingStart="@dimen/spacing_md"
-        android:paddingEnd="@dimen/spacing_md"
-        android:singleLine="true"
-        android:inputType="text" />
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_search"
+                android:alpha="0.6" />
 
-    <!-- 分类标签 -->
+            <EditText
+                android:id="@+id/et_search"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:background="@null"
+                android:hint="搜索应用..."
+                android:textColorHint="@color/text_hint"
+                android:textColor="@color/text_primary"
+                android:textSize="@dimen/text_size_small"
+                android:singleLine="true"
+                android:inputType="text" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- 分类标签栏 -->
     <HorizontalScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:scrollbars="none"
-        android:paddingStart="@dimen/spacing_md"
-        android:paddingEnd="@dimen/spacing_md"
-        android:paddingBottom="@dimen/spacing_sm">
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp">
 
         <LinearLayout
             android:id="@+id/category_tabs"
@@ -70,78 +89,79 @@
             <TextView
                 android:id="@+id/tab_all"
                 android:layout_width="wrap_content"
-                android:layout_height="36dp"
+                android:layout_height="30dp"
                 android:gravity="center"
-                android:paddingStart="@dimen/spacing_md"
-                android:paddingEnd="@dimen/spacing_md"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
                 android:text="全部"
                 android:textColor="@color/primary"
-                android:textSize="@dimen/text_size_medium"
+                android:textSize="@dimen/text_size_small"
                 android:background="@drawable/bg_icon_cyan" />
 
             <TextView
                 android:id="@+id/tab_navigation"
                 android:layout_width="wrap_content"
-                android:layout_height="36dp"
+                android:layout_height="30dp"
                 android:gravity="center"
-                android:layout_marginStart="@dimen/spacing_sm"
-                android:paddingStart="@dimen/spacing_md"
-                android:paddingEnd="@dimen/spacing_md"
+                android:layout_marginStart="8dp"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
                 android:text="导航"
                 android:textColor="@color/text_secondary"
-                android:textSize="@dimen/text_size_medium"
+                android:textSize="@dimen/text_size_small"
                 android:background="@drawable/bg_card" />
 
             <TextView
                 android:id="@+id/tab_music"
                 android:layout_width="wrap_content"
-                android:layout_height="36dp"
+                android:layout_height="30dp"
                 android:gravity="center"
-                android:layout_marginStart="@dimen/spacing_sm"
-                android:paddingStart="@dimen/spacing_md"
-                android:paddingEnd="@dimen/spacing_md"
+                android:layout_marginStart="8dp"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
                 android:text="音乐"
                 android:textColor="@color/text_secondary"
-                android:textSize="@dimen/text_size_medium"
+                android:textSize="@dimen/text_size_small"
                 android:background="@drawable/bg_card" />
 
             <TextView
                 android:id="@+id/tab_video"
                 android:layout_width="wrap_content"
-                android:layout_height="36dp"
+                android:layout_height="30dp"
                 android:gravity="center"
-                android:layout_marginStart="@dimen/spacing_sm"
-                android:paddingStart="@dimen/spacing_md"
-                android:paddingEnd="@dimen/spacing_md"
+                android:layout_marginStart="8dp"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
                 android:text="视频"
                 android:textColor="@color/text_secondary"
-                android:textSize="@dimen/text_size_medium"
+                android:textSize="@dimen/text_size_small"
                 android:background="@drawable/bg_card" />
 
             <TextView
                 android:id="@+id/tab_tool"
                 android:layout_width="wrap_content"
-                android:layout_height="36dp"
+                android:layout_height="30dp"
                 android:gravity="center"
-                android:layout_marginStart="@dimen/spacing_sm"
-                android:paddingStart="@dimen/spacing_md"
-                android:paddingEnd="@dimen/spacing_md"
+                android:layout_marginStart="8dp"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
                 android:text="工具"
                 android:textColor="@color/text_secondary"
-                android:textSize="@dimen/text_size_medium"
+                android:textSize="@dimen/text_size_small"
                 android:background="@drawable/bg_card" />
 
         </LinearLayout>
 
     </HorizontalScrollView>
 
-    <!-- 应用列表 -->
+    <!-- 应用网格列表 -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_app_list"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:paddingStart="@dimen/spacing_md"
-        android:paddingEnd="@dimen/spacing_md" />
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:paddingBottom="8dp" />
 
 </LinearLayout>
