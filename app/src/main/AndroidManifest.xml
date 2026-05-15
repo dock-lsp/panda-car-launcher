@@ -25,6 +25,11 @@
     <!-- 悬浮窗权限 -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+
+    <!-- 定位权限（车速检测） -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <application
         android:name=".PandaApplication"
@@ -64,12 +69,33 @@
             android:exported="false"
             android:theme="@style/Theme.PandaCarLauncher" />
 
+        <!-- 悬浮球设置 -->
+        <activity
+            android:name=".FloatingBallSettingsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.PandaCarLauncher" />
+
+        <!-- 视频播放器 -->
+        <activity
+            android:name=".VideoPlayerActivity"
+            android:exported="false"
+            android:theme="@style/Theme.PandaCarLauncher"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:screenOrientation="sensor" />
+
         <!-- 悬浮球服务 -->
         <service
             android:name=".FloatingBallService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="specialUse" />
+
+        <!-- 车速监测服务 -->
+        <service
+            android:name=".SpeedMonitorService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="location" />
 
         <!-- 画中画Activity -->
         <activity

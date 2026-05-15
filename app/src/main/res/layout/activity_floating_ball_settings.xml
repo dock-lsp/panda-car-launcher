@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- 顶部标题栏 -->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:paddingStart="@dimen/spacing_md"
+            android:paddingEnd="@dimen/spacing_md"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:id="@+id/btn_back"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/ic_back"
+                android:padding="8dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:contentDescription="返回" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@id/btn_back"
+                android:layout_marginStart="@dimen/spacing_sm"
+                android:text="悬浮球设置"
+                android:textColor="@color/text_primary"
+                android:textSize="@dimen/text_size_large"
+                android:textStyle="bold" />
+
+        </RelativeLayout>
+
+        <!-- 悬浮球预览 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:padding="24dp">
+
+            <FrameLayout
+                android:id="@+id/ball_preview"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:background="@drawable/bg_floating_ball">
+
+                <ImageView
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_apps"
+                    android:padding="8dp" />
+
+            </FrameLayout>
+
+        </LinearLayout>
+
+        <!-- 样式设置卡片 -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/card_margin"
+            android:layout_marginEnd="@dimen/card_margin"
+            android:layout_marginBottom="@dimen/spacing_md"
+            app:cardCornerRadius="@dimen/card_corner_radius"
+            app:cardElevation="@dimen/card_elevation"
+            app:cardBackgroundColor="@color/card_glass"
+            xmlns:app="http://schemas.android.com/apk/res-auto">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="@dimen/card_padding">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="样式设置"
+                    android:textColor="@color/text_primary"
+                    android:textSize="@dimen/text_size_normal"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="@dimen/spacing_md" />
+
+                <!-- 颜色选择 -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="悬浮球颜色"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="@dimen/text_size_small" />
+
+                <RadioGroup
+                    android:id="@+id/rg_ball_color"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="@dimen/spacing_sm">
+
+                    <RadioButton android:id="@+id/rb_color_cyan" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="青色" android:textColor="@color/text_primary" android:checked="true" />
+                    <RadioButton android:id="@+id/rb_color_blue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="蓝色" android:textColor="@color/text_primary" />
+                    <RadioButton android:id="@+id/rb_color_green" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="绿色" android:textColor="@color/text_primary" />
+                    <RadioButton android:id="@+id/rb_color_orange" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="橙色" android:textColor="@color/text_primary" />
+
+                </RadioGroup>
+
+                <!-- 大小选择 -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="悬浮球大小"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="@dimen/text_size_small"
+                    android:layout_marginTop="@dimen/spacing_md" />
+
+                <RadioGroup
+                    android:id="@+id/rg_ball_size"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="@dimen/spacing_sm">
+
+                    <RadioButton android:id="@+id/rb_size_small" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="小" android:textColor="@color/text_primary" />
+                    <RadioButton android:id="@+id/rb_size_medium" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="中" android:textColor="@color/text_primary" android:checked="true" />
+                    <RadioButton android:id="@+id/rb_size_large" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="大" android:textColor="@color/text_primary" />
+
+                </RadioGroup>
+
+                <!-- 透明度 -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="透明度"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="@dimen/text_size_small"
+                    android:layout_marginTop="@dimen/spacing_md" />
+
+                <SeekBar
+                    android:id="@+id/seek_ball_alpha"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:max="100"
+                    android:progress="100"
+                    android:layout_marginTop="@dimen/spacing_sm" />
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+        <!-- 功能设置卡片 -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/card_margin"
+            android:layout_marginEnd="@dimen/card_margin"
+            android:layout_marginBottom="@dimen/spacing_md"
+            app:cardCornerRadius="@dimen/card_corner_radius"
+            app:cardElevation="@dimen/card_elevation"
+            app:cardBackgroundColor="@color/card_glass"
+            xmlns:app="http://schemas.android.com/apk/res-auto">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="@dimen/card_padding">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="显示功能"
+                    android:textColor="@color/text_primary"
+                    android:textSize="@dimen/text_size_normal"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="@dimen/spacing_md" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <CheckBox android:id="@+id/cb_func_home" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="桌面" android:textColor="@color/text_primary" android:checked="true" />
+                    <CheckBox android:id="@+id/cb_func_back" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="返回" android:textColor="@color/text_primary" android:checked="true" />
+                    <CheckBox android:id="@+id/cb_func_recent" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="任务" android:textColor="@color/text_primary" android:checked="true" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <CheckBox android:id="@+id/cb_func_music" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="音乐" android:textColor="@color/text_primary" android:checked="true" />
+                    <CheckBox android:id="@+id/cb_func_nav" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="导航" android:textColor="@color/text_primary" android:checked="true" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+        <!-- 底部留白 -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/spacing_lg" />
+
+    </LinearLayout>
+
+</ScrollView>
