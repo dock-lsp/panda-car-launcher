@@ -63,7 +63,7 @@ class VideoPlayerActivity : AppCompatActivity(), SurfaceHolder.Callback {
     private var ivLockUnlock: ImageView? = null
 
     private var isLocked = false
-    private var isPlaying = false
+    private var isVideoPlaying = false
     private var currentSpeed = 0f
     private var isDraggingSeekBar = false
     private var isSurfaceCreated = false
@@ -187,7 +187,7 @@ class VideoPlayerActivity : AppCompatActivity(), SurfaceHolder.Callback {
                     Log.d(TAG, "onPrepared: duration=${videoDuration}ms")
                     updateDurationDisplay()
                     mp.start()
-                    isPlaying = true
+                    isVideoPlaying = true
                     updatePlayPauseIcon()
                     startProgressUpdate()
                     // 如果 duration 仍然为 0，延迟重试
@@ -196,7 +196,7 @@ class VideoPlayerActivity : AppCompatActivity(), SurfaceHolder.Callback {
                     }
                 }
                 setOnCompletionListener {
-                    isPlaying = false
+                    isVideoPlaying = false
                     updatePlayPauseIcon()
                 }
                 setOnErrorListener { _, what, extra ->
@@ -251,7 +251,7 @@ class VideoPlayerActivity : AppCompatActivity(), SurfaceHolder.Callback {
             mediaPlayer?.release()
         } catch (_: Exception) {}
         mediaPlayer = null
-        isPlaying = false
+        isVideoPlaying = false
         videoDuration = 0
     }
 
@@ -299,19 +299,19 @@ class VideoPlayerActivity : AppCompatActivity(), SurfaceHolder.Callback {
 
     private fun togglePlayPause() {
         mediaPlayer?.let { mp ->
-            if (isPlaying) {
+            if (isVideoPlaying) {
                 mp.pause()
             } else {
                 mp.start()
             }
-            isPlaying = !isPlaying
+            isVideoPlaying = !isVideoPlaying
             updatePlayPauseIcon()
             resetHideControlTimer()
         }
     }
 
     private fun updatePlayPauseIcon() {
-        ivPlayPause?.setImageResource(if (isPlaying) R.drawable.ic_pause else R.drawable.ic_play)
+        ivPlayPause?.setImageResource(if (isVideoPlaying) R.drawable.ic_pause else R.drawable.ic_play)
     }
 
     private fun seekRelative(deltaMs: Int) {
@@ -451,7 +451,7 @@ class VideoPlayerActivity : AppCompatActivity(), SurfaceHolder.Callback {
     private fun checkSpeedLimit() {
         if (currentSpeed > SPEED_LIMIT_KMH) {
             releasePlayer()
-            isPlaying = false
+            isVideoPlaying = false
             isLocked = false
             AlertDialog.Builder(this)
                 .setTitle("安全提示")
