@@ -18,11 +18,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
-/**
- * 应用管理页面
- * 支持分类浏览、搜索、添加到桌面、卸载
- * 横屏一行5个，竖屏一行4个
- */
 class AppManagerActivity : AppCompatActivity() {
 
     private lateinit var rvAppList: RecyclerView
@@ -39,17 +34,14 @@ class AppManagerActivity : AppCompatActivity() {
         rvAppList = findViewById(R.id.rv_app_list)
         etSearch = findViewById(R.id.et_search)
 
-        // 设置RecyclerView为网格布局
         val spanCount = getSpanCount()
         gridLayoutManager = GridLayoutManager(this, spanCount)
         rvAppList.layoutManager = gridLayoutManager
         adapter = AppAdapter()
         rvAppList.adapter = adapter
 
-        // 加载应用列表
         loadApps()
 
-        // 搜索功能
         etSearch.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
@@ -58,31 +50,23 @@ class AppManagerActivity : AppCompatActivity() {
             override fun afterTextChanged(s: Editable?) {}
         })
 
-        // 返回按钮
         findViewById<ImageView>(R.id.btn_back)?.setOnClickListener {
             finish()
         }
 
-        // 分类标签
         setupCategoryTabs()
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-        // 屏幕旋转时更新列数
-        val newSpanCount = getSpanCount()
-        gridLayoutManager.spanCount = newSpanCount
+        gridLayoutManager.spanCount = getSpanCount()
     }
 
-    /**
-     * 根据屏幕方向获取列数
-     * 横屏5列，竖屏4列
-     */
     private fun getSpanCount(): Int {
         return if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            5  // 横屏一行5个
+            5
         } else {
-            4  // 竖屏一行4个
+            4
         }
     }
 
@@ -98,7 +82,6 @@ class AppManagerActivity : AppCompatActivity() {
         for ((tabId, category) in tabs) {
             findViewById<TextView>(tabId)?.setOnClickListener {
                 currentCategory = category
-                // 更新标签样式
                 for ((id, _) in tabs) {
                     val tab = findViewById<TextView>(id)
                     tab?.setTextColor(if (id == tabId) getColor(R.color.primary) else getColor(R.color.text_secondary))
@@ -163,19 +146,16 @@ class AppManagerActivity : AppCompatActivity() {
             fun bind(app: AppRecognizer.AppInfo) {
                 tvName.text = app.appName
                 
-                // 设置图标
                 if (app.icon != null) {
                     ivIcon.setImageDrawable(app.icon)
                 } else {
                     ivIcon.setImageResource(R.drawable.ic_apps)
                 }
 
-                // 点击打开应用
                 itemView.setOnClickListener {
                     openApp(app.packageName)
                 }
 
-                // 长按显示操作菜单
                 itemView.setOnLongClickListener {
                     showAppOptions(app)
                     true
@@ -238,4 +218,17 @@ class AppManagerActivity : AppCompatActivity() {
 
     private fun uninstallApp(app: AppRecognizer.AppInfo) {
         AlertDialog.Builder(this)
-            .setTitle("卸载应用
+            .setTitle("卸载应用")
+            .setMessage("确定要卸载 ${app.appName} 吗？")
+            .setPositiveButton("确定") { _, _ ->
+                try {
+                    val intent = Intent(Intent.ACTION_DELETE, Uri.parse("package:${app.packageName}"))
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    Toast.makeText(this, "无法卸载此应用", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("取消", null)
+            .show()
+    }
+}
