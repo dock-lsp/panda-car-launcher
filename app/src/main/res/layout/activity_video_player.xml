@@ -4,12 +4,11 @@
     android:layout_height="match_parent"
     android:background="#000000">
 
-    <!-- 视频播放器 -->
-    <VideoView
-        android:id="@+id/video_view"
+    <!-- 视频渲染SurfaceView -->
+    <SurfaceView
+        android:id="@+id/surface_view"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_gravity="center" />
+        android:layout_height="match_parent" />
 
     <!-- 控制面板 -->
     <FrameLayout
@@ -94,7 +93,7 @@
                     android:layout_weight="1"
                     android:layout_marginStart="8dp"
                     android:layout_marginEnd="8dp"
-                    android:max="100"
+                    android:max="1000"
                     android:progress="0" />
 
                 <TextView
@@ -116,7 +115,6 @@
                 android:gravity="center"
                 android:layout_marginTop="8dp">
 
-                <!-- 快退10秒 -->
                 <ImageView
                     android:id="@+id/iv_rewind"
                     android:layout_width="48dp"
@@ -125,7 +123,6 @@
                     android:padding="8dp"
                     android:background="?android:attr/selectableItemBackgroundBorderless" />
 
-                <!-- 播放/暂停 -->
                 <ImageView
                     android:id="@+id/iv_play_pause"
                     android:layout_width="56dp"
@@ -136,7 +133,6 @@
                     android:padding="8dp"
                     android:background="?android:attr/selectableItemBackgroundBorderless" />
 
-                <!-- 快进10秒 -->
                 <ImageView
                     android:id="@+id/iv_forward"
                     android:layout_width="48dp"
@@ -145,7 +141,6 @@
                     android:padding="8dp"
                     android:background="?android:attr/selectableItemBackgroundBorderless" />
 
-                <!-- 锁屏按钮 -->
                 <ImageView
                     android:id="@+id/iv_lock"
                     android:layout_width="48dp"
@@ -161,21 +156,19 @@
 
     </FrameLayout>
 
-    <!-- 锁屏面板：点击屏幕显示解锁按钮 -->
+    <!-- 锁屏面板 -->
     <FrameLayout
         android:id="@+id/lock_panel"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:visibility="gone">
 
-        <!-- 点击区域：点击显示解锁按钮 -->
         <View
             android:id="@+id/lock_touch_area"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="@android:color/transparent" />
 
-        <!-- 解锁按钮：左侧显示 -->
         <ImageView
             android:id="@+id/iv_lock_unlock"
             android:layout_width="56dp"

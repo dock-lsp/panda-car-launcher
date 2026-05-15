@@ -19,6 +19,7 @@ import android.os.Looper
 import android.util.Log
 import android.view.KeyEvent
 import android.view.MotionEvent
+import android.view.SurfaceHolder
 import android.view.View
 import android.view.WindowManager
 import android.widget.*
@@ -27,20 +28,25 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 
 /**
- * 视频播放器
- * 支持：本地视频/在线视频播放、全屏、锁屏观看、车速超5km自动关闭
+ * 视频播放器 - 使用 MediaPlayer + SurfaceView
+ * 解决 VideoView 的 duration 返回0、进度条拖动无效等问题
  */
-class VideoPlayerActivity : AppCompatActivity() {
+class VideoPlayerActivity : AppCompatActivity(), SurfaceHolder.Callback {
 
     companion object {
         private const val TAG = "VideoPlayer"
         private const val SPEED_LIMIT_KMH = 5.0f
-        private const val SEEK_TIME_MS = 10000 // 快进快退10秒
+        private const val SEEK_TIME_MS = 10000
         const val EXTRA_VIDEO_URI = "extra_video_uri"
         const val EXTRA_VIDEO_TITLE = "extra_video_title"
     }
 
-    private var videoView: VideoView? = null
+    private var surfaceView: SurfaceView? = null
+    private var mediaPlayer: MediaPlayer? = null
+    private var surfaceHolder: SurfaceHolder? = null
+    private var videoUri: Uri? = null
+    private var videoDuration = 0
+
     private var tvTitle: TextView? = null
     private var tvSpeed: TextView? = null
     private var ivLock: ImageView? = null
@@ -60,10 +66,12 @@ class VideoPlayerActivity : AppCompatActivity() {
     private var isPlaying = false
     private var currentSpeed = 0f
     private var isDraggingSeekBar = false
+    private var isSurfaceCreated = false
     private var locationManager: LocationManager? = null
     private val handler = Handler(Looper.getMainLooper())
     private var updateRunnable: Runnable? = null
     private var hideControlRunnable: Runnable? = null
+    private var durationRetryRunnable: Runnable? = null
 
     private val speedReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -79,13 +87,12 @@ class VideoPlayerActivity : AppCompatActivity() {
         setContentView(R.layout.activity_video_player)
 
         initViews()
-        setupVideo()
         setupSpeedMonitor()
         registerSpeedReceiver()
     }
 
     private fun initViews() {
-        videoView = findViewById(R.id.video_view)
+        surfaceView = findViewById(R.id.surface_view)
         tvTitle = findViewById(R.id.tv_video_title)
         tvSpeed = findViewById(R.id.tv_speed)
         ivLock = findViewById(R.id.iv_lock)
@@ -104,26 +111,32 @@ class VideoPlayerActivity : AppCompatActivity() {
         val title = intent.getStringExtra(EXTRA_VIDEO_TITLE) ?: "视频播放"
         tvTitle?.text = title
 
-        // 返回按钮
+        // SurfaceView 回调
+        surfaceHolder = surfaceView?.holder
+        surfaceHolder?.addCallback(this)
+
+        // 返回
         ivBack?.setOnClickListener { finish() }
 
-        // 锁屏按钮
+        // 锁屏
         ivLock?.setOnClickListener { lockScreen() }
 
         // 播放/暂停
         ivPlayPause?.setOnClickListener { togglePlayPause() }
 
-        // 快退10秒
+        // 快退
         ivRewind?.setOnClickListener { seekRelative(-SEEK_TIME_MS) }
 
-        // 快进10秒
+        // 快进
         ivForward?.setOnClickListener { seekRelative(SEEK_TIME_MS) }
 
-        // 进度条
+        // 进度条 - 使用 0~1000 的范围，映射到实际时长
+        seekBar?.max = 1000
         seekBar?.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                if (fromUser) {
-                    tvCurrentTime?.text = formatTime(progress / 1000)
+                if (fromUser && videoDuration > 0) {
+                    val ms = (progress.toLong() * videoDuration) / 1000
+                    tvCurrentTime?.text = formatTime((ms / 1000).toInt())
                 }
             }
             override fun onStartTrackingTouch(seekBar: SeekBar?) {
@@ -131,24 +144,131 @@ class VideoPlayerActivity : AppCompatActivity() {
             }
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
                 isDraggingSeekBar = false
-                videoView?.seekTo(seekBar?.progress ?: 0)
+                if (videoDuration > 0) {
+                    val progress = seekBar?.progress ?: 0
+                    val ms = (progress.toLong() * videoDuration) / 1000
+                    mediaPlayer?.seekTo(ms.toInt())
+                }
             }
         })
 
-        // 锁屏面板点击区域 - 点击显示解锁按钮
+        // 锁屏面板
         lockTouchArea?.setOnClickListener {
-            if (isLocked) {
-                showUnlockButton()
+            if (isLocked) showUnlockButton()
+        }
+        ivLockUnlock?.setOnClickListener { unlockScreen() }
+
+        startHideControlTimer()
+    }
+
+    // ===== SurfaceHolder.Callback =====
+
+    override fun surfaceCreated(holder: SurfaceHolder) {
+        isSurfaceCreated = true
+        surfaceHolder = holder
+        // 如果已有 URI，开始播放
+        videoUri?.let { prepareAndPlay(it) }
+    }
+
+    override fun surfaceChanged(holder: SurfaceHolder, format: Int, w: Int, h: Int) {}
+
+    override fun surfaceDestroyed(holder: SurfaceHolder) {
+        isSurfaceCreated = false
+        releasePlayer()
+    }
+
+    // ===== 播放器核心 =====
+
+    private fun prepareAndPlay(uri: Uri) {
+        releasePlayer()
+        try {
+            mediaPlayer = MediaPlayer().apply {
+                setDataSource(this@VideoPlayerActivity, uri)
+                setDisplay(surfaceHolder)
+                setOnPreparedListener { mp ->
+                    videoDuration = mp.duration
+                    Log.d(TAG, "onPrepared: duration=${videoDuration}ms")
+                    updateDurationDisplay()
+                    mp.start()
+                    isPlaying = true
+                    updatePlayPauseIcon()
+                    startProgressUpdate()
+                    // 如果 duration 仍然为 0，延迟重试
+                    if (videoDuration <= 0) {
+                        retryGetDuration()
+                    }
+                }
+                setOnCompletionListener {
+                    isPlaying = false
+                    updatePlayPauseIcon()
+                }
+                setOnErrorListener { _, what, extra ->
+                    Log.e(TAG, "播放错误: what=$what extra=$extra")
+                    Toast.makeText(this@VideoPlayerActivity, "视频播放失败", Toast.LENGTH_SHORT).show()
+                    true
+                }
+                setOnBufferingUpdateListener { mp, percent ->
+                    // 缓冲更新（可用于显示缓冲进度）
+                }
+                prepareAsync()
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "初始化播放器失败", e)
+            Toast.makeText(this, "无法播放此视频", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /**
+     * duration 为 0 时延迟重试获取
+     */
+    private fun retryGetDuration() {
+        durationRetryRunnable?.let { handler.removeCallbacks(it) }
+        durationRetryRunnable = object : Runnable {
+            override fun run() {
+                val duration = mediaPlayer?.duration ?: 0
+                if (duration > 0) {
+                    videoDuration = duration
+                    Log.d(TAG, "retryGetDuration: duration=${videoDuration}ms")
+                    updateDurationDisplay()
+                } else {
+                    // 最多重试 10 次（每次 500ms，共 5 秒）
+                    handler.postDelayed(this, 500)
+                }
             }
         }
-
-        // 解锁按钮点击
-        ivLockUnlock?.setOnClickListener {
-            unlockScreen()
+        var retryCount = 0
+        val retryTask = object : Runnable {
+            override fun run() {
+                val duration = mediaPlayer?.duration ?: 0
+                if (duration > 0) {
+                    videoDuration = duration
+                    Log.d(TAG, "retryGetDuration success: ${videoDuration}ms")
+                    updateDurationDisplay()
+                } else if (retryCount < 10) {
+                    retryCount++
+                    handler.postDelayed(this, 500)
+                } else {
+                    Log.w(TAG, "retryGetDuration failed after 10 retries")
+                }
+            }
         }
+        handler.postDelayed(retryTask, 500)
+    }
 
-        // 自动隐藏控制面板
-        startHideControlTimer()
+    private fun updateDurationDisplay() {
+        if (videoDuration > 0) {
+            tvTotalTime?.text = formatTime(videoDuration / 1000)
+        }
+    }
+
+    private fun releasePlayer() {
+        durationRetryRunnable?.let { handler.removeCallbacks(it) }
+        try {
+            mediaPlayer?.release()
+        } catch (_: Exception) {}
+        mediaPlayer = null
+        isPlaying = false
+        videoDuration = 0
     }
 
     private fun setupVideo() {
@@ -157,28 +277,11 @@ class VideoPlayerActivity : AppCompatActivity() {
             showFilePicker()
             return
         }
-
-        val uri = Uri.parse(uriStr)
-        videoView?.setVideoURI(uri)
-        videoView?.setOnPreparedListener { mp ->
-            mp.isLooping = false
-            isPlaying = true
-            updatePlayPauseIcon()
-            val duration = mp.duration
-            tvTotalTime?.text = formatTime(duration / 1000)
-            seekBar?.max = duration
-            startProgressUpdate()
+        videoUri = Uri.parse(uriStr)
+        if (isSurfaceCreated) {
+            prepareAndPlay(videoUri!!)
         }
-        videoView?.setOnErrorListener { _, what, extra ->
-            Log.e(TAG, "播放错误: what=$what extra=$extra")
-            Toast.makeText(this, "视频播放失败", Toast.LENGTH_SHORT).show()
-            true
-        }
-        videoView?.setOnCompletionListener {
-            isPlaying = false
-            updatePlayPauseIcon()
-        }
-        videoView?.start()
+        // 如果 Surface 还没创建好，等 surfaceCreated 回调中播放
     }
 
     private fun showFilePicker() {
@@ -193,22 +296,28 @@ class VideoPlayerActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == 1001 && resultCode == RESULT_OK && data?.data != null) {
-            videoView?.setVideoURI(data.data)
-            videoView?.start()
+            videoUri = data.data
+            if (isSurfaceCreated) {
+                prepareAndPlay(videoUri!!)
+            }
         } else {
             finish()
         }
     }
 
+    // ===== 播放控制 =====
+
     private fun togglePlayPause() {
-        if (isPlaying) {
-            videoView?.pause()
-        } else {
-            videoView?.start()
+        mediaPlayer?.let { mp ->
+            if (isPlaying) {
+                mp.pause()
+            } else {
+                mp.start()
+            }
+            isPlaying = !isPlaying
+            updatePlayPauseIcon()
+            resetHideControlTimer()
         }
-        isPlaying = !isPlaying
-        updatePlayPauseIcon()
-        resetHideControlTimer()
     }
 
     private fun updatePlayPauseIcon() {
@@ -216,13 +325,49 @@ class VideoPlayerActivity : AppCompatActivity() {
     }
 
     private fun seekRelative(deltaMs: Int) {
-        videoView?.let {
-            val newPosition = (it.currentPosition + deltaMs).coerceIn(0, it.duration)
-            it.seekTo(newPosition)
-            seekBar?.progress = newPosition
+        mediaPlayer?.let { mp ->
+            if (videoDuration <= 0) return@let
+            val newPosition = (mp.currentPosition + deltaMs).coerceIn(0, videoDuration)
+            mp.seekTo(newPosition)
+            // 立即更新 UI
+            seekBar?.progress = ((newPosition.toLong() * 1000) / videoDuration).toInt()
             tvCurrentTime?.text = formatTime(newPosition / 1000)
         }
         resetHideControlTimer()
+    }
+
+    // ===== 进度更新 =====
+
+    private fun startProgressUpdate() {
+        updateRunnable?.let { handler.removeCallbacks(it) }
+        updateRunnable = object : Runnable {
+            override fun run() {
+                mediaPlayer?.let { mp ->
+                    if (mp.isPlaying && !isDraggingSeekBar && videoDuration > 0) {
+                        val currentPos = mp.currentPosition
+                        val progress = ((currentPos.toLong() * 1000) / videoDuration).toInt()
+                        seekBar?.progress = progress
+                        tvCurrentTime?.text = formatTime(currentPos / 1000)
+                    }
+                    // 即使 duration 仍为 0，也持续尝试获取
+                    if (videoDuration <= 0) {
+                        val d = mp.duration
+                        if (d > 0) {
+                            videoDuration = d
+                            updateDurationDisplay()
+                        }
+                    }
+                }
+                handler.postDelayed(this, 300)
+            }
+        }
+        handler.post(updateRunnable!!)
+    }
+
+    private fun formatTime(seconds: Int): String {
+        val m = seconds / 60
+        val s = seconds % 60
+        return "%02d:%02d".format(m, s)
     }
 
     // ===== 锁屏功能 =====
@@ -231,7 +376,7 @@ class VideoPlayerActivity : AppCompatActivity() {
         isLocked = true
         controlPanel?.visibility = View.GONE
         lockPanel?.visibility = View.VISIBLE
-        ivLockUnlock?.visibility = View.GONE // 初始隐藏解锁按钮
+        ivLockUnlock?.visibility = View.GONE
         window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
     }
 
@@ -246,10 +391,7 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     private fun showUnlockButton() {
         ivLockUnlock?.visibility = View.VISIBLE
-        // 3秒后自动隐藏
-        handler.postDelayed({
-            ivLockUnlock?.visibility = View.GONE
-        }, 3000)
+        handler.postDelayed({ ivLockUnlock?.visibility = View.GONE }, 3000)
     }
 
     // ===== 控制面板自动隐藏 =====
@@ -275,30 +417,6 @@ class VideoPlayerActivity : AppCompatActivity() {
         }
     }
 
-    // ===== 进度更新 =====
-
-    private fun startProgressUpdate() {
-        updateRunnable = object : Runnable {
-            override fun run() {
-                videoView?.let {
-                    if (it.isPlaying && !isDraggingSeekBar) {
-                        val currentPos = it.currentPosition
-                        seekBar?.progress = currentPos
-                        tvCurrentTime?.text = formatTime(currentPos / 1000)
-                    }
-                }
-                handler.postDelayed(this, 500)
-            }
-        }
-        handler.post(updateRunnable!!)
-    }
-
-    private fun formatTime(seconds: Int): String {
-        val m = seconds / 60
-        val s = seconds % 60
-        return "%02d:%02d".format(m, s)
-    }
-
     // ===== 车速监测 =====
 
     private fun setupSpeedMonitor() {
@@ -308,7 +426,6 @@ class VideoPlayerActivity : AppCompatActivity() {
         } else {
             startService(serviceIntent)
         }
-
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
             try {
@@ -343,10 +460,9 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     private fun checkSpeedLimit() {
         if (currentSpeed > SPEED_LIMIT_KMH) {
-            videoView?.stopPlayback()
+            releasePlayer()
             isPlaying = false
             isLocked = false
-
             AlertDialog.Builder(this)
                 .setTitle("安全提示")
                 .setMessage("检测到车辆行驶中（车速: ${"%.1f".format(currentSpeed)} km/h）\n\n行车中禁止观看视频，已自动关闭播放器。\n\n请安全驾驶！")
@@ -356,41 +472,24 @@ class VideoPlayerActivity : AppCompatActivity() {
         }
     }
 
-    // ===== 按键和触摸控制 =====
+    // ===== 按键和触摸 =====
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         when (keyCode) {
             KeyEvent.KEYCODE_BACK -> {
-                if (isLocked) {
-                    showUnlockButton()
-                    return true
-                }
-                finish()
-                return true
+                if (isLocked) { showUnlockButton(); return true }
+                finish(); return true
             }
-            KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_SPACE -> {
-                togglePlayPause()
-                return true
-            }
-            KeyEvent.KEYCODE_DPAD_LEFT -> {
-                seekRelative(-SEEK_TIME_MS)
-                return true
-            }
-            KeyEvent.KEYCODE_DPAD_RIGHT -> {
-                seekRelative(SEEK_TIME_MS)
-                return true
-            }
+            KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_SPACE -> { togglePlayPause(); return true }
+            KeyEvent.KEYCODE_DPAD_LEFT -> { seekRelative(-SEEK_TIME_MS); return true }
+            KeyEvent.KEYCODE_DPAD_RIGHT -> { seekRelative(SEEK_TIME_MS); return true }
         }
         return super.onKeyDown(keyCode, event)
     }
 
     override fun onTouchEvent(event: MotionEvent?): Boolean {
         if (event?.action == MotionEvent.ACTION_DOWN) {
-            if (isLocked) {
-                showUnlockButton()
-            } else {
-                showControlPanel()
-            }
+            if (isLocked) showUnlockButton() else showControlPanel()
         }
         return super.onTouchEvent(event)
     }
@@ -399,6 +498,8 @@ class VideoPlayerActivity : AppCompatActivity() {
         super.onDestroy()
         updateRunnable?.let { handler.removeCallbacks(it) }
         hideControlRunnable?.let { handler.removeCallbacks(it) }
+        durationRetryRunnable?.let { handler.removeCallbacks(it) }
+        releasePlayer()
         try { unregisterReceiver(speedReceiver) } catch (_: Exception) {}
         try { locationManager?.removeUpdates(locationListenerGps) } catch (_: Exception) {}
         stopService(Intent(this, SpeedMonitorService::class.java))
