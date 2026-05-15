@@ -16,6 +16,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
     - name: Set up JDK 17
       uses: actions/setup-java@v4
@@ -27,6 +29,13 @@ jobs:
       uses: gradle/gradle-build-action@v3
       with:
         gradle-version: '8.4'
+
+    - name: Get App Version
+      id: app_version
+      run: |
+        VERSION=$(grep "versionName" app/build.gradle | sed 's/.*versionName[[:space:]]*["\x27]\([^"\x27]*\)["\x27].*/\1/')
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "App Version: $VERSION"
 
     - name: Build Debug APK
       run: gradle assembleDebug
@@ -46,40 +55,32 @@ jobs:
         name: release-apk
         path: app/build/outputs/apk/release/*.apk
 
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    permissions:
-      contents: write
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Download Debug APK
-      uses: actions/download-artifact@v4
-      with:
-        name: debug-apk
-        path: ./apk
-
-    - name: Download Release APK
-      uses: actions/download-artifact@v4
-      with:
-        name: release-apk
-        path: ./apk
-
-    - name: Get version
-      id: version
+    - name: Rename APKs with Version
       run: |
-        VERSION=$(grep "versionName" app/build.gradle | sed 's/.*versionName[[[:space:]]]*["\x27]\([^"\x27]*\)["\x27].*/\1/')
-        DATE=$(date +'%Y%m%d')
-        echo "tag=v${VERSION}-${DATE}" >> $GITHUB_OUTPUT
+        VERSION=${{ steps.app_version.outputs.version }}
+        mkdir -p ./apk
+        cp app/build/outputs/apk/debug/app-debug.apk ./apk/panda-car-launcher-v${VERSION}-debug.apk
+        cp app/build/outputs/apk/release/app-release-unsigned.apk ./apk/panda-car-launcher-v${VERSION}-release.apk
+
+    - name: Create Git Tag
+      run: |
+        VERSION=${{ steps.app_version.outputs.version }}
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git tag -f "v${VERSION}" || true
+        git push -f origin "v${VERSION}" || true
 
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
-        tag_name: ${{ steps.version.outputs.tag }}
-        name: Release ${{ steps.version.outputs.tag }}
+        tag_name: v${{ steps.app_version.outputs.version }}
+        name: 熊猫车机桌面 v${{ steps.app_version.outputs.version }}
         files: ./apk/*.apk
+        body: |
+          ## 熊猫车机桌面 v${{ steps.app_version.outputs.version }}
+
+          ### 下载
+          - Debug 版本: `panda-car-launcher-v${{ steps.app_version.outputs.version }}-debug.apk`
+          - Release 版本: `panda-car-launcher-v${{ steps.app_version.outputs.version }}-release.apk`
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
