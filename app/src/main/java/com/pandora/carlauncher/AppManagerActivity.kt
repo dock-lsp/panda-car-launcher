@@ -2,6 +2,7 @@ package com.pandora.carlauncher
 
 import android.app.AlertDialog
 import android.content.Intent
+import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
@@ -14,18 +15,20 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
 /**
  * 应用管理页面
  * 支持分类浏览、搜索、添加到桌面、卸载
+ * 横屏一行5个，竖屏一行4个
  */
 class AppManagerActivity : AppCompatActivity() {
 
     private lateinit var rvAppList: RecyclerView
     private lateinit var etSearch: EditText
     private lateinit var adapter: AppAdapter
+    private lateinit var gridLayoutManager: GridLayoutManager
     private var allApps = mutableListOf<AppRecognizer.AppInfo>()
     private var currentCategory: AppRecognizer.AppCategory? = null
 
@@ -36,8 +39,10 @@ class AppManagerActivity : AppCompatActivity() {
         rvAppList = findViewById(R.id.rv_app_list)
         etSearch = findViewById(R.id.et_search)
 
-        // 设置RecyclerView
-        rvAppList.layoutManager = LinearLayoutManager(this)
+        // 设置RecyclerView为网格布局
+        val spanCount = getSpanCount()
+        gridLayoutManager = GridLayoutManager(this, spanCount)
+        rvAppList.layoutManager = gridLayoutManager
         adapter = AppAdapter()
         rvAppList.adapter = adapter
 
@@ -60,6 +65,25 @@ class AppManagerActivity : AppCompatActivity() {
 
         // 分类标签
         setupCategoryTabs()
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        // 屏幕旋转时更新列数
+        val newSpanCount = getSpanCount()
+        gridLayoutManager.spanCount = newSpanCount
+    }
+
+    /**
+     * 根据屏幕方向获取列数
+     * 横屏5列，竖屏4列
+     */
+    private fun getSpanCount(): Int {
+        return if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            5  // 横屏一行5个
+        } else {
+            4  // 竖屏一行4个
+        }
     }
 
     private fun setupCategoryTabs() {
@@ -121,7 +145,7 @@ class AppManagerActivity : AppCompatActivity() {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
             val view = LayoutInflater.from(parent.context)
-                .inflate(R.layout.item_app_manager, parent, false)
+                .inflate(R.layout.item_app_grid_card, parent, false)
             return ViewHolder(view)
         }
 
@@ -135,14 +159,9 @@ class AppManagerActivity : AppCompatActivity() {
         inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
             private val ivIcon: ImageView = itemView.findViewById(R.id.iv_app_icon)
             private val tvName: TextView = itemView.findViewById(R.id.tv_app_name)
-            private val tvPackage: TextView = itemView.findViewById(R.id.tv_app_package)
-            private val tvDualTag: TextView = itemView.findViewById(R.id.tv_dual_tag)
-            private val btnAdd: ImageView = itemView.findViewById(R.id.btn_add_to_desktop)
-            private val btnUninstall: ImageView = itemView.findViewById(R.id.btn_uninstall)
 
             fun bind(app: AppRecognizer.AppInfo) {
                 tvName.text = app.appName
-                tvPackage.text = app.packageName
                 
                 // 设置图标
                 if (app.icon != null) {
@@ -151,29 +170,33 @@ class AppManagerActivity : AppCompatActivity() {
                     ivIcon.setImageResource(R.drawable.ic_apps)
                 }
 
-                // 共存版标签
-                if (app.isDualApp) {
-                    tvDualTag.visibility = View.VISIBLE
-                } else {
-                    tvDualTag.visibility = View.GONE
-                }
-
                 // 点击打开应用
                 itemView.setOnClickListener {
                     openApp(app.packageName)
                 }
 
-                // 添加到桌面（底部导航栏自定义应用）
-                btnAdd.setOnClickListener {
-                    addToDesktop(app)
-                }
-
-                // 卸载
-                btnUninstall.setOnClickListener {
-                    uninstallApp(app)
+                // 长按显示操作菜单
+                itemView.setOnLongClickListener {
+                    showAppOptions(app)
+                    true
                 }
             }
         }
+    }
+
+    private fun showAppOptions(app: AppRecognizer.AppInfo) {
+        val options = arrayOf("打开应用", "添加到桌面", "卸载应用")
+        AlertDialog.Builder(this)
+            .setTitle(app.appName)
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> openApp(app.packageName)
+                    1 -> addToDesktop(app)
+                    2 -> uninstallApp(app)
+                }
+            }
+            .setNegativeButton("取消", null)
+            .show()
     }
 
     private fun openApp(packageName: String) {
@@ -189,24 +212,20 @@ class AppManagerActivity : AppCompatActivity() {
     }
 
     private fun addToDesktop(app: AppRecognizer.AppInfo) {
-        // 通过 SharedPreferences 保存，MainActivity 会读取
         val prefs = getSharedPreferences(MainActivity.PREF_NAME, MODE_PRIVATE)
         val customAppsJson = prefs.getString(MainActivity.KEY_CUSTOM_APPS, "[]") ?: "[]"
         
-        // 检查是否已添加
         if (customAppsJson.contains("\"packageName\":\"${app.packageName}\"")) {
             Toast.makeText(this, "该应用已在桌面", Toast.LENGTH_SHORT).show()
             return
         }
         
-        // 检查数量限制
         val count = org.json.JSONArray(customAppsJson).length()
         if (count >= MainActivity.MAX_CUSTOM_APPS) {
             Toast.makeText(this, R.string.custom_app_max_reached, Toast.LENGTH_SHORT).show()
             return
         }
 
-        // 添加应用
         val jsonArray = org.json.JSONArray(customAppsJson)
         val obj = org.json.JSONObject()
         obj.put("packageName", app.packageName)
@@ -219,17 +238,4 @@ class AppManagerActivity : AppCompatActivity() {
 
     private fun uninstallApp(app: AppRecognizer.AppInfo) {
         AlertDialog.Builder(this)
-            .setTitle("卸载应用")
-            .setMessage("确定要卸载 ${app.appName} 吗？")
-            .setPositiveButton("确定") { _, _ ->
-                try {
-                    val intent = Intent(Intent.ACTION_DELETE, Uri.parse("package:${app.packageName}"))
-                    startActivity(intent)
-                } catch (e: Exception) {
-                    Toast.makeText(this, "无法卸载此应用", Toast.LENGTH_SHORT).show()
-                }
-            }
-            .setNegativeButton("取消", null)
-            .show()
-    }
-}
+            .setTitle("卸载应用
