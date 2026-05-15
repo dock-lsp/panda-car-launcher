@@ -83,7 +83,8 @@ class MainActivity : AppCompatActivity() {
         setupFullScreen()
         loadCustomApps()
         gridAdapter.notifyDataSetChanged()
-        renderCustomApps()
+        // 刷新底部应用列表
+        setupBottomAppsRecyclerView()
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
@@ -211,6 +212,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupBottomNavigation() {
+        // 固定功能按钮
         findViewById<LinearLayout>(R.id.nav_home)?.setOnClickListener {
             Toast.makeText(this, "主页", Toast.LENGTH_SHORT).show()
         }
@@ -220,19 +222,60 @@ class MainActivity : AppCompatActivity() {
         findViewById<LinearLayout>(R.id.nav_music)?.setOnClickListener {
             openFirstAvailableMusic()
         }
-        findViewById<LinearLayout>(R.id.nav_app_store)?.setOnClickListener {
-            startActivity(Intent(this, AppManagerActivity::class.java))
-        }
-        findViewById<LinearLayout>(R.id.nav_file_manager)?.setOnClickListener {
-            openFileManager()
-        }
-        findViewById<LinearLayout>(R.id.nav_volume)?.setOnClickListener {
-            showVolumeDialog()
-        }
         findViewById<LinearLayout>(R.id.nav_add)?.setOnClickListener {
             showAddAppDialog()
         }
-        renderCustomApps()
+        
+        // 设置可滑动的底部应用列表
+        setupBottomAppsRecyclerView()
+    }
+    
+    private fun setupBottomAppsRecyclerView() {
+        val recyclerView = findViewById<RecyclerView>(R.id.rv_bottom_apps) ?: return
+        val layoutManager = androidx.recyclerview.widget.LinearLayoutManager(this, androidx.recyclerview.widget.LinearLayoutManager.HORIZONTAL, false)
+        recyclerView.layoutManager = layoutManager
+        
+        val bottomApps = getBottomApps()
+        val adapter = BottomAppsAdapter(bottomApps)
+        recyclerView.adapter = adapter
+    }
+    
+    private fun getBottomApps(): List<BottomApp> {
+        val apps = mutableListOf<BottomApp>()
+        
+        // 添加固定功能：应用管理
+        apps.add(BottomApp("应用管理", R.drawable.ic_apps, null) {
+            startActivity(Intent(this, AppManagerActivity::class.java))
+        })
+        
+        // 添加固定功能：文件管理
+        apps.add(BottomApp("文件管理", R.drawable.ic_file, null) {
+            openFileManager()
+        })
+        
+        // 添加固定功能：音量
+        apps.add(BottomApp("音量", R.drawable.ic_volume, null) {
+            showVolumeDialog()
+        })
+        
+        // 添加固定功能：设置
+        apps.add(BottomApp("设置", R.drawable.ic_settings, null) {
+            startActivity(Intent(this, SettingsActivity::class.java))
+        })
+        
+        // 添加自定义应用
+        for (app in customApps) {
+            val icon = try {
+                packageManager.getApplicationIcon(app.packageName)
+            } catch (e: Exception) {
+                null
+            }
+            apps.add(BottomApp(app.appName, 0, icon) {
+                openApp(app.packageName, app.appName)
+            })
+        }
+        
+        return apps
     }
 
     private fun setupCardClicks() {
@@ -362,24 +405,7 @@ class MainActivity : AppCompatActivity() {
             .setNegativeButton(R.string.cancel, null).show()
     }
 
-    private fun renderCustomApps() {
-        val container = findViewById<LinearLayout>(R.id.custom_apps_container) ?: return
-        container.removeAllViews()
-        for ((index, app) in customApps.withIndex()) {
-            val itemView = LayoutInflater.from(this).inflate(R.layout.item_custom_app, container, false)
-            try { itemView.findViewById<ImageView>(R.id.iv_icon)?.setImageDrawable(packageManager.getApplicationIcon(app.packageName)) }
-            catch (e: Exception) { itemView.findViewById<ImageView>(R.id.iv_icon)?.setImageResource(R.drawable.ic_apps) }
-            itemView.findViewById<TextView>(R.id.tv_name)?.text = app.appName
-            itemView.setOnClickListener { openApp(app.packageName, app.appName) }
-            itemView.setOnLongClickListener {
-                AlertDialog.Builder(this).setTitle(R.string.delete).setMessage(getString(R.string.custom_app_delete_confirm))
-                    .setPositiveButton(R.string.confirm) { _, _ -> customApps.removeAt(index); saveCustomApps(); renderCustomApps(); Toast.makeText(this, "已删除", Toast.LENGTH_SHORT).show() }
-                    .setNegativeButton(R.string.cancel, null).show()
-                true
-            }
-            container.addView(itemView)
-        }
-    }
+
 
     private fun loadCustomApps() {
         customApps.clear()
@@ -399,6 +425,43 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() { super.onDestroy(); handler.removeCallbacks(updateTimeRunnable) }
 
     data class CustomApp(val packageName: String, val appName: String)
+
+    /**
+     * 底部应用数据
+     */
+    data class BottomApp(
+        val appName: String,
+        val iconRes: Int = 0,
+        val icon: Drawable? = null,
+        val onClick: () -> Unit
+    )
+
+    /**
+     * 底部应用适配器
+     */
+    inner class BottomAppsAdapter(private val apps: List<BottomApp>) : RecyclerView.Adapter<BottomAppsAdapter.ViewHolder>() {
+        inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+            val ivIcon: ImageView = view.findViewById(R.id.iv_app_icon)
+            val tvName: TextView = view.findViewById(R.id.tv_app_name)
+        }
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+            return ViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.item_bottom_app, parent, false))
+        }
+
+        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+            val app = apps[position]
+            holder.tvName.text = app.appName
+            if (app.icon != null) {
+                holder.ivIcon.setImageDrawable(app.icon)
+            } else {
+                holder.ivIcon.setImageResource(app.iconRes)
+            }
+            holder.itemView.setOnClickListener { app.onClick() }
+        }
+
+        override fun getItemCount() = apps.size
+    }
 
     /**
      * 网格应用数据

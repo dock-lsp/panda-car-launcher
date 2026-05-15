@@ -24,30 +24,31 @@
         android:paddingTop="@dimen/spacing_sm"
         android:paddingBottom="@dimen/spacing_sm">
 
-        <!-- 竖屏：地图 + 音乐 上下布局 -->
+        <!-- 横屏：地图 + 音乐 左右布局 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="3"
-            android:orientation="vertical">
+            android:orientation="horizontal"
+            android:baselineAligned="false">
 
             <!-- 地图卡片 -->
             <include
                 android:id="@+id/card_map"
                 layout="@layout/layout_card_map"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:layout_marginBottom="@dimen/spacing_sm" />
+                android:layout_marginEnd="@dimen/spacing_sm" />
 
             <!-- 音乐卡片 -->
             <include
                 android:id="@+id/card_music"
                 layout="@layout/layout_card_music"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:layout_marginTop="@dimen/spacing_sm" />
+                android:layout_marginStart="@dimen/spacing_sm" />
 
         </LinearLayout>
 

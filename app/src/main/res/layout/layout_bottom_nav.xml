@@ -3,180 +3,115 @@
     android:layout_width="match_parent"
     android:layout_height="@dimen/bottom_nav_height"
     android:orientation="horizontal"
-    android:gravity="center"
+    android:gravity="center_vertical"
     android:background="@drawable/bg_bottom_nav"
-    android:paddingStart="@dimen/spacing_md"
-    android:paddingEnd="@dimen/spacing_md">
+    android:paddingStart="8dp"
+    android:paddingEnd="8dp">
 
-    <!-- 主页 -->
+    <!-- 固定功能按钮区域 -->
     <LinearLayout
-        android:id="@+id/nav_home"
-        android:layout_width="@dimen/bottom_nav_item_width"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:background="?android:attr/selectableItemBackgroundBorderless">
-
-        <ImageView
-            android:layout_width="@dimen/bottom_nav_icon_size"
-            android:layout_height="@dimen/bottom_nav_icon_size"
-            android:src="@drawable/ic_home"
-            android:tint="@color/primary" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:text="@string/nav_home"
-            android:textColor="@color/primary"
-            android:textSize="@dimen/text_size_micro" />
-
-    </LinearLayout>
-
-    <!-- 导航 -->
-    <LinearLayout
-        android:id="@+id/nav_navigation"
-        android:layout_width="@dimen/bottom_nav_item_width"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:background="?android:attr/selectableItemBackgroundBorderless">
-
-        <ImageView
-            android:layout_width="@dimen/bottom_nav_icon_size"
-            android:layout_height="@dimen/bottom_nav_icon_size"
-            android:src="@drawable/ic_navigation"
-            android:tint="@color/text_secondary" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:text="@string/nav_navigation"
-            android:textColor="@color/text_secondary"
-            android:textSize="@dimen/text_size_micro" />
-
-    </LinearLayout>
-
-    <!-- 音乐 -->
-    <LinearLayout
-        android:id="@+id/nav_music"
-        android:layout_width="@dimen/bottom_nav_item_width"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:background="?android:attr/selectableItemBackgroundBorderless">
-
-        <ImageView
-            android:layout_width="@dimen/bottom_nav_icon_size"
-            android:layout_height="@dimen/bottom_nav_icon_size"
-            android:src="@drawable/ic_music"
-            android:tint="@color/text_secondary" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:text="@string/nav_music"
-            android:textColor="@color/text_secondary"
-            android:textSize="@dimen/text_size_micro" />
-
-    </LinearLayout>
-
-    <!-- 应用管理 -->
-    <LinearLayout
-        android:id="@+id/nav_app_store"
-        android:layout_width="@dimen/bottom_nav_item_width"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:background="?android:attr/selectableItemBackgroundBorderless">
-
-        <ImageView
-            android:layout_width="@dimen/bottom_nav_icon_size"
-            android:layout_height="@dimen/bottom_nav_icon_size"
-            android:src="@drawable/ic_apps"
-            android:tint="@color/text_secondary" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:text="@string/app_my_apps"
-            android:textColor="@color/text_secondary"
-            android:textSize="@dimen/text_size_micro" />
-
-    </LinearLayout>
-
-    <!-- 文件管理 -->
-    <LinearLayout
-        android:id="@+id/nav_file_manager"
-        android:layout_width="@dimen/bottom_nav_item_width"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:background="?android:attr/selectableItemBackgroundBorderless">
-
-        <ImageView
-            android:layout_width="@dimen/bottom_nav_icon_size"
-            android:layout_height="@dimen/bottom_nav_icon_size"
-            android:src="@drawable/ic_file"
-            android:tint="@color/text_secondary" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:text="@string/app_file_manager"
-            android:textColor="@color/text_secondary"
-            android:textSize="@dimen/text_size_micro" />
-
-    </LinearLayout>
-
-    <!-- 音量调节 -->
-    <LinearLayout
-        android:id="@+id/nav_volume"
-        android:layout_width="@dimen/bottom_nav_item_width"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:background="?android:attr/selectableItemBackgroundBorderless">
-
-        <ImageView
-            android:layout_width="@dimen/bottom_nav_icon_size"
-            android:layout_height="@dimen/bottom_nav_icon_size"
-            android:src="@drawable/ic_volume"
-            android:tint="@color/text_secondary" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:text="@string/nav_volume"
-            android:textColor="@color/text_secondary"
-            android:textSize="@dimen/text_size_micro" />
-
-    </LinearLayout>
-
-    <!-- 自定义应用容器 -->
-    <LinearLayout
-        android:id="@+id/custom_apps_container"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        android:orientation="horizontal" />
+        android:orientation="horizontal">
+
+        <!-- 主页 -->
+        <LinearLayout
+            android:id="@+id/nav_home"
+            android:layout_width="60dp"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="?android:attr/selectableItemBackgroundBorderless">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_home"
+                android:tint="@color/primary" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="@string/nav_home"
+                android:textColor="@color/primary"
+                android:textSize="@dimen/text_size_micro" />
+
+        </LinearLayout>
+
+        <!-- 导航 -->
+        <LinearLayout
+            android:id="@+id/nav_navigation"
+            android:layout_width="60dp"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="?android:attr/selectableItemBackgroundBorderless">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_navigation"
+                android:tint="@color/text_secondary" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="@string/nav_navigation"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/text_size_micro" />
+
+        </LinearLayout>
+
+        <!-- 音乐 -->
+        <LinearLayout
+            android:id="@+id/nav_music"
+            android:layout_width="60dp"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="?android:attr/selectableItemBackgroundBorderless">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_music"
+                android:tint="@color/text_secondary" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="@string/nav_music"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/text_size_micro" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- 可滑动的应用列表 -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_bottom_apps"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="horizontal"
+        android:scrollbars="none" />
 
     <!-- 添加按钮 -->
     <LinearLayout
         android:id="@+id/nav_add"
-        android:layout_width="@dimen/bottom_nav_item_width"
+        android:layout_width="48dp"
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:gravity="center"
         android:background="?android:attr/selectableItemBackgroundBorderless">
 
         <ImageView
-            android:layout_width="@dimen/bottom_nav_icon_size"
-            android:layout_height="@dimen/bottom_nav_icon_size"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
             android:src="@drawable/ic_add"
             android:tint="@color/text_secondary" />
 
