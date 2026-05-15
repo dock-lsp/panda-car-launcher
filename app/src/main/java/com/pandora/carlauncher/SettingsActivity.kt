@@ -210,6 +210,17 @@ class SettingsActivity : AppCompatActivity() {
             "位置设置",
             "GPS定位和位置服务"
         )
+
+        // 关于我们
+        findViewById<View>(R.id.item_about)?.setOnClickListener {
+            startActivity(Intent(this, AboutActivity::class.java))
+        }
+        bindSettingItem(
+            R.id.item_about,
+            R.drawable.ic_apps,
+            "关于我们",
+            "版本信息和软件说明"
+        )
     }
 
     /**

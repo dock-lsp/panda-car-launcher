@@ -83,6 +83,12 @@
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:screenOrientation="sensor" />
 
+        <!-- 关于我们 -->
+        <activity
+            android:name=".AboutActivity"
+            android:exported="false"
+            android:theme="@style/Theme.PandaCarLauncher" />
+
         <!-- 悬浮球服务 -->
         <service
             android:name=".FloatingBallService"
