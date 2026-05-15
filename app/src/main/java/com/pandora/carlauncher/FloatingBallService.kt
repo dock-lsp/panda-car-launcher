@@ -136,12 +136,14 @@ class FloatingBallService : Service() {
         
         menuView.findViewById<LinearLayout>(R.id.btn_menu_back)?.setOnClickListener {
             hideMenu()
-            performGlobalAction(GLOBAL_ACTION_BACK)
+            // 发送返回广播
+            sendBroadcast(Intent("com.pandora.carlauncher.ACTION_BACK"))
         }
         
         menuView.findViewById<LinearLayout>(R.id.btn_menu_recent)?.setOnClickListener {
             hideMenu()
-            performGlobalAction(GLOBAL_ACTION_RECENTS)
+            // 发送最近任务广播
+            sendBroadcast(Intent("com.pandora.carlauncher.ACTION_RECENTS"))
         }
         
         menuView.findViewById<LinearLayout>(R.id.btn_menu_music)?.setOnClickListener {
@@ -221,14 +223,6 @@ class FloatingBallService : Service() {
         } else {
             Toast.makeText(this, "未安装导航应用", Toast.LENGTH_SHORT).show()
         }
-    }
-
-    private fun performGlobalAction(action: Int) {
-        // 使用辅助功能执行全局操作
-        val intent = Intent("com.pandora.carlauncher.ACTION_GLOBAL").apply {
-            putExtra("action", action)
-        }
-        sendBroadcast(intent)
     }
 
     override fun onDestroy() {
