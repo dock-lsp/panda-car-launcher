@@ -164,9 +164,9 @@ class VideoPlayerActivity : AppCompatActivity() {
             mp.isLooping = false
             isPlaying = true
             updatePlayPauseIcon()
-            val duration = mp.duration / 1000
-            tvTotalTime?.text = formatTime(duration)
-            seekBar?.max = mp.duration
+            val duration = mp.duration
+            tvTotalTime?.text = formatTime(duration / 1000)
+            seekBar?.max = duration
             startProgressUpdate()
         }
         videoView?.setOnErrorListener { _, what, extra ->
@@ -282,8 +282,9 @@ class VideoPlayerActivity : AppCompatActivity() {
             override fun run() {
                 videoView?.let {
                     if (it.isPlaying && !isDraggingSeekBar) {
-                        seekBar?.progress = it.currentPosition
-                        tvCurrentTime?.text = formatTime(it.currentPosition / 1000)
+                        val currentPos = it.currentPosition
+                        seekBar?.progress = currentPos
+                        tvCurrentTime?.text = formatTime(currentPos / 1000)
                     }
                 }
                 handler.postDelayed(this, 500)

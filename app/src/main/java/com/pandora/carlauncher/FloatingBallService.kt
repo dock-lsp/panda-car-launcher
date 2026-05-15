@@ -3,6 +3,7 @@ package com.pandora.carlauncher
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.graphics.PixelFormat
 import android.os.Build
 import android.os.IBinder
@@ -22,9 +23,22 @@ import android.widget.Toast
  */
 class FloatingBallService : Service() {
 
+    companion object {
+        const val PREF_FLOAT_BALL = "float_ball_pref"
+        const val KEY_FLOAT_BALL_COLOR = "float_ball_color"
+        const val KEY_FLOAT_BALL_SIZE = "float_ball_size"
+        const val KEY_FLOAT_BALL_ALPHA = "float_ball_alpha"
+        const val KEY_FLOAT_BALL_FUNC_HOME = "float_ball_func_home"
+        const val KEY_FLOAT_BALL_FUNC_BACK = "float_ball_func_back"
+        const val KEY_FLOAT_BALL_FUNC_RECENT = "float_ball_func_recent"
+        const val KEY_FLOAT_BALL_FUNC_MUSIC = "float_ball_func_music"
+        const val KEY_FLOAT_BALL_FUNC_NAV = "float_ball_func_nav"
+    }
+
     private lateinit var windowManager: WindowManager
     private lateinit var floatingBallView: View
     private lateinit var menuView: View
+    private lateinit var prefs: SharedPreferences
     private var params: WindowManager.LayoutParams? = null
     private var menuParams: WindowManager.LayoutParams? = null
     private var isMenuShowing = false
@@ -40,6 +54,7 @@ class FloatingBallService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        prefs = getSharedPreferences(PREF_FLOAT_BALL, Context.MODE_PRIVATE)
         windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
         createFloatingBall()
         createMenu()
@@ -50,6 +65,9 @@ class FloatingBallService : Service() {
         
         val ballIcon = floatingBallView.findViewById<ImageView>(R.id.iv_floating_ball)
         ballIcon.setImageResource(R.drawable.ic_apps)
+        
+        // 读取设置
+        applySettings()
         
         params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT,
@@ -72,6 +90,36 @@ class FloatingBallService : Service() {
         windowManager.addView(floatingBallView, params)
         
         setupTouchListener()
+    }
+
+    private fun applySettings() {
+        // 应用大小设置
+        val size = prefs.getString(KEY_FLOAT_BALL_SIZE, "medium") ?: "medium"
+        val sizeDp = when (size) {
+            "small" -> 40
+            "large" -> 72
+            else -> 56
+        }
+        val sizePx = (sizeDp * resources.displayMetrics.density).toInt()
+        floatingBallView.layoutParams?.let {
+            it.width = sizePx
+            it.height = sizePx
+            floatingBallView.layoutParams = it
+        }
+
+        // 应用透明度设置
+        val alpha = prefs.getInt(KEY_FLOAT_BALL_ALPHA, 100) / 100f
+        floatingBallView.alpha = alpha
+
+        // 应用颜色设置
+        val color = prefs.getString(KEY_FLOAT_BALL_COLOR, "cyan") ?: "cyan"
+        val bgRes = when (color) {
+            "blue" -> R.drawable.bg_icon_blue
+            "green" -> R.drawable.bg_icon_green
+            "orange" -> R.drawable.bg_icon_orange
+            else -> R.drawable.bg_floating_ball
+        }
+        floatingBallView.setBackgroundResource(bgRes)
     }
 
     private fun setupTouchListener() {
@@ -126,36 +174,59 @@ class FloatingBallService : Service() {
             gravity = Gravity.TOP or Gravity.START
         }
         
-        // 设置菜单按钮点击事件
-        menuView.findViewById<LinearLayout>(R.id.btn_menu_home)?.setOnClickListener {
-            hideMenu()
-            startActivity(Intent(this, MainActivity::class.java).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            })
+        // 根据设置显示/隐藏功能按钮
+        setupMenuButtons()
+    }
+
+    private fun setupMenuButtons() {
+        // 桌面
+        menuView.findViewById<LinearLayout>(R.id.btn_menu_home)?.apply {
+            visibility = if (prefs.getBoolean(KEY_FLOAT_BALL_FUNC_HOME, true)) View.VISIBLE else View.GONE
+            setOnClickListener {
+                hideMenu()
+                startActivity(Intent(this@FloatingBallService, MainActivity::class.java).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                })
+            }
         }
         
-        menuView.findViewById<LinearLayout>(R.id.btn_menu_back)?.setOnClickListener {
-            hideMenu()
-            // 发送返回广播
-            sendBroadcast(Intent("com.pandora.carlauncher.ACTION_BACK"))
+        // 返回
+        menuView.findViewById<LinearLayout>(R.id.btn_menu_back)?.apply {
+            visibility = if (prefs.getBoolean(KEY_FLOAT_BALL_FUNC_BACK, true)) View.VISIBLE else View.GONE
+            setOnClickListener {
+                hideMenu()
+                sendBroadcast(Intent("com.pandora.carlauncher.ACTION_BACK"))
+            }
         }
         
-        menuView.findViewById<LinearLayout>(R.id.btn_menu_recent)?.setOnClickListener {
-            hideMenu()
-            // 发送最近任务广播
-            sendBroadcast(Intent("com.pandora.carlauncher.ACTION_RECENTS"))
+        // 最近任务
+        menuView.findViewById<LinearLayout>(R.id.btn_menu_recent)?.apply {
+            visibility = if (prefs.getBoolean(KEY_FLOAT_BALL_FUNC_RECENT, true)) View.VISIBLE else View.GONE
+            setOnClickListener {
+                hideMenu()
+                sendBroadcast(Intent("com.pandora.carlauncher.ACTION_RECENTS"))
+            }
         }
         
-        menuView.findViewById<LinearLayout>(R.id.btn_menu_music)?.setOnClickListener {
-            hideMenu()
-            openFirstAvailableMusic()
+        // 音乐
+        menuView.findViewById<LinearLayout>(R.id.btn_menu_music)?.apply {
+            visibility = if (prefs.getBoolean(KEY_FLOAT_BALL_FUNC_MUSIC, true)) View.VISIBLE else View.GONE
+            setOnClickListener {
+                hideMenu()
+                openFirstAvailableMusic()
+            }
         }
         
-        menuView.findViewById<LinearLayout>(R.id.btn_menu_nav)?.setOnClickListener {
-            hideMenu()
-            openFirstAvailableNav()
+        // 导航
+        menuView.findViewById<LinearLayout>(R.id.btn_menu_nav)?.apply {
+            visibility = if (prefs.getBoolean(KEY_FLOAT_BALL_FUNC_NAV, true)) View.VISIBLE else View.GONE
+            setOnClickListener {
+                hideMenu()
+                openFirstAvailableNav()
+            }
         }
         
+        // 关闭
         menuView.findViewById<LinearLayout>(R.id.btn_menu_close)?.setOnClickListener {
             hideMenu()
             stopSelf()
@@ -172,6 +243,10 @@ class FloatingBallService : Service() {
 
     private fun showMenu() {
         if (!::menuView.isInitialized) return
+        
+        // 重新读取设置并应用（可能设置已更改）
+        applySettings()
+        setupMenuButtons()
         
         // 计算菜单位置（悬浮球下方）
         val ballX = params?.x ?: 0
@@ -234,12 +309,6 @@ class FloatingBallService : Service() {
             } catch (e: Exception) {
                 // 忽略
             }
-        }
-    }
-
-    companion object {
-        fun isRunning(): Boolean {
-            return false // 需要实际检测
         }
     }
 }
