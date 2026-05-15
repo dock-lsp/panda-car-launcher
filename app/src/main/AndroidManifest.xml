@@ -22,6 +22,10 @@
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
+    <!-- 悬浮窗权限 -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+
     <application
         android:name=".PandaApplication"
         android:allowBackup="true"
@@ -30,7 +34,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.PandaCarLauncher"
-        android:requestLegacyExternalStorage="true">
+        android:requestLegacyExternalStorage="true"
+        android:hardwareAccelerated="true">
 
         <activity
             android:name=".MainActivity"
@@ -58,6 +63,21 @@
             android:name=".SettingsActivity"
             android:exported="false"
             android:theme="@style/Theme.PandaCarLauncher" />
+
+        <!-- 悬浮球服务 -->
+        <service
+            android:name=".FloatingBallService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="specialUse" />
+
+        <!-- 画中画Activity -->
+        <activity
+            android:name=".PipActivity"
+            android:exported="false"
+            android:theme="@style/Theme.PandaCarLauncher"
+            android:supportsPictureInPicture="true"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation" />
 
     </application>
 

@@ -91,11 +91,28 @@ class SettingsActivity : AppCompatActivity() {
 
         switchFloatBall?.setOnCheckedChangeListener { _, isChecked ->
             prefs.edit().putBoolean(KEY_FLOAT_BALL_ENABLED, isChecked).apply()
-            Toast.makeText(
-                this,
-                if (isChecked) "悬浮球已开启" else "悬浮球已关闭",
-                Toast.LENGTH_SHORT
-            ).show()
+            
+            if (isChecked) {
+                // 检查悬浮窗权限
+                if (!Settings.canDrawOverlays(this)) {
+                    // 请求权限
+                    val intent = Intent(
+                        Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                        android.net.Uri.parse("package:$packageName")
+                    )
+                    startActivity(intent)
+                    Toast.makeText(this, "请授予悬浮窗权限", Toast.LENGTH_LONG).show()
+                    switchFloatBall.isChecked = false
+                    return@setOnCheckedChangeListener
+                }
+                // 启动悬浮球服务
+                startService(Intent(this, FloatingBallService::class.java))
+                Toast.makeText(this, "悬浮球已开启", Toast.LENGTH_SHORT).show()
+            } else {
+                // 停止悬浮球服务
+                stopService(Intent(this, FloatingBallService::class.java))
+                Toast.makeText(this, "悬浮球已关闭", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 

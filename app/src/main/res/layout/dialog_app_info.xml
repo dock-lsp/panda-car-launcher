@@ -206,6 +206,34 @@
 
         </LinearLayout>
 
+        <!-- 悬浮窗 -->
+        <LinearLayout
+            android:id="@+id/btn_pip"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="8dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless">
+
+            <ImageView
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_apps"
+                android:background="@drawable/bg_icon_cyan"
+                android:padding="6dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="悬浮"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/text_size_small" />
+
+        </LinearLayout>
+
     </LinearLayout>
 
 </LinearLayout>

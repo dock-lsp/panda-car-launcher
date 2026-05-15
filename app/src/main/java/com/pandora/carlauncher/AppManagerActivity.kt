@@ -24,6 +24,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.pandora.carlauncher.PipActivity
 
 class AppManagerActivity : AppCompatActivity() {
 
@@ -59,6 +60,10 @@ class AppManagerActivity : AppCompatActivity() {
 
         findViewById<ImageView>(R.id.btn_back)?.setOnClickListener {
             finish()
+        }
+
+        findViewById<ImageView>(R.id.btn_refresh)?.setOnClickListener {
+            refreshApps()
         }
 
         setupCategoryTabs()
@@ -103,6 +108,17 @@ class AppManagerActivity : AppCompatActivity() {
         allApps.clear()
         allApps.addAll(AppRecognizer.getAllInstalledApps(this))
         adapter.notifyDataSetChanged()
+    }
+
+    private fun refreshApps() {
+        // 清空搜索框
+        etSearch.setText("")
+        // 重置分类为全部
+        currentCategory = null
+        findViewById<TextView>(R.id.tab_all)?.performClick()
+        // 重新加载应用列表
+        loadApps()
+        Toast.makeText(this, "应用列表已刷新", Toast.LENGTH_SHORT).show()
     }
 
     private fun filterApps(query: String) {
@@ -255,6 +271,12 @@ class AppManagerActivity : AppCompatActivity() {
             addToDesktop(app)
         }
 
+        // 悬浮窗按钮
+        dialog.findViewById<LinearLayout>(R.id.btn_pip)?.setOnClickListener {
+            dialog.dismiss()
+            startPipMode(app)
+        }
+
         // 关闭按钮
         dialog.findViewById<ImageView>(R.id.btn_close)?.setOnClickListener {
             dialog.dismiss()
@@ -274,6 +296,14 @@ class AppManagerActivity : AppCompatActivity() {
             startActivity(intent)
         } catch (e: Exception) {
             Toast.makeText(this, "无法打开应用详情", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun startPipMode(app: AppRecognizer.AppInfo) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            PipActivity.start(this, app.packageName, app.appName)
+        } else {
+            Toast.makeText(this, "画中画功能需要 Android 8.0+", Toast.LENGTH_SHORT).show()
         }
     }
 
