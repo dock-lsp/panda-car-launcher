@@ -57,10 +57,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
         try {
-            super.onCreate(savedInstanceState)
-            setupFullScreen()
             setContentView(R.layout.activity_main)
+            setupFullScreen()
 
             audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
@@ -73,15 +73,8 @@ class MainActivity : AppCompatActivity() {
             setupBottomNavigation()
             setupCardClicks()
         } catch (e: Exception) {
-            Log.e(TAG, "onCreate 崩溃", e)
-            // 尝试最小化布局
-            try {
-                super.onCreate(savedInstanceState)
-                setContentView(R.layout.activity_main)
-            } catch (e2: Exception) {
-                Log.e(TAG, "最小化布局也失败", e2)
-                Toast.makeText(this, "启动失败: ${e.message}", Toast.LENGTH_LONG).show()
-            }
+            Log.e(TAG, "onCreate 初始化失败", e)
+            Toast.makeText(this, "初始化异常: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -102,23 +95,27 @@ class MainActivity : AppCompatActivity() {
      * 全屏沉浸式显示
      */
     private fun setupFullScreen() {
-        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            window.setDecorFitsSystemWindows(false)
-            window.insetsController?.let {
-                it.hide(android.view.WindowInsets.Type.statusBars() or android.view.WindowInsets.Type.navigationBars())
-                it.systemBarsBehavior = android.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        try {
+            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                window.setDecorFitsSystemWindows(false)
+                window.insetsController?.let {
+                    it.hide(android.view.WindowInsets.Type.statusBars() or android.view.WindowInsets.Type.navigationBars())
+                    it.systemBarsBehavior = android.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                }
+            } else {
+                @Suppress("DEPRECATION")
+                window.decorView.systemUiVisibility = (
+                    View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                    or View.SYSTEM_UI_FLAG_FULLSCREEN
+                    or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                    or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                    or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                    or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                )
             }
-        } else {
-            @Suppress("DEPRECATION")
-            window.decorView.systemUiVisibility = (
-                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                or View.SYSTEM_UI_FLAG_FULLSCREEN
-                or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-            )
+        } catch (e: Exception) {
+            Log.e(TAG, "setupFullScreen 失败", e)
         }
     }
 
