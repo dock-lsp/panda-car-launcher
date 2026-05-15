@@ -241,11 +241,7 @@ class VideoPlayerActivity : AppCompatActivity() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
             try {
-                locationManager?.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0f) { location ->
-                    currentSpeed = location.speed * 3.6f // m/s -> km/h
-                    tvSpeed?.text = "车速: ${"%.1f".format(currentSpeed)} km/h"
-                    checkSpeedLimit()
-                }
+                locationManager?.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0f, locationListenerGps)
             } catch (e: Exception) {
                 Log.e(TAG, "GPS定位失败", e)
             }
@@ -300,7 +296,18 @@ class VideoPlayerActivity : AppCompatActivity() {
         super.onDestroy()
         handler.removeCallbacks(updateRunnable ?: return)
         try { unregisterReceiver(speedReceiver) } catch (_: Exception) {}
-        locationManager?.removeUpdates(null)
+        try { locationManager?.removeUpdates(locationListenerGps) } catch (_: Exception) {}
         stopService(Intent(this, SpeedMonitorService::class.java))
+    }
+
+    private val locationListenerGps = object : LocationListener {
+        override fun onLocationChanged(location: Location) {
+            currentSpeed = location.speed * 3.6f
+            tvSpeed?.text = "车速: ${"%.1f".format(currentSpeed)} km/h"
+            checkSpeedLimit()
+        }
+        override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
+        override fun onProviderEnabled(provider: String) {}
+        override fun onProviderDisabled(provider: String) {}
     }
 }
