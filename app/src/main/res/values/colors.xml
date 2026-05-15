@@ -39,4 +39,7 @@
     <color name="transparent">#00000000</color>
     <color name="semi_transparent">#80000000</color>
     <color name="card_glass">#991A1A2E</color>
+    
+    <!-- 分隔线 -->
+    <color name="divider">#333333</color>
 </resources>
