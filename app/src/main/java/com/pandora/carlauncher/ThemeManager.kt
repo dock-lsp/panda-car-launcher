@@ -102,6 +102,10 @@ object ThemeManager {
         return getColors(context)["text_hint"]!!
     }
 
+    fun getAccentColor(context: Context): Int {
+        return getColors(context)["accent"]!!
+    }
+
     /**
      * 应用主题到 Activity
      */
