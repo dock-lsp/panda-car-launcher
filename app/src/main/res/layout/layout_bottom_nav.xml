@@ -89,6 +89,31 @@
 
         </LinearLayout>
 
+        <!-- 主题中心 -->
+        <LinearLayout
+            android:id="@+id/nav_theme"
+            android:layout_width="60dp"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="?android:attr/selectableItemBackgroundBorderless">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_settings"
+                android:tint="@color/text_secondary" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="主题"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/text_size_micro" />
+
+        </LinearLayout>
+
     </LinearLayout>
 
     <!-- 可滑动的应用列表 -->

@@ -120,6 +120,9 @@ class VideoPlayerActivity : AppCompatActivity(), SurfaceHolder.Callback {
         // 锁屏
         ivLock?.setOnClickListener { lockScreen() }
 
+        // 视频列表
+        findViewById<ImageView>(R.id.iv_video_list)?.setOnClickListener { showVideoList() }
+
         // 播放/暂停
         ivPlayPause?.setOnClickListener { togglePlayPause() }
 
@@ -278,6 +281,67 @@ class VideoPlayerActivity : AppCompatActivity(), SurfaceHolder.Callback {
             putExtra(Intent.EXTRA_ALLOW_MULTIPLE, false)
         }
         startActivityForResult(intent, 1001)
+    }
+
+    private fun showVideoList() {
+        // 扫描本地视频文件
+        val videoFiles = scanLocalVideos()
+        if (videoFiles.isEmpty()) {
+            Toast.makeText(this, "未找到本地视频文件", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val names = videoFiles.map { it.second }.toTypedArray()
+        AlertDialog.Builder(this)
+            .setTitle("选择视频")
+            .setItems(names) { _, which ->
+                val (uri, _) = videoFiles[which]
+                videoUri = uri
+                tvTitle?.text = names[which]
+                if (isSurfaceCreated) {
+                    val holder = surfaceView?.holder
+                    if (holder != null) {
+                        prepareAndPlay(uri, holder)
+                    }
+                }
+            }
+            .setNegativeButton("取消", null)
+            .show()
+    }
+
+    private fun scanLocalVideos(): List<Pair<Uri, String>> {
+        val videos = mutableListOf<Pair<Uri, String>>()
+        val projection = arrayOf(
+            android.provider.MediaStore.Video.Media._ID,
+            android.provider.MediaStore.Video.Media.DISPLAY_NAME,
+            android.provider.MediaStore.Video.Media.DATA
+        )
+
+        try {
+            contentResolver.query(
+                android.provider.MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+                projection,
+                null,
+                null,
+                "${android.provider.MediaStore.Video.Media.DATE_ADDED} DESC"
+            )?.use { cursor ->
+                val idColumn = cursor.getColumnIndexOrThrow(android.provider.MediaStore.Video.Media._ID)
+                val nameColumn = cursor.getColumnIndexOrThrow(android.provider.MediaStore.Video.Media.DISPLAY_NAME)
+
+                while (cursor.moveToNext()) {
+                    val id = cursor.getLong(idColumn)
+                    val name = cursor.getString(nameColumn)
+                    val uri = android.provider.MediaStore.Video.Media.EXTERNAL_CONTENT_URI.buildUpon()
+                        .appendPath(id.toString())
+                        .build()
+                    videos.add(uri to name)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "扫描视频失败", e)
+        }
+
+        return videos
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

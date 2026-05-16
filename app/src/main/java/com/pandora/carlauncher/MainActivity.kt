@@ -222,6 +222,9 @@ class MainActivity : AppCompatActivity() {
         findViewById<LinearLayout>(R.id.nav_music)?.setOnClickListener {
             openFirstAvailableMusic()
         }
+        findViewById<LinearLayout>(R.id.nav_theme)?.setOnClickListener {
+            showThemeCenterDialog()
+        }
         findViewById<LinearLayout>(R.id.nav_add)?.setOnClickListener {
             showAddAppDialog()
         }
@@ -487,6 +490,45 @@ class MainActivity : AppCompatActivity() {
         val arr = JSONArray()
         for (app in customApps) { val o = JSONObject(); o.put("packageName", app.packageName); o.put("appName", app.appName); arr.put(o) }
         getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE).edit().putString(KEY_CUSTOM_APPS, arr.toString()).apply()
+    }
+
+    private fun showThemeCenterDialog() {
+        val items = arrayOf("更换壁纸", "切换主题")
+        AlertDialog.Builder(this)
+            .setTitle("主题中心")
+            .setItems(items) { _, which ->
+                when (which) {
+                    0 -> startActivity(Intent(this, WallpaperActivity::class.java))
+                    1 -> showThemeSwitchDialog()
+                }
+            }
+            .setNegativeButton("取消", null)
+            .show()
+    }
+
+    private fun showThemeSwitchDialog() {
+        val themes = arrayOf("深色主题", "浅色主题")
+        val current = if (ThemeManager.isDarkTheme(this)) 0 else 1
+        AlertDialog.Builder(this)
+            .setTitle("切换主题")
+            .setSingleChoiceItems(themes, current) { dialog, which ->
+                val newTheme = if (which == 0) ThemeManager.THEME_DARK else ThemeManager.THEME_LIGHT
+                ThemeManager.setTheme(this, newTheme)
+                dialog.dismiss()
+                // 实时应用主题
+                applyThemeToActivity()
+                Toast.makeText(this, "主题已切换", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("取消", null)
+            .show()
+    }
+
+    private fun applyThemeToActivity() {
+        // 应用主题背景色
+        val bgColor = ThemeManager.getBackgroundColor(this)
+        findViewById<View>(android.R.id.content)?.setBackgroundColor(bgColor)
+        // 刷新界面
+        recreate()
     }
 
     override fun onDestroy() { super.onDestroy(); handler.removeCallbacks(updateTimeRunnable) }

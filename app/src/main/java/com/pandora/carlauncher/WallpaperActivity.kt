@@ -1,8 +1,6 @@
 package com.pandora.carlauncher
 
-import android.app.WallpaperManager
 import android.content.Intent
-import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -13,17 +11,15 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import java.io.InputStream
 
 /**
- * 壁纸设置
+ * 壁纸设置 - 应用内背景
  * 支持内置壁纸和自定义壁纸
  */
 class WallpaperActivity : AppCompatActivity() {
 
     private lateinit var ivCurrentWallpaper: ImageView
     private lateinit var rvWallpapers: RecyclerView
-    private val wallpaperManager: WallpaperManager by lazy { WallpaperManager.getInstance(this) }
 
     // 内置壁纸资源ID
     private val builtInWallpapers = listOf(
@@ -48,7 +44,9 @@ class WallpaperActivity : AppCompatActivity() {
         // 内置壁纸列表
         rvWallpapers.layoutManager = GridLayoutManager(this, 2)
         rvWallpapers.adapter = WallpaperAdapter(builtInWallpapers) { resId ->
-            setWallpaperFromResource(resId)
+            WallpaperManager.setBuiltinWallpaper(this, resId)
+            showCurrentWallpaper()
+            Toast.makeText(this, "壁纸已设置", Toast.LENGTH_SHORT).show()
         }
 
         // 从相册选择
@@ -61,55 +59,31 @@ class WallpaperActivity : AppCompatActivity() {
 
         // 恢复默认
         findViewById<View>(R.id.btn_default_wallpaper)?.setOnClickListener {
-            try {
-                wallpaperManager.clear()
-                Toast.makeText(this, "已恢复默认壁纸", Toast.LENGTH_SHORT).show()
-                showCurrentWallpaper()
-            } catch (e: Exception) {
-                Toast.makeText(this, "恢复失败", Toast.LENGTH_SHORT).show()
-            }
+            WallpaperManager.resetToDefault(this)
+            showCurrentWallpaper()
+            Toast.makeText(this, "已恢复默认", Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun showCurrentWallpaper() {
-        try {
-            val drawable = wallpaperManager.drawable
+        val drawable = WallpaperManager.getWallpaperDrawable(this)
+        if (drawable != null) {
             ivCurrentWallpaper.setImageDrawable(drawable)
-        } catch (e: Exception) {
-            ivCurrentWallpaper.setBackgroundColor(0xFF0F0F1A.toInt())
-        }
-    }
-
-    private fun setWallpaperFromResource(resId: Int) {
-        try {
-            val inputStream = resources.openRawResource(resId)
-            wallpaperManager.setStream(inputStream)
-            inputStream.close()
-            Toast.makeText(this, "壁纸已设置", Toast.LENGTH_SHORT).show()
-            showCurrentWallpaper()
-        } catch (e: Exception) {
-            Toast.makeText(this, "设置失败", Toast.LENGTH_SHORT).show()
+        } else {
+            // 显示默认背景色
+            ivCurrentWallpaper.setBackgroundColor(ThemeManager.getBackgroundColor(this))
+            ivCurrentWallpaper.setImageResource(0)
         }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == 1001 && resultCode == RESULT_OK && data?.data != null) {
-            setWallpaperFromUri(data.data!!)
-        }
-    }
-
-    private fun setWallpaperFromUri(uri: Uri) {
-        try {
-            val inputStream = contentResolver.openInputStream(uri)
-            if (inputStream != null) {
-                wallpaperManager.setStream(inputStream)
-                inputStream.close()
-                Toast.makeText(this, "壁纸已设置", Toast.LENGTH_SHORT).show()
-                showCurrentWallpaper()
-            }
-        } catch (e: Exception) {
-            Toast.makeText(this, "设置失败", Toast.LENGTH_SHORT).show()
+            // 保存自定义壁纸路径
+            val uri = data.data.toString()
+            WallpaperManager.setCustomWallpaper(this, uri)
+            showCurrentWallpaper()
+            Toast.makeText(this, "自定义壁纸已设置", Toast.LENGTH_SHORT).show()
         }
     }
 
