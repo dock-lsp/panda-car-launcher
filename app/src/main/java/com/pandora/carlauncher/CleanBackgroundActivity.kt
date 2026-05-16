@@ -2,10 +2,14 @@ package com.pandora.carlauncher
 
 import android.app.ActivityManager
 import android.app.AlertDialog
+import android.app.usage.UsageStatsManager
 import android.content.Context
+import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -36,7 +40,7 @@ class CleanBackgroundActivity : AppCompatActivity() {
     data class AppProcessInfo(
         val packageName: String,
         val appName: String,
-        val importance: Int,
+        val isSystemApp: Boolean,
         var isSelected: Boolean = false
     )
 
@@ -53,7 +57,17 @@ class CleanBackgroundActivity : AppCompatActivity() {
         rvProcesses.layoutManager = LinearLayoutManager(this)
 
         updateMemoryInfo()
-        loadRunningProcesses()
+
+        // 检查是否有 UsageStats 权限（Android 5.0+ 需要）
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            if (!hasUsageStatsPermission()) {
+                requestUsageStatsPermission()
+            } else {
+                loadRunningProcesses()
+            }
+        } else {
+            loadRunningProcessesLegacy()
+        }
 
         btnClean.setOnClickListener {
             showCleanConfirmDialog()
@@ -70,6 +84,32 @@ class CleanBackgroundActivity : AppCompatActivity() {
             runningApps.forEach { it.isSelected = false }
             (rvProcesses.adapter as? ProcessAdapter)?.notifyDataSetChanged()
         }
+    }
+
+    private fun hasUsageStatsPermission(): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) return true
+        val usageStatsManager = getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+        val time = System.currentTimeMillis()
+        val stats = usageStatsManager.queryUsageStats(
+            UsageStatsManager.INTERVAL_DAILY,
+            time - 1000 * 60,
+            time
+        )
+        return stats != null && stats.isNotEmpty()
+    }
+
+    private fun requestUsageStatsPermission() {
+        AlertDialog.Builder(this)
+            .setTitle("需要权限")
+            .setMessage("清理后台功能需要"使用情况访问权限"来查看运行中的应用。\n\n请在设置中开启此权限。")
+            .setPositiveButton("去设置") { _, _ ->
+                val intent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
+                startActivity(intent)
+            }
+            .setNegativeButton("取消") { _, _ ->
+                Toast.makeText(this, "没有权限无法显示应用列表", Toast.LENGTH_LONG).show()
+            }
+            .show()
     }
 
     private fun updateMemoryInfo() {
@@ -98,25 +138,95 @@ class CleanBackgroundActivity : AppCompatActivity() {
             "com.android.providers",
             "com.android.server",
             "android.process.system",
+            "com.google.android.gms",
+            "com.google.android.gsf",
             packageName // 保留自己
         )
 
-        val processes = activityManager.runningAppProcesses ?: emptyList()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            // 使用 UsageStats 获取最近使用的应用
+            val usageStatsManager = getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+            val time = System.currentTimeMillis()
+            val stats = usageStatsManager.queryUsageStats(
+                UsageStatsManager.INTERVAL_DAILY,
+                time - 1000 * 60 * 60 * 24, // 过去24小时
+                time
+            )
 
-        processes.forEach { process ->
-            if (process.processName !in systemPackages &&
-                !process.processName.startsWith("com.android.")
+            // 获取正在运行的服务
+            val runningServices = activityManager.getRunningServices(100)
+            val runningPackages = runningServices.map { it.service.packageName }.toSet()
+
+            // 合并数据
+            val allPackages = mutableSetOf<String>()
+            stats?.forEach { allPackages.add(it.packageName) }
+            allPackages.addAll(runningPackages)
+
+            allPackages.forEach { pkg ->
+                if (pkg !in systemPackages && !pkg.startsWith("com.android.")) {
+                    try {
+                        val appInfo = pm.getApplicationInfo(pkg, 0)
+                        val appName = pm.getApplicationLabel(appInfo).toString()
+                        val isSystem = (appInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0
+                        runningApps.add(AppProcessInfo(pkg, appName, isSystem))
+                    } catch (e: Exception) {
+                        // 忽略
+                    }
+                }
+            }
+        }
+
+        // 如果上面方法没有获取到，使用传统方法
+        if (runningApps.isEmpty()) {
+            loadRunningProcessesLegacy()
+        }
+
+        // 去重并排序
+        val uniqueApps = runningApps.distinctBy { it.packageName }
+            .sortedBy { it.appName }
+
+        runningApps.clear()
+        runningApps.addAll(uniqueApps)
+
+        rvProcesses.adapter = ProcessAdapter(runningApps, selectedApps) { pkg, selected ->
+            if (selected) selectedApps.add(pkg) else selectedApps.remove(pkg)
+        }
+    }
+
+    private fun loadRunningProcessesLegacy() {
+        runningApps.clear()
+
+        // 系统进程白名单
+        val systemPackages = setOf(
+            "com.android.systemui",
+            "com.android.settings",
+            "com.android.launcher",
+            "com.android.phone",
+            "com.android.contacts",
+            "com.android.mms",
+            "com.android.providers",
+            "com.android.server",
+            "android.process.system",
+            packageName
+        )
+
+        val processes = activityManager.runningAppProcesses
+        val processedPackages = mutableSetOf<String>()
+
+        processes?.forEach { process ->
+            val pkg = process.processName
+            if (pkg !in processedPackages &&
+                pkg !in systemPackages &&
+                !pkg.startsWith("com.android.")
             ) {
                 try {
-                    val appInfo = pm.getApplicationInfo(process.processName, 0)
+                    val appInfo = pm.getApplicationInfo(pkg, 0)
                     val appName = pm.getApplicationLabel(appInfo).toString()
-                    runningApps.add(AppProcessInfo(
-                        process.processName,
-                        appName,
-                        process.importance
-                    ))
+                    val isSystem = (appInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0
+                    runningApps.add(AppProcessInfo(pkg, appName, isSystem))
+                    processedPackages.add(pkg)
                 } catch (e: Exception) {
-                    // 忽略无法获取应用信息的进程
+                    // 忽略
                 }
             }
         }
@@ -157,6 +267,14 @@ class CleanBackgroundActivity : AppCompatActivity() {
         updateMemoryInfo()
         loadRunningProcesses()
         Toast.makeText(this, "已清理 $cleanedCount 个应用", Toast.LENGTH_SHORT).show()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // 检查权限后重新加载
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && hasUsageStatsPermission()) {
+            loadRunningProcesses()
+        }
     }
 
     inner class ProcessAdapter(

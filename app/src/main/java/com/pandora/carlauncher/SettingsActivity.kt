@@ -126,13 +126,24 @@ class SettingsActivity : AppCompatActivity() {
 
         // 视频播放器
         findViewById<View>(R.id.item_video_player)?.setOnClickListener {
-            startActivity(Intent(this, VideoPlayerActivity::class.java))
+            // 打开文件选择器
+            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                addCategory(Intent.CATEGORY_OPENABLE)
+                type = "video/*"
+                putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("video/mp4", "video/3gp", "video/mkv", "video/avi"))
+            }
+            try {
+                startActivityForResult(intent, 1003)
+            } catch (e: Exception) {
+                // 备选：直接打开播放器
+                startActivity(Intent(this, VideoPlayerActivity::class.java))
+            }
         }
         bindSettingItem(
             R.id.item_video_player,
             R.drawable.ic_play,
             "视频播放器",
-            "播放本地视频和在线视频"
+            "选择并播放本地视频"
         )
 
         // WiFi设置
@@ -266,6 +277,12 @@ class SettingsActivity : AppCompatActivity() {
         }
         bindSettingItem(R.id.item_clean_background, R.drawable.ic_apps, "一键清理", "清理后台进程")
 
+        // 画中画模式
+        findViewById<View>(R.id.item_pip)?.setOnClickListener {
+            showPipDialog()
+        }
+        bindSettingItem(R.id.item_pip, R.drawable.ic_apps, "画中画模式", "悬浮窗口播放视频")
+
         // 关于我们
         findViewById<View>(R.id.item_about)?.setOnClickListener {
             startActivity(Intent(this, AboutActivity::class.java))
@@ -276,6 +293,18 @@ class SettingsActivity : AppCompatActivity() {
             "关于我们",
             "版本信息和软件说明"
         )
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == 1003 && resultCode == RESULT_OK && data?.data != null) {
+            // 打开视频播放器
+            val intent = Intent(this, VideoPlayerActivity::class.java).apply {
+                putExtra(VideoPlayerActivity.EXTRA_VIDEO_URI, data.data.toString())
+                putExtra(VideoPlayerActivity.EXTRA_VIDEO_TITLE, "本地视频")
+            }
+            startActivity(intent)
+        }
     }
 
     private fun showThemeDialog() {
@@ -292,6 +321,33 @@ class SettingsActivity : AppCompatActivity() {
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
                 startActivity(intent)
                 finish()
+            }
+            .setNegativeButton("取消", null)
+            .show()
+    }
+
+    private fun showPipDialog() {
+        val videoApps = AppRecognizer.getInstalledVideoApps(this)
+        if (videoApps.isEmpty()) {
+            AlertDialog.Builder(this)
+                .setTitle("画中画模式")
+                .setMessage("未检测到视频应用。\n\n画中画模式需要视频应用支持，请安装以下应用之一：\n• 腾讯视频\n• 爱奇艺\n• 优酷\n• 哔哩哔哩\n• 抖音")
+                .setPositiveButton("知道了", null)
+                .show()
+            return
+        }
+
+        val names = videoApps.map { it.appName }.toTypedArray()
+        AlertDialog.Builder(this)
+            .setTitle("选择视频应用")
+            .setItems(names) { _, which ->
+                val app = videoApps[which]
+                // 启动画中画模式
+                val intent = Intent(this, PipActivity::class.java).apply {
+                    putExtra(PipActivity.EXTRA_PACKAGE_NAME, app.packageName)
+                    putExtra(PipActivity.EXTRA_APP_NAME, app.appName)
+                }
+                startActivity(intent)
             }
             .setNegativeButton("取消", null)
             .show()
