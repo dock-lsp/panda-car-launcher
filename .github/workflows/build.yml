@@ -38,7 +38,9 @@ jobs:
         echo "App Version: $VERSION"
 
     - name: Build Debug APK
-      run: gradle clean assembleDebug
+      run: |
+        rm -rf ~/.gradle/caches/transforms-*
+        gradle clean assembleDebug --no-build-cache
 
     - name: Upload Debug APK
       uses: actions/upload-artifact@v4
