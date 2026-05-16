@@ -46,6 +46,9 @@ class VideoPlayerActivity : AppCompatActivity(), SurfaceHolder.Callback {
     private var mediaPlayer: MediaPlayer? = null
     private var videoUri: Uri? = null
     private var videoDuration = 0
+    private var isFullScreen = true // 默认全屏
+    private var videoWidth = 0
+    private var videoHeight = 0
 
     private var tvTitle: TextView? = null
     private var tvSpeed: TextView? = null
@@ -123,6 +126,9 @@ class VideoPlayerActivity : AppCompatActivity(), SurfaceHolder.Callback {
         // 视频列表
         findViewById<ImageView>(R.id.iv_video_list)?.setOnClickListener { showVideoList() }
 
+        // 全屏切换
+        findViewById<ImageView>(R.id.iv_fullscreen)?.setOnClickListener { toggleFullScreen() }
+
         // 播放/暂停
         ivPlayPause?.setOnClickListener { togglePlayPause() }
 
@@ -190,10 +196,12 @@ class VideoPlayerActivity : AppCompatActivity(), SurfaceHolder.Callback {
                 setDisplay(holder)
                 setOnPreparedListener { mp ->
                     videoDuration = mp.duration
-                    Log.d(TAG, "onPrepared: duration=${videoDuration}ms")
+                    videoWidth = mp.videoWidth
+                    videoHeight = mp.videoHeight
+                    Log.d(TAG, "onPrepared: duration=${videoDuration}ms, size=${videoWidth}x${videoHeight}")
                     updateDurationDisplay()
-                    // 根据视频宽高比调整 SurfaceView 尺寸，避免拉伸
-                    adjustSurfaceSize(mp.videoWidth, mp.videoHeight)
+                    // 根据当前模式调整 SurfaceView
+                    updateSurfaceSize()
                     mp.start()
                     isVideoPlaying = true
                     updatePlayPauseIcon()
@@ -253,27 +261,52 @@ class VideoPlayerActivity : AppCompatActivity(), SurfaceHolder.Callback {
     }
 
     /**
-     * 根据视频宽高比调整 SurfaceView，保持比例不拉伸
+     * 更新 SurfaceView 尺寸：全屏模式撑满，非全屏保持比例
      */
-    private fun adjustSurfaceSize(videoWidth: Int, videoHeight: Int) {
-        if (videoWidth <= 0 || videoHeight <= 0) return
+    private fun updateSurfaceSize() {
         val sv = surfaceView ?: return
         val containerWidth = resources.displayMetrics.widthPixels
         val containerHeight = resources.displayMetrics.heightPixels
-        val videoRatio = videoWidth.toFloat() / videoHeight.toFloat()
-        val containerRatio = containerWidth.toFloat() / containerHeight.toFloat()
 
         val lp = sv.layoutParams
-        if (videoRatio > containerRatio) {
-            // 视频更宽 -> 宽度撑满，高度按比例
+        if (isFullScreen) {
+            // 全屏模式：直接撑满
             lp.width = containerWidth
-            lp.height = (containerWidth / videoRatio).toInt()
-        } else {
-            // 视频更高 -> 高度撑满，宽度按比例
             lp.height = containerHeight
-            lp.width = (containerHeight * videoRatio).toInt()
+        } else {
+            // 保持比例模式
+            if (videoWidth <= 0 || videoHeight <= 0) {
+                // 未知尺寸，默认撑满
+                lp.width = containerWidth
+                lp.height = containerHeight
+            } else {
+                val videoRatio = videoWidth.toFloat() / videoHeight.toFloat()
+                val containerRatio = containerWidth.toFloat() / containerHeight.toFloat()
+                if (videoRatio > containerRatio) {
+                    lp.width = containerWidth
+                    lp.height = (containerWidth / videoRatio).toInt()
+                } else {
+                    lp.height = containerHeight
+                    lp.width = (containerHeight * videoRatio).toInt()
+                }
+            }
         }
         sv.layoutParams = lp
+    }
+
+    /**
+     * 切换全屏/保持比例
+     */
+    private fun toggleFullScreen() {
+        isFullScreen = !isFullScreen
+        updateSurfaceSize()
+        // 更新按钮图标
+        updateFullScreenIcon()
+    }
+
+    private fun updateFullScreenIcon() {
+        val ivFullscreen = findViewById<ImageView>(R.id.iv_fullscreen)
+        ivFullscreen?.setImageResource(if (isFullScreen) R.drawable.ic_fullscreen_exit else R.drawable.ic_fullscreen)
     }
 
     private fun releasePlayer() {
