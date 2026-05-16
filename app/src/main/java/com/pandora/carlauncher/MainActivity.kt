@@ -81,16 +81,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * 应用壁纸或主题背景到根布局
+     * 应用壁纸或主题背景到壁纸层 ImageView
      */
     private fun applyAppBackground() {
-        val rootView = findViewById<View>(android.R.id.content)
-        if (rootView != null) {
+        val ivWallpaper = findViewById<ImageView>(R.id.iv_wallpaper)
+        if (ivWallpaper != null) {
             val wallpaperDrawable = WallpaperManager.getWallpaperDrawable(this)
             if (wallpaperDrawable != null) {
-                rootView.background = wallpaperDrawable
+                ivWallpaper.setImageDrawable(wallpaperDrawable)
+                ivWallpaper.visibility = View.VISIBLE
             } else {
-                rootView.setBackgroundColor(ThemeManager.getBackgroundColor(this))
+                // 没有自定义壁纸，使用主题背景色
+                ivWallpaper.setImageDrawable(null)
+                ivWallpaper.setBackgroundColor(ThemeManager.getBackgroundColor(this))
+                ivWallpaper.visibility = View.VISIBLE
             }
         }
     }

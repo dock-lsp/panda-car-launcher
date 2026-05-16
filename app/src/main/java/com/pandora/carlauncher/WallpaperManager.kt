@@ -30,7 +30,7 @@ object WallpaperManager {
 
     fun getWallpaperType(context: Context): String {
         val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-        return prefs.getString(KEY_WALLPAPER_TYPE, TYPE_DEFAULT) ?: TYPE_DEFAULT
+        return prefs.getString(KEY_WALLPAPER_TYPE, TYPE_BUILTIN) ?: TYPE_BUILTIN
     }
 
     fun setBuiltinWallpaper(context: Context, resId: Int) {
