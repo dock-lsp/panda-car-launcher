@@ -165,6 +165,11 @@
             android:supportsPictureInPicture="true"
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation" />
 
+        <!-- 悬浮视频播放服务 -->
+        <service
+            android:name=".FloatingVideoService"
+            android:exported="false" />
+
         <!-- FileProvider -->
         <provider
             android:name="androidx.core.content.FileProvider"

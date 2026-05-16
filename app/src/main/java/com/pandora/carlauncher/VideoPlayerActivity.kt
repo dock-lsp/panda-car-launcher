@@ -129,6 +129,9 @@ class VideoPlayerActivity : AppCompatActivity(), SurfaceHolder.Callback {
         // 全屏切换
         findViewById<ImageView>(R.id.iv_fullscreen)?.setOnClickListener { toggleFullScreen() }
 
+        // 悬浮播放
+        findViewById<ImageView>(R.id.iv_floating)?.setOnClickListener { startFloatingPlay() }
+
         // 播放/暂停
         ivPlayPause?.setOnClickListener { togglePlayPause() }
 
@@ -261,34 +264,30 @@ class VideoPlayerActivity : AppCompatActivity(), SurfaceHolder.Callback {
     }
 
     /**
-     * 更新 SurfaceView 尺寸：全屏模式撑满，非全屏保持比例
+     * 更新 SurfaceView 尺寸
+     * 竖屏：左右拉满，上下保持比例（居中，上下黑边）
+     * 横屏：直接全屏
      */
     private fun updateSurfaceSize() {
         val sv = surfaceView ?: return
         val containerWidth = resources.displayMetrics.widthPixels
         val containerHeight = resources.displayMetrics.heightPixels
+        val isLandscape = containerWidth > containerHeight
 
         val lp = sv.layoutParams
-        if (isFullScreen) {
-            // 全屏模式：直接撑满
+        if (isLandscape) {
+            // 横屏：全屏撑满
             lp.width = containerWidth
             lp.height = containerHeight
         } else {
-            // 保持比例模式
+            // 竖屏：宽度撑满，高度按视频比例
             if (videoWidth <= 0 || videoHeight <= 0) {
-                // 未知尺寸，默认撑满
                 lp.width = containerWidth
                 lp.height = containerHeight
             } else {
                 val videoRatio = videoWidth.toFloat() / videoHeight.toFloat()
-                val containerRatio = containerWidth.toFloat() / containerHeight.toFloat()
-                if (videoRatio > containerRatio) {
-                    lp.width = containerWidth
-                    lp.height = (containerWidth / videoRatio).toInt()
-                } else {
-                    lp.height = containerHeight
-                    lp.width = (containerHeight * videoRatio).toInt()
-                }
+                lp.width = containerWidth
+                lp.height = (containerWidth / videoRatio).toInt()
             }
         }
         sv.layoutParams = lp
@@ -307,6 +306,28 @@ class VideoPlayerActivity : AppCompatActivity(), SurfaceHolder.Callback {
     private fun updateFullScreenIcon() {
         val ivFullscreen = findViewById<ImageView>(R.id.iv_fullscreen)
         ivFullscreen?.setImageResource(if (isFullScreen) R.drawable.ic_fullscreen_exit else R.drawable.ic_fullscreen)
+    }
+
+    /**
+     * 启动悬浮播放
+     */
+    private fun startFloatingPlay() {
+        val uri = videoUri ?: return
+        // 检查悬浮窗权限
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+            Toast.makeText(this, "请先授予悬浮窗权限", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            })
+            return
+        }
+        val intent = Intent(this, FloatingVideoService::class.java).apply {
+            putExtra(FloatingVideoService.EXTRA_VIDEO_URI, uri.toString())
+        }
+        startService(intent)
+        // 停止当前播放，回到桌面
+        releasePlayer()
+        finish()
     }
 
     private fun releasePlayer() {

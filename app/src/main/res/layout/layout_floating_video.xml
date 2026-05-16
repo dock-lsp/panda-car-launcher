@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#CC000000">
+
+    <!-- 视频渲染 -->
+    <SurfaceView
+        android:id="@+id/floating_surface_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- 顶部控制栏 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="#80000000"
+        android:padding="4dp">
+
+        <ImageView
+            android:id="@+id/floating_btn_close"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:src="@drawable/ic_close"
+            android:padding="4dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless" />
+
+        <TextView
+            android:id="@+id/floating_tv_time"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="4dp"
+            android:text="00:00/00:00"
+            android:textColor="#FFFFFF"
+            android:textSize="10sp"
+            android:singleLine="true" />
+
+        <ImageView
+            android:id="@+id/floating_btn_play"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:src="@drawable/ic_pause"
+            android:padding="4dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless" />
+
+    </LinearLayout>
+
+    <!-- 底部进度条 -->
+    <SeekBar
+        android:id="@+id/floating_seek_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_marginBottom="-4dp"
+        android:max="1000"
+        android:progress="0"
+        android:thumbTint="#00CED1"
+        android:progressTint="#00CED1"
+        android:progressBackgroundTint="#666666" />
+
+</FrameLayout>
