@@ -8,7 +8,6 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.graphics.PixelFormat
-import android.net.Uri
 import android.os.Build
 import android.os.IBinder
 import android.provider.Settings
@@ -18,11 +17,9 @@ import android.webkit.*
 import android.widget.*
 
 /**
- * 悬浮地图服务
+ * 悬浮地图服务 - WebView 嵌入地图
  * 
- * 实现方式：
- * 1. 优先通过广播协议打开高德悬浮版地图（com.autonavi.plus.openmap）
- * 2. 备选方案：WebView 嵌入高德地图 JS API 显示地图
+ * 实现方式：WebView 加载地图 H5 页面
  */
 class FloatingMapService : Service() {
 
@@ -31,16 +28,8 @@ class FloatingMapService : Service() {
         private const val NOTIFICATION_ID = 1001
         private const val CHANNEL_ID = "floating_map"
 
-        const val EXTRA_MAP_TYPE = "extra_map_type"
         const val EXTRA_MAP_PACKAGE = "extra_map_package"
         const val EXTRA_MAP_NAME = "extra_map_name"
-
-        const val TYPE_NATIVE_FLOAT = "native_float"  // 原生悬浮版（广播协议）
-        const val TYPE_WEBVIEW = "webview"            // WebView 嵌入
-
-        // 高德悬浮版广播
-        private const val ACTION_OPEN_MAP = "com.autonavi.plus.openmap"
-        private const val ACTION_CLOSE_MAP = "com.autonavi.plus.closemap"
 
         // 悬浮窗尺寸
         private const val DEFAULT_WIDTH = 600
@@ -60,7 +49,6 @@ class FloatingMapService : Service() {
 
     private var currentWidth = DEFAULT_WIDTH
     private var currentHeight = DEFAULT_HEIGHT
-    private var mapType: String? = null
     private var mapPackage: String? = null
     private var mapName: String? = null
 
@@ -78,60 +66,28 @@ class FloatingMapService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        Log.d(TAG, "onStartCommand called")
+        
         intent?.let {
-            mapType = it.getStringExtra(EXTRA_MAP_TYPE) ?: TYPE_WEBVIEW
             mapPackage = it.getStringExtra(EXTRA_MAP_PACKAGE)
             mapName = it.getStringExtra(EXTRA_MAP_NAME) ?: "导航"
+            Log.d(TAG, "mapPackage=$mapPackage, mapName=$mapName")
         }
 
         // 启动前台通知
         startForeground(NOTIFICATION_ID, buildNotification())
 
-        if (mapType == TYPE_NATIVE_FLOAT) {
-            // 原生悬浮版：通过广播打开高德悬浮地图
-            openNativeFloatingMap()
-        } else {
-            // WebView 模式：创建悬浮窗
-            if (floatingView == null) {
-                createFloatingWindow()
-            }
+        // 创建悬浮窗
+        if (floatingView == null) {
+            createFloatingWindow()
         }
 
         return START_STICKY
     }
 
-    /**
-     * 方式1：通过广播协议打开高德悬浮版地图
-     * 这是布丁桌面使用的方式，最干净
-     */
-    private fun openNativeFloatingMap() {
-        try {
-            val intent = Intent(ACTION_OPEN_MAP).apply {
-                putExtra("x", 0)
-                putExtra("y", 0)
-                putExtra("w", 0)
-                putExtra("h", 0)
-            }
-            sendBroadcast(intent)
-            Log.d(TAG, "已发送高德悬浮版广播")
-            Toast.makeText(this, "已启动${mapName}悬浮地图", Toast.LENGTH_SHORT).show()
-            // 不需要悬浮窗，直接停止服务
-            stopForeground(STOP_FOREGROUND_REMOVE)
-            stopSelf()
-        } catch (e: Exception) {
-            Log.e(TAG, "广播打开悬浮地图失败", e)
-            Toast.makeText(this, "打开悬浮地图失败，尝试WebView模式", Toast.LENGTH_SHORT).show()
-            // 回退到 WebView 模式
-            mapType = TYPE_WEBVIEW
-            createFloatingWindow()
-        }
-    }
-
-    /**
-     * 方式2：WebView 嵌入地图
-     */
     @SuppressLint("SetJavaScriptEnabled", "ClickableViewAccessibility", "InflateParams")
     private fun createFloatingWindow() {
+        Log.d(TAG, "createFloatingWindow")
         val inflater = LayoutInflater.from(this)
         floatingView = inflater.inflate(R.layout.layout_floating_map, null)
 
@@ -157,6 +113,7 @@ class FloatingMapService : Service() {
 
         try {
             windowManager?.addView(floatingView, params)
+            Log.d(TAG, "悬浮窗已添加")
         } catch (e: Exception) {
             Log.e(TAG, "创建悬浮窗失败", e)
             stopSelf()
@@ -170,6 +127,7 @@ class FloatingMapService : Service() {
 
         tvTitle?.text = mapName
         tvStatus?.text = "正在加载地图..."
+        tvStatus?.visibility = View.VISIBLE
 
         setupWebView()
         setupDrag(rootView)
@@ -188,15 +146,22 @@ class FloatingMapService : Service() {
             builtInZoomControls = false
             cacheMode = WebSettings.LOAD_DEFAULT
             mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+            allowContentAccess = true
+            allowFileAccess = true
         }
 
         wv.webViewClient = object : WebViewClient() {
             override fun onPageFinished(view: WebView?, url: String?) {
+                Log.d(TAG, "页面加载完成: $url")
                 tvStatus?.visibility = View.GONE
             }
             override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
-                tvStatus?.text = "加载失败"
+                Log.e(TAG, "页面加载错误: $error")
+                tvStatus?.text = "加载失败，请检查网络"
                 tvStatus?.visibility = View.VISIBLE
+            }
+            override fun onReceivedHttpError(view: WebView?, request: WebResourceRequest?, errorResponse: WebResourceResponse?) {
+                Log.e(TAG, "HTTP错误: ${errorResponse?.statusCode}")
             }
         }
 
@@ -208,24 +173,20 @@ class FloatingMapService : Service() {
 
     private fun loadMapUrl() {
         val wv = webView ?: return
-        when {
-            // 高德地图
+        val url = when {
             mapPackage?.contains("autonavi") == true -> {
-                wv.loadUrl("https://m.amap.com/navi/?dest=116.397428,39.90923&destName=目的地&hideRouteIcon=1&key=")
+                "https://m.amap.com/navi/"
             }
-            // 百度地图
             mapPackage?.contains("baidu") == true -> {
-                wv.loadUrl("https://map.baidu.com/mobile/webapp/index/index/index.html")
+                "https://map.baidu.com/mobile/webapp/index/index"
             }
-            // 腾讯地图
             mapPackage?.contains("tencent") == true -> {
-                wv.loadUrl("https://apis.map.qq.com/tools/routeplan/?type=drive&to=北京&tocoord=39.916527,116.397128&referer=myapp")
+                "https://map.qq.com/m/"
             }
-            // 默认高德
-            else -> {
-                wv.loadUrl("https://m.amap.com/navi/?dest=116.397428,39.90923&destName=目的地&hideRouteIcon=1&key=")
-            }
+            else -> "https://m.amap.com/navi/"
         }
+        Log.d(TAG, "加载地图URL: $url")
+        wv.loadUrl(url)
     }
 
     private fun setupDrag(rootView: View) {
@@ -260,7 +221,6 @@ class FloatingMapService : Service() {
     private fun setupButtons(rootView: View) {
         // 关闭
         rootView.findViewById<ImageView>(R.id.map_btn_close)?.setOnClickListener {
-            closeMap()
             stopSelf()
         }
 
@@ -272,13 +232,9 @@ class FloatingMapService : Service() {
             resizeWindow(0.8f)
         }
 
-        // 点击内容区域 - 如果是 WebView 模式则允许交互
-        rootView.findViewById<View>(R.id.map_content)?.setOnClickListener {
-            if (!isDragging && mapType == TYPE_WEBVIEW) {
-                // 让 WebView 获取焦点
-                params?.flags = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
-                try { windowManager?.updateViewLayout(floatingView, params) } catch (_: Exception) {}
-            }
+        // 刷新
+        rootView.findViewById<ImageView>(R.id.map_btn_refresh)?.setOnClickListener {
+            webView?.reload()
         }
     }
 
@@ -290,22 +246,6 @@ class FloatingMapService : Service() {
         params?.width = newWidth
         params?.height = newHeight
         try { windowManager?.updateViewLayout(floatingView, params) } catch (_: Exception) {}
-    }
-
-    private fun closeMap() {
-        // 如果是原生悬浮版，发送关闭广播
-        if (mapType == TYPE_NATIVE_FLOAT) {
-            try {
-                sendBroadcast(Intent(ACTION_CLOSE_MAP))
-            } catch (_: Exception) {}
-        }
-        // 销毁 WebView
-        webView?.apply {
-            stopLoading()
-            loadUrl("about:blank")
-            destroy()
-        }
-        webView = null
     }
 
     private fun createNotificationChannel() {
@@ -337,7 +277,13 @@ class FloatingMapService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        closeMap()
+        Log.d(TAG, "onDestroy")
+        webView?.apply {
+            stopLoading()
+            loadUrl("about:blank")
+            destroy()
+        }
+        webView = null
         floatingView?.let {
             try { windowManager?.removeView(it) } catch (_: Exception) {}
         }

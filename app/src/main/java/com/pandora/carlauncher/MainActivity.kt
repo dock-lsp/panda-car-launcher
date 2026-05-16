@@ -381,12 +381,8 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
-        // 判断是否支持原生悬浮版（高德车机版）
-        val isAmapAuto = pkg.contains("autonavi.amapauto")
-        val mapType = if (isAmapAuto) FloatingMapService.TYPE_NATIVE_FLOAT else FloatingMapService.TYPE_WEBVIEW
-
+        // 启动悬浮地图服务
         val intent = Intent(this, FloatingMapService::class.java).apply {
-            putExtra(FloatingMapService.EXTRA_MAP_TYPE, mapType)
             putExtra(FloatingMapService.EXTRA_MAP_PACKAGE, pkg)
             putExtra(FloatingMapService.EXTRA_MAP_NAME, name)
         }
