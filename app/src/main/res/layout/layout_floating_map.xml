@@ -1,106 +1,233 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/map_content"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#CC1A1A2E"
-    android:elevation="8dp">
+    android:background="#80000000"
+    android:elevation="12dp">
 
-    <!-- WebView 地图 -->
+    <!-- 地图 WebView -->
     <WebView
         android:id="@+id/map_webview"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="36dp" />
+        android:layout_marginTop="48dp"
+        android:layout_marginBottom="80dp" />
 
-    <!-- 加载状态 -->
+    <!-- 顶部导航指引卡片 -->
     <LinearLayout
-        android:id="@+id/map_loading"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_marginTop="36dp"
-        android:orientation="vertical"
-        android:gravity="center">
-
-        <ProgressBar
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:indeterminateTint="#00CED1" />
-
-        <TextView
-            android:id="@+id/map_tv_status"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="正在加载地图..."
-            android:textColor="#80FFFFFF"
-            android:textSize="12sp" />
-
-    </LinearLayout>
-
-    <!-- 标题栏 -->
-    <LinearLayout
-        android:id="@+id/map_title_bar"
+        android:id="@+id/map_nav_card"
         android:layout_width="match_parent"
-        android:layout_height="36dp"
-        android:background="#80000000"
+        android:layout_height="48dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:background="@drawable/bg_nav_card"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp">
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp">
 
         <ImageView
-            android:layout_width="20dp"
-            android:layout_height="20dp"
+            android:id="@+id/nav_icon"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
             android:src="@drawable/ic_navigation"
             android:tint="#00CED1" />
 
         <TextView
-            android:id="@+id/map_tv_title"
+            android:id="@+id/nav_text"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginStart="8dp"
-            android:text="导航"
+            android:layout_marginStart="12dp"
+            android:text="点击开始导航"
             android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:singleLine="true"
+            android:ellipsize="end" />
+
+        <TextView
+            android:id="@+id/nav_distance"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textColor="#00CED1"
             android:textSize="14sp"
-            android:singleLine="true" />
+            android:textStyle="bold"
+            android:visibility="gone" />
 
-        <ImageView
-            android:id="@+id/map_btn_zoom_out"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:src="@drawable/ic_minus"
-            android:padding="4dp"
-            android:background="?android:attr/selectableItemBackgroundBorderless" />
+    </LinearLayout>
 
-        <ImageView
-            android:id="@+id/map_btn_zoom_in"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:layout_marginStart="4dp"
-            android:src="@drawable/ic_plus"
-            android:padding="4dp"
-            android:background="?android:attr/selectableItemBackgroundBorderless" />
+    <!-- 底部信息卡片 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:layout_gravity="bottom"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/bg_info_card"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="12dp">
 
-        <ImageView
-            android:id="@+id/map_btn_refresh"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:layout_marginStart="4dp"
-            android:src="@drawable/ic_refresh"
-            android:padding="4dp"
-            android:background="?android:attr/selectableItemBackgroundBorderless" />
+        <!-- 地图类型切换 -->
+        <LinearLayout
+            android:id="@+id/map_type_container"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center">
 
-        <ImageView
-            android:id="@+id/map_btn_close"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
+            <ImageView
+                android:id="@+id/btn_map_amap"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:src="@drawable/ic_map_amap"
+                android:padding="4dp"
+                android:background="@drawable/bg_map_btn_selected" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="高德"
+                android:textColor="#FFFFFF"
+                android:textSize="10sp"
+                android:layout_marginTop="2dp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/map_type_baidu"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
             android:layout_marginStart="8dp"
-            android:src="@drawable/ic_close"
-            android:padding="4dp"
-            android:background="?android:attr/selectableItemBackgroundBorderless" />
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <ImageView
+                android:id="@+id/btn_map_baidu"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:src="@drawable/ic_map_baidu"
+                android:padding="4dp"
+                android:background="@drawable/bg_map_btn" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="百度"
+                android:textColor="#80FFFFFF"
+                android:textSize="10sp"
+                android:layout_marginTop="2dp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/map_type_tencent"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginStart="8dp"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <ImageView
+                android:id="@+id/btn_map_tencent"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:src="@drawable/ic_map_tencent"
+                android:padding="4dp"
+                android:background="@drawable/bg_map_btn" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="腾讯"
+                android:textColor="#80FFFFFF"
+                android:textSize="10sp"
+                android:layout_marginTop="2dp" />
+
+        </LinearLayout>
+
+        <!-- 分隔线 -->
+        <View
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="12dp"
+            android:background="#40FFFFFF" />
+
+        <!-- 控制按钮 -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="horizontal"
+            android:gravity="center">
+
+            <ImageView
+                android:id="@+id/btn_zoom_out"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/ic_minus"
+                android:padding="8dp"
+                android:background="@drawable/bg_control_btn" />
+
+            <ImageView
+                android:id="@+id/btn_zoom_in"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="8dp"
+                android:src="@drawable/ic_plus"
+                android:padding="8dp"
+                android:background="@drawable/bg_control_btn" />
+
+            <ImageView
+                android:id="@+id/btn_refresh"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="8dp"
+                android:src="@drawable/ic_refresh"
+                android:padding="8dp"
+                android:background="@drawable/bg_control_btn" />
+
+            <ImageView
+                android:id="@+id/btn_close"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="8dp"
+                android:src="@drawable/ic_close"
+                android:padding="8dp"
+                android:background="@drawable/bg_control_btn" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- 加载状态 -->
+    <LinearLayout
+        android:id="@+id/loading_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:background="@drawable/bg_loading_card"
+        android:padding="24dp">
+
+        <ProgressBar
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:indeterminateTint="#00CED1" />
+
+        <TextView
+            android:id="@+id/tv_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="正在加载地图..."
+            android:textColor="#FFFFFF"
+            android:textSize="14sp" />
 
     </LinearLayout>
 
