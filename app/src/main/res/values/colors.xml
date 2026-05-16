@@ -21,6 +21,7 @@
     <color name="text_hint">#666666</color>
     
     <!-- 功能色 -->
+    <color name="accent">#FF6B6B</color>
     <color name="accent_blue">#2196F3</color>
     <color name="accent_green">#4CAF50</color>
     <color name="accent_orange">#FF9800</color>
