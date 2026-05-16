@@ -364,26 +364,95 @@ class MainActivity : AppCompatActivity() {
         dialog.setContentView(R.layout.dialog_volume)
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
         dialog.window?.setGravity(Gravity.BOTTOM)
-        setupVolumeSeek(dialog, R.id.seek_media_volume, R.id.tv_media_volume, AudioManager.STREAM_MUSIC)
-        setupVolumeSeek(dialog, R.id.seek_ring_volume, R.id.tv_ring_volume, AudioManager.STREAM_RING)
-        setupVolumeSeek(dialog, R.id.seek_alarm_volume, R.id.tv_alarm_volume, AudioManager.STREAM_ALARM)
+
+        // 静音按钮
+        val ivMute = dialog.findViewById<ImageView>(R.id.iv_mute)
+        var isMuted = false
+        // 保存静音前的音量
+        val savedVolumes = mutableMapOf<Int, Int>()
+        ivMute?.setOnClickListener {
+            isMuted = !isMuted
+            if (isMuted) {
+                // 保存当前音量并静音
+                savedVolumes[AudioManager.STREAM_MUSIC] = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+                savedVolumes[AudioManager.STREAM_RING] = audioManager.getStreamVolume(AudioManager.STREAM_RING)
+                savedVolumes[AudioManager.STREAM_ALARM] = audioManager.getStreamVolume(AudioManager.STREAM_ALARM)
+                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, 0, 0)
+                audioManager.setStreamVolume(AudioManager.STREAM_RING, 0, 0)
+                audioManager.setStreamVolume(AudioManager.STREAM_ALARM, 0, 0)
+                ivMute.setImageResource(R.drawable.ic_volume_mute)
+                // 更新UI
+                updateVolumeUI(dialog, R.id.seek_media_volume, R.id.tv_media_volume, AudioManager.STREAM_MUSIC)
+                updateVolumeUI(dialog, R.id.seek_ring_volume, R.id.tv_ring_volume, AudioManager.STREAM_RING)
+                updateVolumeUI(dialog, R.id.seek_alarm_volume, R.id.tv_alarm_volume, AudioManager.STREAM_ALARM)
+            } else {
+                // 恢复音量
+                savedVolumes[AudioManager.STREAM_MUSIC]?.let {
+                    audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, it, 0)
+                }
+                savedVolumes[AudioManager.STREAM_RING]?.let {
+                    audioManager.setStreamVolume(AudioManager.STREAM_RING, it, 0)
+                }
+                savedVolumes[AudioManager.STREAM_ALARM]?.let {
+                    audioManager.setStreamVolume(AudioManager.STREAM_ALARM, it, 0)
+                }
+                ivMute.setImageResource(R.drawable.ic_volume)
+                updateVolumeUI(dialog, R.id.seek_media_volume, R.id.tv_media_volume, AudioManager.STREAM_MUSIC)
+                updateVolumeUI(dialog, R.id.seek_ring_volume, R.id.tv_ring_volume, AudioManager.STREAM_RING)
+                updateVolumeUI(dialog, R.id.seek_alarm_volume, R.id.tv_alarm_volume, AudioManager.STREAM_ALARM)
+            }
+        }
+
+        // 设置三个音量条（带+/-按钮）
+        setupVolumeControl(dialog, R.id.seek_media_volume, R.id.tv_media_volume, R.id.btn_media_minus, R.id.btn_media_plus, AudioManager.STREAM_MUSIC)
+        setupVolumeControl(dialog, R.id.seek_ring_volume, R.id.tv_ring_volume, R.id.btn_ring_minus, R.id.btn_ring_plus, AudioManager.STREAM_RING)
+        setupVolumeControl(dialog, R.id.seek_alarm_volume, R.id.tv_alarm_volume, R.id.btn_alarm_minus, R.id.btn_alarm_plus, AudioManager.STREAM_ALARM)
+
         dialog.show()
     }
 
-    private fun setupVolumeSeek(dialog: Dialog, seekId: Int, tvId: Int, streamType: Int) {
+    private fun updateVolumeUI(dialog: Dialog, seekId: Int, tvId: Int, streamType: Int) {
+        val seek = dialog.findViewById<SeekBar>(seekId)
+        val tv = dialog.findViewById<TextView>(tvId)
+        seek?.progress = audioManager.getStreamVolume(streamType)
+        tv?.text = "${audioManager.getStreamVolume(streamType)}"
+    }
+
+    private fun setupVolumeControl(dialog: Dialog, seekId: Int, tvId: Int, minusBtnId: Int, plusBtnId: Int, streamType: Int) {
         val seek = dialog.findViewById<SeekBar>(seekId)
         val tv = dialog.findViewById<TextView>(tvId)
         val max = audioManager.getStreamMaxVolume(streamType)
         seek?.max = max
-        seek?.progress = audioManager.getStreamVolume(streamType)
-        tv?.text = "${seek?.progress}/$max"
+        val current = audioManager.getStreamVolume(streamType)
+        seek?.progress = current
+        tv?.text = "$current"
+
         seek?.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                if (fromUser) { audioManager.setStreamVolume(streamType, progress, 0); tv?.text = "$progress/$max" }
+                if (fromUser) {
+                    audioManager.setStreamVolume(streamType, progress, 0)
+                    tv?.text = "$progress"
+                }
             }
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
         })
+
+        // 减小按钮
+        dialog.findViewById<View>(minusBtnId)?.setOnClickListener {
+            val newVol = (audioManager.getStreamVolume(streamType) - 1).coerceAtLeast(0)
+            audioManager.setStreamVolume(streamType, newVol, 0)
+            seek?.progress = newVol
+            tv?.text = "$newVol"
+        }
+
+        // 增大按钮
+        dialog.findViewById<View>(plusBtnId)?.setOnClickListener {
+            val newVol = (audioManager.getStreamVolume(streamType) + 1).coerceAtMost(max)
+            audioManager.setStreamVolume(streamType, newVol, 0)
+            seek?.progress = newVol
+            tv?.text = "$newVol"
+        }
     }
 
     private fun showAddAppDialog() {

@@ -7,52 +7,98 @@
     android:padding="@dimen/card_padding"
     android:layout_margin="@dimen/spacing_md">
 
-    <TextView
-        android:layout_width="wrap_content"
+    <!-- 标题栏：音量调节 + 静音按钮 -->
+    <RelativeLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/volume_title"
-        android:textColor="@color/text_primary"
-        android:textSize="@dimen/text_size_large"
-        android:textStyle="bold"
-        android:layout_marginBottom="@dimen/spacing_md" />
+        android:layout_marginBottom="@dimen/spacing_md">
 
-    <!-- 媒体音量 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:text="@string/volume_title"
+            android:textColor="@color/text_primary"
+            android:textSize="@dimen/text_size_large"
+            android:textStyle="bold" />
+
+        <!-- 静音按钮 -->
+        <ImageView
+            android:id="@+id/iv_mute"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:src="@drawable/ic_volume"
+            android:padding="6dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="静音" />
+
+    </RelativeLayout>
+
+    <!-- 媒体音量：一行显示 [-] 标签 音量条 数值 [+] -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_marginBottom="@dimen/spacing_md">
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="@dimen/spacing_sm">
 
-        <LinearLayout
-            android:layout_width="match_parent"
+        <!-- 减小按钮 -->
+        <TextView
+            android:id="@+id/btn_media_minus"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:gravity="center"
+            android:text="-"
+            android:textColor="@color/text_primary"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:background="@drawable/bg_volume_btn" />
+
+        <!-- 标签 -->
+        <TextView
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:layout_marginStart="8dp"
+            android:text="@string/volume_media"
+            android:textColor="@color/text_secondary"
+            android:textSize="@dimen/text_size_small" />
 
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/volume_media"
-                android:textColor="@color/text_secondary"
-                android:textSize="@dimen/text_size_normal" />
-
-            <TextView
-                android:id="@+id/tv_media_volume"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="0/15"
-                android:textColor="@color/primary"
-                android:textSize="@dimen/text_size_normal" />
-
-        </LinearLayout>
-
+        <!-- 音量条 -->
         <SeekBar
             android:id="@+id/seek_media_volume"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_sm"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
             android:progressTint="@color/primary"
             android:thumbTint="@color/primary" />
+
+        <!-- 数值 -->
+        <TextView
+            android:id="@+id/tv_media_volume"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="36dp"
+            android:gravity="end"
+            android:text="0"
+            android:textColor="@color/primary"
+            android:textSize="@dimen/text_size_small" />
+
+        <!-- 增大按钮 -->
+        <TextView
+            android:id="@+id/btn_media_plus"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginStart="8dp"
+            android:gravity="center"
+            android:text="+"
+            android:textColor="@color/text_primary"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:background="@drawable/bg_volume_btn" />
 
     </LinearLayout>
 
@@ -60,39 +106,60 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_marginBottom="@dimen/spacing_md">
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="@dimen/spacing_sm">
 
-        <LinearLayout
-            android:layout_width="match_parent"
+        <TextView
+            android:id="@+id/btn_ring_minus"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:gravity="center"
+            android:text="-"
+            android:textColor="@color/text_primary"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:background="@drawable/bg_volume_btn" />
+
+        <TextView
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/volume_ring"
-                android:textColor="@color/text_secondary"
-                android:textSize="@dimen/text_size_normal" />
-
-            <TextView
-                android:id="@+id/tv_ring_volume"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="0/15"
-                android:textColor="@color/primary"
-                android:textSize="@dimen/text_size_normal" />
-
-        </LinearLayout>
+            android:layout_marginStart="8dp"
+            android:text="@string/volume_ring"
+            android:textColor="@color/text_secondary"
+            android:textSize="@dimen/text_size_small" />
 
         <SeekBar
             android:id="@+id/seek_ring_volume"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_sm"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
             android:progressTint="@color/primary"
             android:thumbTint="@color/primary" />
+
+        <TextView
+            android:id="@+id/tv_ring_volume"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="36dp"
+            android:gravity="end"
+            android:text="0"
+            android:textColor="@color/primary"
+            android:textSize="@dimen/text_size_small" />
+
+        <TextView
+            android:id="@+id/btn_ring_plus"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginStart="8dp"
+            android:gravity="center"
+            android:text="+"
+            android:textColor="@color/text_primary"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:background="@drawable/bg_volume_btn" />
 
     </LinearLayout>
 
@@ -100,38 +167,59 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
 
-        <LinearLayout
-            android:layout_width="match_parent"
+        <TextView
+            android:id="@+id/btn_alarm_minus"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:gravity="center"
+            android:text="-"
+            android:textColor="@color/text_primary"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:background="@drawable/bg_volume_btn" />
+
+        <TextView
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/volume_alarm"
-                android:textColor="@color/text_secondary"
-                android:textSize="@dimen/text_size_normal" />
-
-            <TextView
-                android:id="@+id/tv_alarm_volume"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="0/15"
-                android:textColor="@color/primary"
-                android:textSize="@dimen/text_size_normal" />
-
-        </LinearLayout>
+            android:layout_marginStart="8dp"
+            android:text="@string/volume_alarm"
+            android:textColor="@color/text_secondary"
+            android:textSize="@dimen/text_size_small" />
 
         <SeekBar
             android:id="@+id/seek_alarm_volume"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_sm"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
             android:progressTint="@color/primary"
             android:thumbTint="@color/primary" />
+
+        <TextView
+            android:id="@+id/tv_alarm_volume"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="36dp"
+            android:gravity="end"
+            android:text="0"
+            android:textColor="@color/primary"
+            android:textSize="@dimen/text_size_small" />
+
+        <TextView
+            android:id="@+id/btn_alarm_plus"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginStart="8dp"
+            android:gravity="center"
+            android:text="+"
+            android:textColor="@color/text_primary"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:background="@drawable/bg_volume_btn" />
 
     </LinearLayout>
 
