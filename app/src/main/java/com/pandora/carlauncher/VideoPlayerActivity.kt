@@ -161,6 +161,9 @@ class VideoPlayerActivity : AppCompatActivity(), SurfaceHolder.Callback {
         ivLockUnlock?.setOnClickListener { unlockScreen() }
 
         startHideControlTimer()
+
+        // 初始化视频播放
+        setupVideo()
     }
 
     // ===== SurfaceHolder.Callback =====
@@ -275,10 +278,10 @@ class VideoPlayerActivity : AppCompatActivity(), SurfaceHolder.Callback {
     }
 
     private fun showFilePicker() {
-        val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
-            type = "video/*"
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
             addCategory(Intent.CATEGORY_OPENABLE)
-            putExtra(Intent.EXTRA_ALLOW_MULTIPLE, false)
+            type = "video/*"
+            putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("video/mp4", "video/3gp", "video/mkv", "video/avi", "video/webm"))
         }
         startActivityForResult(intent, 1001)
     }
@@ -348,13 +351,26 @@ class VideoPlayerActivity : AppCompatActivity(), SurfaceHolder.Callback {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == 1001 && resultCode == RESULT_OK && data?.data != null) {
             videoUri = data.data
+            // 持久化 URI 读取权限
+            try {
+                contentResolver.takePersistableUriPermission(
+                    videoUri!!,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+            } catch (e: Exception) {
+                Log.w(TAG, "无法持久化 URI 权限", e)
+            }
+            // 更新标题
+            tvTitle?.text = "本地视频"
+            // 开始播放
             if (isSurfaceCreated) {
                 val holder = surfaceView?.holder
                 if (holder != null) {
                     prepareAndPlay(videoUri!!, holder)
                 }
             }
-        } else {
+        } else if (requestCode == 1001 && resultCode != RESULT_OK) {
+            // 用户取消了文件选择，关闭播放器
             finish()
         }
     }

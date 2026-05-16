@@ -60,6 +60,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         try {
             setContentView(R.layout.activity_main)
+            // 应用壁纸和主题背景
+            applyAppBackground()
             setupFullScreen()
 
             audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
@@ -78,9 +80,25 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * 应用壁纸或主题背景到根布局
+     */
+    private fun applyAppBackground() {
+        val rootView = findViewById<View>(android.R.id.content)
+        if (rootView != null) {
+            val wallpaperDrawable = WallpaperManager.getWallpaperDrawable(this)
+            if (wallpaperDrawable != null) {
+                rootView.background = wallpaperDrawable
+            } else {
+                rootView.setBackgroundColor(ThemeManager.getBackgroundColor(this))
+            }
+        }
+    }
+
     override fun onResume() {
         super.onResume()
         setupFullScreen()
+        applyAppBackground()
         loadCustomApps()
         gridAdapter.notifyDataSetChanged()
         // 刷新底部应用列表
@@ -515,20 +533,12 @@ class MainActivity : AppCompatActivity() {
                 val newTheme = if (which == 0) ThemeManager.THEME_DARK else ThemeManager.THEME_LIGHT
                 ThemeManager.setTheme(this, newTheme)
                 dialog.dismiss()
-                // 实时应用主题
-                applyThemeToActivity()
-                Toast.makeText(this, "主题已切换", Toast.LENGTH_SHORT).show()
+                // 实时应用主题背景
+                applyAppBackground()
+                Toast.makeText(this, "主题已切换，返回主页即可看到效果", Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton("取消", null)
             .show()
-    }
-
-    private fun applyThemeToActivity() {
-        // 应用主题背景色
-        val bgColor = ThemeManager.getBackgroundColor(this)
-        findViewById<View>(android.R.id.content)?.setBackgroundColor(bgColor)
-        // 刷新界面
-        recreate()
     }
 
     override fun onDestroy() { super.onDestroy(); handler.removeCallbacks(updateTimeRunnable) }
