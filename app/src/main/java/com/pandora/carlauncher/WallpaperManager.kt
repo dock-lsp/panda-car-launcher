@@ -1,16 +1,22 @@
 package com.pandora.carlauncher
 
 import android.content.Context
-import android.content.SharedPreferences
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
-import android.graphics.drawable.GradientDrawable
+import android.net.Uri
+import android.util.Log
 import androidx.core.content.ContextCompat
+import java.io.File
+import java.io.FileOutputStream
 
 /**
  * 应用壁纸管理器
  * 管理应用内背景壁纸，不是系统壁纸
  */
 object WallpaperManager {
+    private const val TAG = "WallpaperManager"
     private const val PREF_NAME = "wallpaper_pref"
     private const val KEY_WALLPAPER_TYPE = "wallpaper_type"
     private const val KEY_WALLPAPER_RES = "wallpaper_res"
@@ -20,7 +26,6 @@ object WallpaperManager {
     const val TYPE_BUILTIN = "builtin"
     const val TYPE_CUSTOM = "custom"
 
-    // 内置壁纸资源
     val BUILTIN_WALLPAPERS = listOf(
         R.drawable.wallpaper_1,
         R.drawable.wallpaper_2,
@@ -34,28 +39,46 @@ object WallpaperManager {
     }
 
     fun setBuiltinWallpaper(context: Context, resId: Int) {
-        val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-        prefs.edit()
+        context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE).edit()
             .putString(KEY_WALLPAPER_TYPE, TYPE_BUILTIN)
             .putInt(KEY_WALLPAPER_RES, resId)
             .apply()
     }
 
-    fun setCustomWallpaper(context: Context, path: String) {
-        val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-        prefs.edit()
-            .putString(KEY_WALLPAPER_TYPE, TYPE_CUSTOM)
-            .putString(KEY_WALLPAPER_PATH, path)
-            .apply()
+    /**
+     * 设置自定义壁纸 - 将 URI 的图片复制到应用内部存储
+     */
+    fun setCustomWallpaper(context: Context, uri: Uri) {
+        try {
+            val inputStream = context.contentResolver.openInputStream(uri)
+            if (inputStream != null) {
+                val wallpaperFile = getCustomWallpaperFile(context)
+                FileOutputStream(wallpaperFile).use { out ->
+                    inputStream.copyTo(out)
+                }
+                inputStream.close()
+                context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE).edit()
+                    .putString(KEY_WALLPAPER_TYPE, TYPE_CUSTOM)
+                    .putString(KEY_WALLPAPER_PATH, wallpaperFile.absolutePath)
+                    .apply()
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "设置自定义壁纸失败", e)
+        }
     }
 
     fun resetToDefault(context: Context) {
-        val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-        prefs.edit()
+        context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE).edit()
             .putString(KEY_WALLPAPER_TYPE, TYPE_DEFAULT)
             .remove(KEY_WALLPAPER_RES)
             .remove(KEY_WALLPAPER_PATH)
             .apply()
+    }
+
+    private fun getCustomWallpaperFile(context: Context): File {
+        val dir = File(context.filesDir, "wallpapers")
+        if (!dir.exists()) dir.mkdirs()
+        return File(dir, "custom_wallpaper.jpg")
     }
 
     /**
@@ -73,25 +96,32 @@ object WallpaperManager {
                 }
             }
             TYPE_CUSTOM -> {
-                // 自定义壁纸稍后实现
-                null
+                loadCustomWallpaper(context)
             }
-            else -> null // 默认使用主题背景
+            else -> null
         }
     }
 
     /**
-     * 应用壁纸到 View
+     * 从内部存储加载自定义壁纸
      */
-    fun applyWallpaper(context: Context, view: android.view.View) {
-        val drawable = getWallpaperDrawable(context)
-        if (drawable != null) {
-            view.background = drawable
-        } else {
-            // 使用默认主题背景
-            val themeManager = ThemeManager
-            val bgColor = themeManager.getBackgroundColor(context)
-            view.setBackgroundColor(bgColor)
+    private fun loadCustomWallpaper(context: Context): Drawable? {
+        val path = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+            .getString(KEY_WALLPAPER_PATH, null) ?: return null
+        return try {
+            val file = File(path)
+            if (file.exists()) {
+                val options = BitmapFactory.Options().apply {
+                    inPreferredConfig = Bitmap.Config.RGB_565
+                }
+                val bitmap = BitmapFactory.decodeFile(path, options)
+                if (bitmap != null) {
+                    BitmapDrawable(context.resources, bitmap)
+                } else null
+            } else null
+        } catch (e: Exception) {
+            Log.e(TAG, "加载自定义壁纸失败", e)
+            null
         }
     }
 }

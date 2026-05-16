@@ -192,11 +192,12 @@ class VideoPlayerActivity : AppCompatActivity(), SurfaceHolder.Callback {
                     videoDuration = mp.duration
                     Log.d(TAG, "onPrepared: duration=${videoDuration}ms")
                     updateDurationDisplay()
+                    // 根据视频宽高比调整 SurfaceView 尺寸，避免拉伸
+                    adjustSurfaceSize(mp.videoWidth, mp.videoHeight)
                     mp.start()
                     isVideoPlaying = true
                     updatePlayPauseIcon()
                     startProgressUpdate()
-                    // 如果 duration 仍然为 0，延迟重试
                     if (videoDuration <= 0) {
                         retryGetDuration()
                     }
@@ -249,6 +250,30 @@ class VideoPlayerActivity : AppCompatActivity(), SurfaceHolder.Callback {
         if (videoDuration > 0) {
             tvTotalTime?.text = formatTime(videoDuration / 1000)
         }
+    }
+
+    /**
+     * 根据视频宽高比调整 SurfaceView，保持比例不拉伸
+     */
+    private fun adjustSurfaceSize(videoWidth: Int, videoHeight: Int) {
+        if (videoWidth <= 0 || videoHeight <= 0) return
+        val sv = surfaceView ?: return
+        val containerWidth = resources.displayMetrics.widthPixels
+        val containerHeight = resources.displayMetrics.heightPixels
+        val videoRatio = videoWidth.toFloat() / videoHeight.toFloat()
+        val containerRatio = containerWidth.toFloat() / containerHeight.toFloat()
+
+        val lp = sv.layoutParams
+        if (videoRatio > containerRatio) {
+            // 视频更宽 -> 宽度撑满，高度按比例
+            lp.width = containerWidth
+            lp.height = (containerWidth / videoRatio).toInt()
+        } else {
+            // 视频更高 -> 高度撑满，宽度按比例
+            lp.height = containerHeight
+            lp.width = (containerHeight * videoRatio).toInt()
+        }
+        sv.layoutParams = lp
     }
 
     private fun releasePlayer() {

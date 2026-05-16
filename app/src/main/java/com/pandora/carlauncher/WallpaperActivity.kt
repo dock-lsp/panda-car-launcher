@@ -79,9 +79,8 @@ class WallpaperActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == 1001 && resultCode == RESULT_OK && data?.data != null) {
-            // 保存自定义壁纸路径
-            val uri = data.data.toString()
-            WallpaperManager.setCustomWallpaper(this, uri)
+            // 将图片复制到内部存储并设置为壁纸
+            WallpaperManager.setCustomWallpaper(this, data.data!!)
             showCurrentWallpaper()
             Toast.makeText(this, "自定义壁纸已设置", Toast.LENGTH_SHORT).show()
         }

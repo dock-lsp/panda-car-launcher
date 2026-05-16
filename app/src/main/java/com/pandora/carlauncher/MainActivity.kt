@@ -581,6 +581,26 @@ class MainActivity : AppCompatActivity() {
                 holder.ivIcon.setImageResource(app.iconRes)
             }
             holder.itemView.setOnClickListener { app.onClick() }
+            // 长按移除自定义应用
+            holder.itemView.setOnLongClickListener {
+                val customApp = customApps.find { it.appName == app.appName }
+                if (customApp != null) {
+                    AlertDialog.Builder(this@MainActivity)
+                        .setTitle("移除应用")
+                        .setMessage("确定要移除 \"${app.appName}\" 吗？")
+                        .setPositiveButton("移除") { _, _ ->
+                            customApps.remove(customApp)
+                            saveCustomApps()
+                            setupBottomAppsRecyclerView()
+                            Toast.makeText(this@MainActivity, "已移除 ${app.appName}", Toast.LENGTH_SHORT).show()
+                        }
+                        .setNegativeButton("取消", null)
+                        .show()
+                    true
+                } else {
+                    false
+                }
+            }
         }
 
         override fun getItemCount() = apps.size

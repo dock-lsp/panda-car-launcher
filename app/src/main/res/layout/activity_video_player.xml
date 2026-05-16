@@ -4,11 +4,12 @@
     android:layout_height="match_parent"
     android:background="#000000">
 
-    <!-- 视频渲染SurfaceView -->
+    <!-- 视频渲染SurfaceView - 保持比例居中 -->
     <SurfaceView
         android:id="@+id/surface_view"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:layout_gravity="center" />
 
     <!-- 控制面板 -->
     <FrameLayout
