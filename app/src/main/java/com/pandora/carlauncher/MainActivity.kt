@@ -307,20 +307,104 @@ class MainActivity : AppCompatActivity() {
         findViewById<View>(R.id.card_map)?.setOnClickListener { openFirstAvailableNavigation() }
         findViewById<View>(R.id.card_music)?.setOnClickListener { openFirstAvailableMusic() }
         
-        // 地图卡片悬浮按钮
-        findViewById<View>(R.id.btn_float_map)?.setOnClickListener { 
-            startFloatingMapService()
+        // 地图卡片悬浮按钮 - 选择地图后启动画中画
+        findViewById<View>(R.id.btn_float_map)?.setOnClickListener {
+            showMapPickerForFloating()
         }
     }
-    
-    private fun startFloatingMapService() {
+
+    /**
+     * 显示地图选择器，选择后启动画中画
+     */
+    private fun showMapPickerForFloating() {
+        val mapApps = getInstalledMapApps()
+        if (mapApps.isEmpty()) {
+            Toast.makeText(this, "未检测到地图应用", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val names = mapApps.map { it.second }.toTypedArray()
+        AlertDialog.Builder(this)
+            .setTitle("选择导航应用")
+            .setItems(names) { _, which ->
+                val (pkg, name) = mapApps[which]
+                requestScreenCaptureAndStartFloating(pkg, name)
+            }
+            .setNegativeButton("取消", null)
+            .show()
+    }
+
+    /**
+     * 获取已安装的地图应用列表
+     */
+    private fun getInstalledMapApps(): List<Pair<String, String>> {
+        val apps = mutableListOf<Pair<String, String>>()
+        val mapPackages = mapOf(
+            "com.autonavi.amapauto" to "高德地图(车机版)",
+            "com.autonavi.amapauto.lite" to "高德地图(车机精简版)",
+            "com.autonavi.minimap" to "高德地图(手机版)",
+            "com.baidu.BaiduMap" to "百度地图",
+            "com.baidu.naviauto" to "百度地图(车机版)",
+            "com.tencent.map" to "腾讯地图"
+        )
+        for ((pkg, name) in mapPackages) {
+            try {
+                if (packageManager.getPackageInfo(pkg, 0) != null) {
+                    apps.add(pkg to name)
+                }
+            } catch (_: Exception) {}
+        }
+        // 检测双开/共存版
+        try {
+            val installed = packageManager.getInstalledPackages(0)
+            for (info in installed) {
+                val pkgName = info.packageName
+                if (pkgName.contains("autonavi") || pkgName.contains("baidu.BaiduMap") || pkgName.contains("tencent.map")) {
+                    if (apps.none { it.first == pkgName }) {
+                        val label = info.applicationInfo?.loadLabel(packageManager)?.toString() ?: pkgName
+                        apps.add(pkgName to label)
+                    }
+                }
+            }
+        } catch (_: Exception) {}
+        return apps
+    }
+
+    private var pendingMapPackage: String? = null
+    private var pendingMapName: String? = null
+
+    private fun requestScreenCaptureAndStartFloating(pkg: String, name: String) {
+        // 检查悬浮窗权限
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
             Toast.makeText(this, "请先授予悬浮窗权限", Toast.LENGTH_SHORT).show()
             startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION))
             return
         }
-        startService(Intent(this, FloatingMapService::class.java))
-        Toast.makeText(this, "导航悬浮窗已启动", Toast.LENGTH_SHORT).show()
+        // 请求截屏权限
+        pendingMapPackage = pkg
+        pendingMapName = name
+        val projectionManager = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as android.media.projection.MediaProjectionManager
+        startActivityForResult(projectionManager.createScreenCaptureIntent(), 2001)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == 2001) {
+            if (resultCode == RESULT_OK && data != null && pendingMapPackage != null) {
+                val intent = Intent(this, FloatingMapService::class.java).apply {
+                    putExtra(FloatingMapService.EXTRA_MAP_PACKAGE, pendingMapPackage)
+                    putExtra(FloatingMapService.EXTRA_MAP_NAME, pendingMapName)
+                    putExtra(FloatingMapService.EXTRA_CAPTURE_RESULT, resultCode)
+                    putExtra(FloatingMapService.EXTRA_CAPTURE_DATA, data)
+                }
+                startService(intent)
+                Toast.makeText(this, "${pendingMapName} 画中画已启动", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "需要截屏权限才能使用画中画", Toast.LENGTH_SHORT).show()
+            }
+            pendingMapPackage = null
+            pendingMapName = null
+        }
     }
 
     private fun openFirstAvailableNavigation() {
