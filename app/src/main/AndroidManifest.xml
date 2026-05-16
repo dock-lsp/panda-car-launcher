@@ -13,10 +13,22 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28" />
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+    <!-- Android 13+ 媒体权限 -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
 
     <!-- 音量调节 -->
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+
+    <!-- 蓝牙权限 -->
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+
+    <!-- 清理后台权限 -->
+    <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
 
     <!-- 安装/卸载应用 -->
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
@@ -86,6 +98,48 @@
         <!-- 关于我们 -->
         <activity
             android:name=".AboutActivity"
+            android:exported="false"
+            android:theme="@style/Theme.PandaCarLauncher" />
+
+        <!-- 蓝牙音乐 -->
+        <activity
+            android:name=".BluetoothMusicActivity"
+            android:exported="false"
+            android:theme="@style/Theme.PandaCarLauncher" />
+
+        <!-- 文件管理器 -->
+        <activity
+            android:name=".FileManagerActivity"
+            android:exported="false"
+            android:theme="@style/Theme.PandaCarLauncher" />
+
+        <!-- 小组件 -->
+        <activity
+            android:name=".WidgetsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.PandaCarLauncher" />
+
+        <!-- 应用市场 -->
+        <activity
+            android:name=".AppMarketActivity"
+            android:exported="false"
+            android:theme="@style/Theme.PandaCarLauncher" />
+
+        <!-- 手机投屏 -->
+        <activity
+            android:name=".ScreenCastActivity"
+            android:exported="false"
+            android:theme="@style/Theme.PandaCarLauncher" />
+
+        <!-- 一键清理 -->
+        <activity
+            android:name=".CleanBackgroundActivity"
+            android:exported="false"
+            android:theme="@style/Theme.PandaCarLauncher" />
+
+        <!-- 壁纸设置 -->
+        <activity
+            android:name=".WallpaperActivity"
             android:exported="false"
             android:theme="@style/Theme.PandaCarLauncher" />
 

@@ -353,6 +353,94 @@
                     android:background="@color/text_hint"
                     android:layout_marginStart="68dp" />
 
+                <!-- 主题切换 -->
+                <include
+                    android:id="@+id/item_theme"
+                    layout="@layout/item_setting" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0.5dp"
+                    android:background="@color/text_hint"
+                    android:layout_marginStart="68dp" />
+
+                <!-- 壁纸设置 -->
+                <include
+                    android:id="@+id/item_wallpaper"
+                    layout="@layout/item_setting" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0.5dp"
+                    android:background="@color/text_hint"
+                    android:layout_marginStart="68dp" />
+
+                <!-- 蓝牙音乐 -->
+                <include
+                    android:id="@+id/item_bluetooth_music"
+                    layout="@layout/item_setting" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0.5dp"
+                    android:background="@color/text_hint"
+                    android:layout_marginStart="68dp" />
+
+                <!-- 文件管理器 -->
+                <include
+                    android:id="@+id/item_file_manager"
+                    layout="@layout/item_setting" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0.5dp"
+                    android:background="@color/text_hint"
+                    android:layout_marginStart="68dp" />
+
+                <!-- 小组件 -->
+                <include
+                    android:id="@+id/item_widgets"
+                    layout="@layout/item_setting" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0.5dp"
+                    android:background="@color/text_hint"
+                    android:layout_marginStart="68dp" />
+
+                <!-- 应用市场 -->
+                <include
+                    android:id="@+id/item_app_market"
+                    layout="@layout/item_setting" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0.5dp"
+                    android:background="@color/text_hint"
+                    android:layout_marginStart="68dp" />
+
+                <!-- 手机投屏 -->
+                <include
+                    android:id="@+id/item_screen_cast"
+                    layout="@layout/item_setting" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0.5dp"
+                    android:background="@color/text_hint"
+                    android:layout_marginStart="68dp" />
+
+                <!-- 一键清理 -->
+                <include
+                    android:id="@+id/item_clean_background"
+                    layout="@layout/item_setting" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0.5dp"
+                    android:background="@color/text_hint"
+                    android:layout_marginStart="68dp" />
+
                 <!-- 关于我们 -->
                 <include
                     android:id="@+id/item_about"

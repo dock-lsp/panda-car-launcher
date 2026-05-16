@@ -211,6 +211,60 @@ class SettingsActivity : AppCompatActivity() {
             "GPS定位和位置服务"
         )
 
+        // 主题切换
+        findViewById<View>(R.id.item_theme)?.setOnClickListener {
+            showThemeDialog()
+        }
+        val currentTheme = if (ThemeManager.isDarkTheme(this)) "深色主题" else "浅色主题"
+        bindSettingItem(
+            R.id.item_theme,
+            R.drawable.ic_settings,
+            "主题切换",
+            "当前: $currentTheme"
+        )
+
+        // 壁纸设置
+        findViewById<View>(R.id.item_wallpaper)?.setOnClickListener {
+            startActivity(Intent(this, WallpaperActivity::class.java))
+        }
+        bindSettingItem(R.id.item_wallpaper, R.drawable.ic_image, "壁纸设置", "更换桌面壁纸")
+
+        // 蓝牙音乐
+        findViewById<View>(R.id.item_bluetooth_music)?.setOnClickListener {
+            startActivity(Intent(this, BluetoothMusicActivity::class.java))
+        }
+        bindSettingItem(R.id.item_bluetooth_music, R.drawable.ic_bluetooth, "蓝牙音乐", "蓝牙播放音乐")
+
+        // 文件管理器
+        findViewById<View>(R.id.item_file_manager)?.setOnClickListener {
+            startActivity(Intent(this, FileManagerActivity::class.java))
+        }
+        bindSettingItem(R.id.item_file_manager, R.drawable.ic_folder, "文件管理器", "浏览和管理文件")
+
+        // 小组件
+        findViewById<View>(R.id.item_widgets)?.setOnClickListener {
+            startActivity(Intent(this, WidgetsActivity::class.java))
+        }
+        bindSettingItem(R.id.item_widgets, R.drawable.ic_apps, "小组件", "时钟、天气、日历")
+
+        // 应用市场
+        findViewById<View>(R.id.item_app_market)?.setOnClickListener {
+            startActivity(Intent(this, AppMarketActivity::class.java))
+        }
+        bindSettingItem(R.id.item_app_market, R.drawable.ic_apps, "应用市场", "下载更多应用")
+
+        // 手机投屏
+        findViewById<View>(R.id.item_screen_cast)?.setOnClickListener {
+            startActivity(Intent(this, ScreenCastActivity::class.java))
+        }
+        bindSettingItem(R.id.item_screen_cast, R.drawable.ic_cast, "手机投屏", "Android Auto / CarPlay")
+
+        // 一键清理
+        findViewById<View>(R.id.item_clean_background)?.setOnClickListener {
+            startActivity(Intent(this, CleanBackgroundActivity::class.java))
+        }
+        bindSettingItem(R.id.item_clean_background, R.drawable.ic_apps, "一键清理", "清理后台进程")
+
         // 关于我们
         findViewById<View>(R.id.item_about)?.setOnClickListener {
             startActivity(Intent(this, AboutActivity::class.java))
@@ -221,6 +275,25 @@ class SettingsActivity : AppCompatActivity() {
             "关于我们",
             "版本信息和软件说明"
         )
+    }
+
+    private fun showThemeDialog() {
+        val themes = arrayOf("深色主题", "浅色主题")
+        val current = if (ThemeManager.isDarkTheme(this)) 0 else 1
+        AlertDialog.Builder(this)
+            .setTitle("选择主题")
+            .setSingleChoiceItems(themes, current) { dialog, which ->
+                val newTheme = if (which == 0) ThemeManager.THEME_DARK else ThemeManager.THEME_LIGHT
+                ThemeManager.setTheme(this, newTheme)
+                dialog.dismiss()
+                // 重启应用以应用主题
+                val intent = Intent(this, MainActivity::class.java)
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+                startActivity(intent)
+                finish()
+            }
+            .setNegativeButton("取消", null)
+            .show()
     }
 
     /**
