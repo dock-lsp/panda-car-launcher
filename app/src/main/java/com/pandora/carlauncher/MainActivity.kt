@@ -380,8 +380,18 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION))
             return
         }
-        // 直接启动悬浮窗 Activity
-        FloatingMapActivity.start(this, pkg, name)
+
+        // 判断是否支持原生悬浮版（高德车机版）
+        val isAmapAuto = pkg.contains("autonavi.amapauto")
+        val mapType = if (isAmapAuto) FloatingMapService.TYPE_NATIVE_FLOAT else FloatingMapService.TYPE_WEBVIEW
+
+        val intent = Intent(this, FloatingMapService::class.java).apply {
+            putExtra(FloatingMapService.EXTRA_MAP_TYPE, mapType)
+            putExtra(FloatingMapService.EXTRA_MAP_PACKAGE, pkg)
+            putExtra(FloatingMapService.EXTRA_MAP_NAME, name)
+        }
+        startForegroundService(intent)
+        Toast.makeText(this, "${name} 悬浮地图已启动", Toast.LENGTH_SHORT).show()
     }
 
     private fun openFirstAvailableNavigation() {

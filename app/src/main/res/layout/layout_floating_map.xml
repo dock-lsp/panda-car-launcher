@@ -1,9 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/map_content"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#CC1A1A2E"
     android:elevation="8dp">
+
+    <!-- WebView 地图 -->
+    <WebView
+        android:id="@+id/map_webview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="36dp" />
+
+    <!-- 加载状态 -->
+    <LinearLayout
+        android:id="@+id/map_loading"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="36dp"
+        android:orientation="vertical"
+        android:gravity="center">
+
+        <ProgressBar
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:indeterminateTint="#00CED1" />
+
+        <TextView
+            android:id="@+id/map_tv_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="正在加载地图..."
+            android:textColor="#80FFFFFF"
+            android:textSize="12sp" />
+
+    </LinearLayout>
 
     <!-- 标题栏 -->
     <LinearLayout
@@ -60,48 +94,5 @@
             android:background="?android:attr/selectableItemBackgroundBorderless" />
 
     </LinearLayout>
-
-    <!-- 内容区域 -->
-    <FrameLayout
-        android:id="@+id/map_content"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginTop="36dp"
-        android:background="#0D1642">
-
-        <!-- 截图显示 -->
-        <ImageView
-            android:id="@+id/map_screenshot"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:scaleType="centerCrop"
-            android:visibility="gone" />
-
-        <!-- 加载状态 -->
-        <LinearLayout
-            android:id="@+id/map_loading"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:orientation="vertical"
-            android:gravity="center">
-
-            <ProgressBar
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:indeterminateTint="#00CED1" />
-
-            <TextView
-                android:id="@+id/map_tv_status"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="正在启动导航..."
-                android:textColor="#80FFFFFF"
-                android:textSize="12sp" />
-
-        </LinearLayout>
-
-    </FrameLayout>
 
 </FrameLayout>
