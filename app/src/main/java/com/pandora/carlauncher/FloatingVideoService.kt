@@ -29,13 +29,13 @@ class FloatingVideoService : Service() {
         const val EXTRA_VIDEO_URI = "extra_video_uri"
         const val EXTRA_VIDEO_TITLE = "extra_video_title"
 
-        // 悬浮窗默认尺寸
-        private const val DEFAULT_WIDTH = 480
-        private const val DEFAULT_HEIGHT = 270
-        private const val MIN_WIDTH = 240
-        private const val MIN_HEIGHT = 135
-        private const val MAX_WIDTH = 960
-        private const val MAX_HEIGHT = 540
+        // 悬浮窗默认尺寸（可根据需要调整）
+        private const val DEFAULT_WIDTH = 640
+        private const val DEFAULT_HEIGHT = 360
+        private const val MIN_WIDTH = 160   // 最小160px
+        private const val MIN_HEIGHT = 90
+        private const val MAX_WIDTH = 1920  // 最大1920px
+        private const val MAX_HEIGHT = 1080
     }
 
     private var windowManager: WindowManager? = null
