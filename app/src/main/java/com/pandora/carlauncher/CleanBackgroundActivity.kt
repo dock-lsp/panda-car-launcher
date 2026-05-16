@@ -29,7 +29,7 @@ class CleanBackgroundActivity : AppCompatActivity() {
     private val activityManager: ActivityManager by lazy {
         getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
     }
-    private val packageManager: PackageManager by lazy { packageManager }
+    private val pm: PackageManager by lazy { packageManager }
     private val runningApps = mutableListOf<AppProcessInfo>()
     private val selectedApps = mutableSetOf<String>()
 
@@ -108,8 +108,8 @@ class CleanBackgroundActivity : AppCompatActivity() {
                 !process.processName.startsWith("com.android.")
             ) {
                 try {
-                    val appInfo = packageManager.getApplicationInfo(process.processName, 0)
-                    val appName = packageManager.getApplicationLabel(appInfo).toString()
+                    val appInfo = pm.getApplicationInfo(process.processName, 0)
+                    val appName = pm.getApplicationLabel(appInfo).toString()
                     runningApps.add(AppProcessInfo(
                         process.processName,
                         appName,
