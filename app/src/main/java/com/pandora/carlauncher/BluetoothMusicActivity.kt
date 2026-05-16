@@ -154,14 +154,14 @@ class BluetoothMusicActivity : AppCompatActivity() {
             val controllers = mediaSessionManager?.getActiveSessions(null)
             if (!controllers.isNullOrEmpty()) {
                 // 使用第一个活动的 MediaController
-                setMediaController(controllers[0])
+                setupMediaController(controllers[0])
             }
         } catch (e: SecurityException) {
             Log.e(TAG, "需要通知监听权限")
         }
     }
 
-    private fun setMediaController(controller: MediaController?) {
+    private fun setupMediaController(controller: MediaController?) {
         mediaController?.unregisterCallback(mediaCallback)
         mediaController = controller
         controller?.registerCallback(mediaCallback)

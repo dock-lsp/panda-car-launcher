@@ -101,7 +101,7 @@ class CleanBackgroundActivity : AppCompatActivity() {
     private fun requestUsageStatsPermission() {
         AlertDialog.Builder(this)
             .setTitle("需要权限")
-            .setMessage("清理后台功能需要"使用情况访问权限"来查看运行中的应用。\n\n请在设置中开启此权限。")
+            .setMessage("清理后台功能需要\"使用情况访问权限\"来查看运行中的应用。\n\n请在设置中开启此权限。")
             .setPositiveButton("去设置") { _, _ ->
                 val intent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
                 startActivity(intent)
