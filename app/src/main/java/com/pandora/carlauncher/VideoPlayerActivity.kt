@@ -46,10 +46,10 @@ class VideoPlayerActivity : AppCompatActivity(), SurfaceHolder.Callback {
     private var surfaceView: SurfaceView? = null
     private var mediaPlayer: MediaPlayer? = null
     private var videoUri: Uri? = null
-    private var videoDuration = 0
-    private var isFullScreen = true // 默认全屏
-    private var videoWidth = 0
-    private var videoHeight = 0
+    private var videoDuration: Int = 0
+    private var isFullScreen: Boolean = true
+    private var videoWidth: Int = 0
+    private var videoHeight: Int = 0
 
     private var tvTitle: TextView? = null
     private var tvSpeed: TextView? = null
