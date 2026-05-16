@@ -200,8 +200,8 @@ class VideoPlayerActivity : AppCompatActivity(), SurfaceHolder.Callback {
                 setDisplay(holder)
                 setOnPreparedListener { mp ->
                     videoDuration = mp.duration
-                    videoWidth = mp.videoWidth
-                    videoHeight = mp.videoHeight
+                    this@VideoPlayerActivity.videoWidth = mp.videoWidth
+                    this@VideoPlayerActivity.videoHeight = mp.videoHeight
                     Log.d(TAG, "onPrepared: duration=${videoDuration}ms, size=${videoWidth}x${videoHeight}")
                     updateDurationDisplay()
                     // 根据当前模式调整 SurfaceView
