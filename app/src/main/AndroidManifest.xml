@@ -175,6 +175,14 @@
             android:name=".FloatingMapService"
             android:exported="false" />
 
+        <!-- 悬浮地图 Activity -->
+        <activity
+            android:name=".FloatingMapActivity"
+            android:exported="false"
+            android:theme="@style/Theme.PandaCarLauncher"
+            android:launchMode="singleTask"
+            android:excludeFromRecents="true" />
+
         <!-- FileProvider -->
         <provider
             android:name="androidx.core.content.FileProvider"

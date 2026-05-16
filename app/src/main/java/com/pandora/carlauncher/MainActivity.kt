@@ -380,31 +380,8 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION))
             return
         }
-        // 请求截屏权限
-        pendingMapPackage = pkg
-        pendingMapName = name
-        val projectionManager = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as android.media.projection.MediaProjectionManager
-        startActivityForResult(projectionManager.createScreenCaptureIntent(), 2001)
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == 2001) {
-            if (resultCode == RESULT_OK && data != null && pendingMapPackage != null) {
-                val intent = Intent(this, FloatingMapService::class.java).apply {
-                    putExtra(FloatingMapService.EXTRA_MAP_PACKAGE, pendingMapPackage)
-                    putExtra(FloatingMapService.EXTRA_MAP_NAME, pendingMapName)
-                    putExtra(FloatingMapService.EXTRA_CAPTURE_RESULT, resultCode)
-                    putExtra(FloatingMapService.EXTRA_CAPTURE_DATA, data)
-                }
-                startService(intent)
-                Toast.makeText(this, "${pendingMapName} 画中画已启动", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(this, "需要截屏权限才能使用画中画", Toast.LENGTH_SHORT).show()
-            }
-            pendingMapPackage = null
-            pendingMapName = null
-        }
+        // 直接启动悬浮窗 Activity
+        FloatingMapActivity.start(this, pkg, name)
     }
 
     private fun openFirstAvailableNavigation() {
