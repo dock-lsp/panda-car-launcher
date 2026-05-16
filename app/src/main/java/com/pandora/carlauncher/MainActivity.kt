@@ -368,34 +368,24 @@ class MainActivity : AppCompatActivity() {
         // 静音按钮
         val ivMute = dialog.findViewById<ImageView>(R.id.iv_mute)
         var isMuted = false
-        // 保存静音前的音量
         val savedVolumes = mutableMapOf<Int, Int>()
         ivMute?.setOnClickListener {
             isMuted = !isMuted
             if (isMuted) {
-                // 保存当前音量并静音
                 savedVolumes[AudioManager.STREAM_MUSIC] = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
                 savedVolumes[AudioManager.STREAM_RING] = audioManager.getStreamVolume(AudioManager.STREAM_RING)
                 savedVolumes[AudioManager.STREAM_ALARM] = audioManager.getStreamVolume(AudioManager.STREAM_ALARM)
-                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, 0, 0)
-                audioManager.setStreamVolume(AudioManager.STREAM_RING, 0, 0)
-                audioManager.setStreamVolume(AudioManager.STREAM_ALARM, 0, 0)
+                safeSetVolume(AudioManager.STREAM_MUSIC, 0)
+                safeSetVolume(AudioManager.STREAM_RING, 0)
+                safeSetVolume(AudioManager.STREAM_ALARM, 0)
                 ivMute.setImageResource(R.drawable.ic_volume_mute)
-                // 更新UI
                 updateVolumeUI(dialog, R.id.seek_media_volume, R.id.tv_media_volume, AudioManager.STREAM_MUSIC)
                 updateVolumeUI(dialog, R.id.seek_ring_volume, R.id.tv_ring_volume, AudioManager.STREAM_RING)
                 updateVolumeUI(dialog, R.id.seek_alarm_volume, R.id.tv_alarm_volume, AudioManager.STREAM_ALARM)
             } else {
-                // 恢复音量
-                savedVolumes[AudioManager.STREAM_MUSIC]?.let {
-                    audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, it, 0)
-                }
-                savedVolumes[AudioManager.STREAM_RING]?.let {
-                    audioManager.setStreamVolume(AudioManager.STREAM_RING, it, 0)
-                }
-                savedVolumes[AudioManager.STREAM_ALARM]?.let {
-                    audioManager.setStreamVolume(AudioManager.STREAM_ALARM, it, 0)
-                }
+                savedVolumes[AudioManager.STREAM_MUSIC]?.let { safeSetVolume(AudioManager.STREAM_MUSIC, it) }
+                savedVolumes[AudioManager.STREAM_RING]?.let { safeSetVolume(AudioManager.STREAM_RING, it) }
+                savedVolumes[AudioManager.STREAM_ALARM]?.let { safeSetVolume(AudioManager.STREAM_ALARM, it) }
                 ivMute.setImageResource(R.drawable.ic_volume)
                 updateVolumeUI(dialog, R.id.seek_media_volume, R.id.tv_media_volume, AudioManager.STREAM_MUSIC)
                 updateVolumeUI(dialog, R.id.seek_ring_volume, R.id.tv_ring_volume, AudioManager.STREAM_RING)
@@ -403,12 +393,21 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // 设置三个音量条（带+/-按钮）
         setupVolumeControl(dialog, R.id.seek_media_volume, R.id.tv_media_volume, R.id.btn_media_minus, R.id.btn_media_plus, AudioManager.STREAM_MUSIC)
         setupVolumeControl(dialog, R.id.seek_ring_volume, R.id.tv_ring_volume, R.id.btn_ring_minus, R.id.btn_ring_plus, AudioManager.STREAM_RING)
         setupVolumeControl(dialog, R.id.seek_alarm_volume, R.id.tv_alarm_volume, R.id.btn_alarm_minus, R.id.btn_alarm_plus, AudioManager.STREAM_ALARM)
 
         dialog.show()
+    }
+
+    private fun safeSetVolume(streamType: Int, volume: Int) {
+        try {
+            audioManager.setStreamVolume(streamType, volume, 0)
+        } catch (e: SecurityException) {
+            Log.e(TAG, "设置音量失败(权限不足): stream=$streamType", e)
+        } catch (e: Exception) {
+            Log.e(TAG, "设置音量失败: stream=$streamType", e)
+        }
     }
 
     private fun updateVolumeUI(dialog: Dialog, seekId: Int, tvId: Int, streamType: Int) {
@@ -430,7 +429,7 @@ class MainActivity : AppCompatActivity() {
         seek?.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 if (fromUser) {
-                    audioManager.setStreamVolume(streamType, progress, 0)
+                    safeSetVolume(streamType, progress)
                     tv?.text = "$progress"
                 }
             }
@@ -438,18 +437,16 @@ class MainActivity : AppCompatActivity() {
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
         })
 
-        // 减小按钮
         dialog.findViewById<View>(minusBtnId)?.setOnClickListener {
             val newVol = (audioManager.getStreamVolume(streamType) - 1).coerceAtLeast(0)
-            audioManager.setStreamVolume(streamType, newVol, 0)
+            safeSetVolume(streamType, newVol)
             seek?.progress = newVol
             tv?.text = "$newVol"
         }
 
-        // 增大按钮
         dialog.findViewById<View>(plusBtnId)?.setOnClickListener {
             val newVol = (audioManager.getStreamVolume(streamType) + 1).coerceAtMost(max)
-            audioManager.setStreamVolume(streamType, newVol, 0)
+            safeSetVolume(streamType, newVol)
             seek?.progress = newVol
             tv?.text = "$newVol"
         }
