@@ -6,6 +6,8 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.PixelFormat
+import android.hardware.display.DisplayManager
+import android.media.ImageReader
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
@@ -15,8 +17,6 @@ import android.util.DisplayMetrics
 import android.util.Log
 import android.view.*
 import android.widget.*
-import java.io.File
-import java.io.FileOutputStream
 
 /**
  * 地图悬浮窗服务 - 真实画中画
