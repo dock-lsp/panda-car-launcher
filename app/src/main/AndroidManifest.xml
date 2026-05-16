@@ -170,6 +170,11 @@
             android:name=".FloatingVideoService"
             android:exported="false" />
 
+        <!-- 悬浮地图服务 -->
+        <service
+            android:name=".FloatingMapService"
+            android:exported="false" />
+
         <!-- FileProvider -->
         <provider
             android:name="androidx.core.content.FileProvider"

@@ -306,6 +306,21 @@ class MainActivity : AppCompatActivity() {
     private fun setupCardClicks() {
         findViewById<View>(R.id.card_map)?.setOnClickListener { openFirstAvailableNavigation() }
         findViewById<View>(R.id.card_music)?.setOnClickListener { openFirstAvailableMusic() }
+        
+        // 地图卡片悬浮按钮
+        findViewById<View>(R.id.btn_float_map)?.setOnClickListener { 
+            startFloatingMapService()
+        }
+    }
+    
+    private fun startFloatingMapService() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+            Toast.makeText(this, "请先授予悬浮窗权限", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION))
+            return
+        }
+        startService(Intent(this, FloatingMapService::class.java))
+        Toast.makeText(this, "导航悬浮窗已启动", Toast.LENGTH_SHORT).show()
     }
 
     private fun openFirstAvailableNavigation() {

@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#CC1A1A2E"
+    android:elevation="8dp">
+
+    <!-- 标题栏 -->
+    <LinearLayout
+        android:id="@+id/map_title_bar"
+        android:layout_width="match_parent"
+        android:layout_height="36dp"
+        android:background="#80000000"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp">
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/ic_navigation"
+            android:tint="#00CED1" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:text="导航"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp" />
+
+        <ImageView
+            android:id="@+id/map_btn_zoom_out"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:src="@drawable/ic_minus"
+            android:padding="4dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless" />
+
+        <ImageView
+            android:id="@+id/map_btn_zoom_in"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_marginStart="4dp"
+            android:src="@drawable/ic_plus"
+            android:padding="4dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless" />
+
+        <ImageView
+            android:id="@+id/map_btn_close"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_marginStart="8dp"
+            android:src="@drawable/ic_close"
+            android:padding="4dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless" />
+
+    </LinearLayout>
+
+    <!-- 内容区域 -->
+    <FrameLayout
+        android:id="@+id/map_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="36dp"
+        android:background="#0D1642">
+
+        <!-- 地图预览占位 -->
+        <ImageView
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_navigation"
+            android:alpha="0.3" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="40dp"
+            android:text="点击打开导航"
+            android:textColor="#80FFFFFF"
+            android:textSize="14sp" />
+
+        <Button
+            android:id="@+id/map_btn_open"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:layout_gravity="center|bottom"
+            android:layout_marginBottom="16dp"
+            android:text="打开地图"
+            android:textSize="12sp"
+            android:backgroundTint="#00CED1"
+            android:textColor="#FFFFFF" />
+
+    </FrameLayout>
+
+</FrameLayout>
