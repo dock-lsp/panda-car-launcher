@@ -38,7 +38,7 @@ jobs:
         echo "App Version: $VERSION"
 
     - name: Build Debug APK
-      run: gradle assembleDebug
+      run: gradle clean assembleDebug
 
     - name: Upload Debug APK
       uses: actions/upload-artifact@v4
