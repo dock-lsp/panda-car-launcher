@@ -73,7 +73,7 @@ class BluetoothMusicActivity : AppCompatActivity() {
                     }
                     device?.let {
                         if (ActivityCompat.checkSelfPermission(this@BluetoothMusicActivity,
-                                Manifest.permission.BluetoothConnect) == PackageManager.PERMISSION_GRANTED) {
+                                Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
                             if (it.name != null && it.name.isNotEmpty()) {
                                 // 设备发现
                             }
@@ -185,7 +185,7 @@ class BluetoothMusicActivity : AppCompatActivity() {
 
     private fun loadPairedDevices() {
         pairedDevices.clear()
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BluetoothConnect) == PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
             bluetoothAdapter?.bondedDevices?.let {
                 pairedDevices.addAll(it)
             }
@@ -196,14 +196,14 @@ class BluetoothMusicActivity : AppCompatActivity() {
     }
 
     private fun scanBluetoothDevices() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BluetoothScan) == PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) == PackageManager.PERMISSION_GRANTED) {
             bluetoothAdapter?.startDiscovery()
         }
     }
 
     private fun connectToDevice(device: BluetoothDevice) {
         connectedDevice = device
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BluetoothConnect) == PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
             tvSongTitle?.text = "已连接: ${device.name}"
         }
     }
@@ -305,7 +305,7 @@ class BluetoothMusicActivity : AppCompatActivity() {
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             val device = devices[position]
             if (ActivityCompat.checkSelfPermission(this@BluetoothMusicActivity,
-                    Manifest.permission.BluetoothConnect) == PackageManager.PERMISSION_GRANTED) {
+                    Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
                 holder.tvName.text = device.name ?: "未知设备"
             }
             holder.tvAddress.text = device.address
