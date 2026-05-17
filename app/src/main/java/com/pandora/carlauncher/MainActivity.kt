@@ -193,6 +193,10 @@ class MainActivity : AppCompatActivity() {
         rvGrid?.layoutManager = GridLayoutManager(this, 6)
         gridAdapter = AppGridAdapter(getGridApps())
         rvGrid?.adapter = gridAdapter
+
+        // Dock 栏（空白，后续可添加快捷应用）
+        val rvDock = findViewById<RecyclerView>(R.id.rv_dock)
+        rvDock?.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
     }
 
     /**
