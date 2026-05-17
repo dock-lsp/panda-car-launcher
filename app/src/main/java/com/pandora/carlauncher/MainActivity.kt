@@ -191,7 +191,12 @@ class MainActivity : AppCompatActivity() {
     private fun setupAppGrid() {
         val rvGrid = findViewById<RecyclerView>(R.id.rv_app_grid)
         rvGrid?.layoutManager = GridLayoutManager(this, 6)
-        gridAdapter = AppGridAdapter(getGridApps())
+        val gridApps = getGridApps().toMutableList()
+        // 添加➕按钮项
+        gridApps.add(GridApp(appName = "添加", iconRes = R.drawable.ic_add, iconBg = R.drawable.bg_icon_gray) {
+            showAddAppDialog()
+        })
+        gridAdapter = AppGridAdapter(gridApps)
         rvGrid?.adapter = gridAdapter
 
         // Dock 栏（空白，后续可添加快捷应用）
