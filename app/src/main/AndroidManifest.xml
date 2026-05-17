@@ -38,6 +38,7 @@
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
 
     <!-- 定位权限（车速检测） -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -175,6 +176,20 @@
             android:name=".FloatingMapService"
             android:exported="false"
             android:foregroundServiceType="location" />
+
+        <!-- 悬浮导航服务 -->
+        <service
+            android:name=".FloatingNavService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="location" />
+
+        <!-- 悬浮音乐服务 -->
+        <service
+            android:name=".FloatingMusicService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
 
         <!-- FileProvider -->
         <provider
