@@ -30,17 +30,30 @@
             android:layout_height="0dp"
             android:layout_weight="1">
 
-            <!-- 应用网格（默认显示） -->
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rv_app_grid"
+            <!-- 应用网格容器（带圆角） -->
+            <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_gravity="bottom"
-                android:clipToPadding="false"
-                android:paddingStart="@dimen/card_margin"
-                android:paddingEnd="@dimen/card_margin"
-                android:paddingTop="@dimen/spacing_sm"
-                android:paddingBottom="@dimen/spacing_sm" />
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginBottom="8dp"
+                app:cardCornerRadius="25dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="#15000000">
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rv_app_grid"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="bottom"
+                    android:clipToPadding="false"
+                    android:paddingStart="@dimen/card_margin"
+                    android:paddingEnd="@dimen/card_margin"
+                    android:paddingTop="@dimen/spacing_sm"
+                    android:paddingBottom="@dimen/spacing_sm" />
+
+            </androidx.cardview.widget.CardView>
 
             <!-- 分屏插件容器（横屏：左右布局） -->
             <LinearLayout
