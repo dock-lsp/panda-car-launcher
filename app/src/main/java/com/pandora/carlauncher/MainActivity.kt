@@ -56,6 +56,9 @@ class MainActivity : AppCompatActivity() {
     // 导航类型
     private var currentNavType = "amap" // amap, baidu, tencent
 
+    // 悬浮导航窗口
+    private var floatingNavWindow: FloatingNavWindow? = null
+
     private val updateTimeRunnable = object : Runnable {
         override fun run() {
             updateTime()
@@ -252,12 +255,18 @@ class MainActivity : AppCompatActivity() {
     private fun setupBottomNavigation() {
         // 固定功能按钮
         findViewById<LinearLayout>(R.id.nav_home)?.setOnClickListener {
+            // 关闭所有悬浮窗口
+            floatingNavWindow?.hide()
+            floatingNavWindow = null
             showAppGrid()
         }
         findViewById<LinearLayout>(R.id.nav_navigation)?.setOnClickListener {
-            toggleNavPlugin()
+            toggleFloatingNavWindow()
         }
         findViewById<LinearLayout>(R.id.nav_music)?.setOnClickListener {
+            // 关闭悬浮导航窗口
+            floatingNavWindow?.hide()
+            floatingNavWindow = null
             toggleMusicPlugin()
         }
         findViewById<LinearLayout>(R.id.nav_theme)?.setOnClickListener {
@@ -266,9 +275,36 @@ class MainActivity : AppCompatActivity() {
         findViewById<LinearLayout>(R.id.nav_add)?.setOnClickListener {
             showAddAppDialog()
         }
-        
+
         // 设置可滑动的底部应用列表
         setupBottomAppsRecyclerView()
+    }
+
+    /**
+     * 切换悬浮导航窗口
+     */
+    private fun toggleFloatingNavWindow() {
+        // 检查悬浮窗权限
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+            Toast.makeText(this, "请授予悬浮窗权限", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION))
+            return
+        }
+
+        if (floatingNavWindow == null) {
+            floatingNavWindow = FloatingNavWindow(this)
+            floatingNavWindow?.show()
+            // 发送广播打开高德悬浮版
+            try {
+                sendBroadcast(Intent("com.autonavi.plus.openmap").apply {
+                    putExtra("x", 0); putExtra("y", 0)
+                    putExtra("w", 0); putExtra("h", 0)
+                })
+            } catch (_: Exception) {}
+        } else {
+            floatingNavWindow?.hide()
+            floatingNavWindow = null
+        }
     }
 
     // ========== 插件显示控制 ==========
