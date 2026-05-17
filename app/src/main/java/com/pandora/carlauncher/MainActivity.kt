@@ -56,11 +56,8 @@ class MainActivity : AppCompatActivity() {
     // 导航类型
     private var currentNavType = "amap" // amap, baidu, tencent
 
-    // 悬浮导航窗口
-    private var floatingNavWindow: FloatingNavWindow? = null
-    
-    // 悬浮音乐窗口
-    private var floatingMusicWindow: FloatingMusicWindow? = null
+    // 歌词悬浮窗口
+    private var floatingLyricsWindow: FloatingLyricsWindow? = null
 
     private val updateTimeRunnable = object : Runnable {
         override fun run() {
@@ -258,22 +255,16 @@ class MainActivity : AppCompatActivity() {
     private fun setupBottomNavigation() {
         // 固定功能按钮
         findViewById<LinearLayout>(R.id.nav_home)?.setOnClickListener {
-            // 关闭所有悬浮窗口
-            floatingNavWindow?.hide()
-            floatingNavWindow = null
-            floatingMusicWindow?.hide()
-            floatingMusicWindow = null
+            // 关闭歌词悬浮窗，回到桌面
+            floatingLyricsWindow?.hide()
+            floatingLyricsWindow = null
             showAppGrid()
         }
         findViewById<LinearLayout>(R.id.nav_navigation)?.setOnClickListener {
-            toggleFloatingNavWindow()
+            enterMapMode()
         }
         findViewById<LinearLayout>(R.id.nav_music)?.setOnClickListener {
-            // 关闭悬浮导航窗口
-            floatingNavWindow?.hide()
-            floatingNavWindow = null
-            // 切换悬浮音乐窗口
-            toggleFloatingMusicWindow()
+            toggleMusicPlugin()
         }
         findViewById<LinearLayout>(R.id.nav_theme)?.setOnClickListener {
             showThemeCenterDialog()
@@ -286,10 +277,8 @@ class MainActivity : AppCompatActivity() {
         setupBottomAppsRecyclerView()
     }
 
-    /**
-     * 切换悬浮导航窗口
-     */
-    private fun toggleFloatingNavWindow() {
+    // 进入地图模式
+    private fun enterMapMode() {
         // 检查悬浮窗权限
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
             Toast.makeText(this, "请授予悬浮窗权限", Toast.LENGTH_SHORT).show()
@@ -297,40 +286,17 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
-        if (floatingNavWindow == null) {
-            floatingNavWindow = FloatingNavWindow(this)
-            floatingNavWindow?.show()
-            // 发送广播打开高德悬浮版
-            try {
-                sendBroadcast(Intent("com.autonavi.plus.openmap").apply {
-                    putExtra("x", 0); putExtra("y", 0)
-                    putExtra("w", 0); putExtra("h", 0)
-                })
-            } catch (_: Exception) {}
-        } else {
-            floatingNavWindow?.hide()
-            floatingNavWindow = null
-        }
-    }
+        // 1. 隐藏应用网格
+        showAppGrid() // 先回到主页
 
-    /**
-     * 切换悬浮音乐窗口
-     */
-    private fun toggleFloatingMusicWindow() {
-        // 检查悬浮窗权限
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
-            Toast.makeText(this, "请授予悬浮窗权限", Toast.LENGTH_SHORT).show()
-            startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION))
-            return
-        }
+        // 2. 启动地图APP
+        openMapApp()
 
-        if (floatingMusicWindow == null) {
-            floatingMusicWindow = FloatingMusicWindow(this)
-            floatingMusicWindow?.show()
-        } else {
-            floatingMusicWindow?.hide()
-            floatingMusicWindow = null
+        // 3. 显示歌词悬浮窗
+        if (floatingLyricsWindow == null) {
+            floatingLyricsWindow = FloatingLyricsWindow(this)
         }
+        floatingLyricsWindow?.show()
     }
 
     // ========== 插件显示控制 ==========
@@ -466,11 +432,7 @@ class MainActivity : AppCompatActivity() {
      * 打开地图应用
      */
     private fun openMapApp() {
-        val packages = when (currentNavType) {
-            "baidu" -> arrayOf("com.baidu.BaiduMap", "com.baidu.naviauto")
-            "tencent" -> arrayOf("com.tencent.map")
-            else -> arrayOf("com.autonavi.amapauto", "com.autonavi.minimap")
-        }
+        val packages = arrayOf("com.autonavi.amapauto", "com.autonavi.minimap", "com.baidu.BaiduMap")
         for (pkg in packages) {
             try {
                 val intent = packageManager.getLaunchIntentForPackage(pkg)
@@ -839,11 +801,9 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
         handler.removeCallbacks(updateTimeRunnable)
         musicRefreshHandler.removeCallbacks(musicRefreshRunnable)
-        // 清理悬浮窗口
-        floatingNavWindow?.hide()
-        floatingNavWindow = null
-        floatingMusicWindow?.hide()
-        floatingMusicWindow = null
+        // 清理歌词悬浮窗口
+        floatingLyricsWindow?.hide()
+        floatingLyricsWindow = null
     }
 
     data class CustomApp(val packageName: String, val appName: String)

@@ -11,13 +11,13 @@ import android.view.*
 import android.widget.*
 
 /**
- * 悬浮音乐窗口
- * 显示真实音乐信息 + 歌词
+ * 歌词悬浮窗口
+ * 显示在地图APP之上
  */
-class FloatingMusicWindow(private val context: Context) {
+class FloatingLyricsWindow(private val context: Context) {
 
     companion object {
-        private const val TAG = "FloatingMusicWindow"
+        private const val TAG = "FloatingLyrics"
         @Volatile var isShowing = false
     }
 
@@ -26,6 +26,7 @@ class FloatingMusicWindow(private val context: Context) {
     private var params: WindowManager.LayoutParams? = null
     private val handler = Handler(Looper.getMainLooper())
 
+    // 拖动
     private var initialX = 0
     private var initialY = 0
     private var initialTouchX = 0f
@@ -36,32 +37,32 @@ class FloatingMusicWindow(private val context: Context) {
         if (floatingView != null) return
 
         val inflater = LayoutInflater.from(context)
-        floatingView = inflater.inflate(R.layout.layout_floating_music_window, null)
+        floatingView = inflater.inflate(R.layout.layout_floating_lyrics, null)
 
         val dm = context.resources.displayMetrics
-        val width = (dm.widthPixels * 0.25).toInt()
-        val height = (dm.heightPixels * 0.45).toInt()
+        val width = (dm.widthPixels * 0.35).toInt()
+        val height = ViewGroup.LayoutParams.WRAP_CONTENT
 
         params = WindowManager.LayoutParams(
             width, height,
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
             else @Suppress("DEPRECATION") WindowManager.LayoutParams.TYPE_PHONE,
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or 
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
             WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
             PixelFormat.TRANSLUCENT
         ).apply {
-            gravity = Gravity.TOP or Gravity.END
-            x = 20
-            y = (dm.heightPixels - height) / 2
+            gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
+            x = 0
+            y = dm.heightPixels / 4 // 显示在屏幕上方1/4处
         }
 
         try {
             windowManager.addView(floatingView, params)
             isShowing = true
-            Log.d(TAG, "悬浮音乐窗口已显示")
+            Log.d(TAG, "歌词悬浮窗已显示")
         } catch (e: Exception) {
-            Log.e(TAG, "显示悬浮窗口失败", e)
+            Log.e(TAG, "显示失败", e)
             return
         }
 
@@ -86,18 +87,18 @@ class FloatingMusicWindow(private val context: Context) {
         }
 
         // 关闭按钮
-        floatingView?.findViewById<ImageView>(R.id.float_music_close)?.setOnClickListener {
+        floatingView?.findViewById<ImageView>(R.id.lyrics_close)?.setOnClickListener {
             hide()
         }
 
         // 播放控制
-        floatingView?.findViewById<ImageView>(R.id.float_music_prev)?.setOnClickListener {
+        floatingView?.findViewById<ImageView>(R.id.lyrics_prev)?.setOnClickListener {
             sendMediaAction("prev")
         }
-        floatingView?.findViewById<ImageView>(R.id.float_music_play)?.setOnClickListener {
+        floatingView?.findViewById<ImageView>(R.id.lyrics_play)?.setOnClickListener {
             sendMediaAction("play_pause")
         }
-        floatingView?.findViewById<ImageView>(R.id.float_music_next)?.setOnClickListener {
+        floatingView?.findViewById<ImageView>(R.id.lyrics_next)?.setOnClickListener {
             sendMediaAction("next")
         }
 
@@ -112,12 +113,11 @@ class FloatingMusicWindow(private val context: Context) {
         }
         floatingView = null
         isShowing = false
-        Log.d(TAG, "悬浮音乐窗口已隐藏")
     }
 
     private val refreshRunnable = object : Runnable {
         override fun run() {
-            updateMusicInfo()
+            updateLyrics()
             handler.postDelayed(this, 1000)
         }
     }
@@ -130,20 +130,25 @@ class FloatingMusicWindow(private val context: Context) {
         handler.removeCallbacks(refreshRunnable)
     }
 
-    private fun updateMusicInfo() {
+    private fun updateLyrics() {
         val title = MusicNotificationListener.currentTitle
         val artist = MusicNotificationListener.currentArtist
         val isPlaying = MusicNotificationListener.isPlaying
 
-        floatingView?.findViewById<TextView>(R.id.float_music_title)?.text = 
+        floatingView?.findViewById<TextView>(R.id.lyrics_title)?.text =
             if (title.isNotEmpty()) title else "未在播放"
-        floatingView?.findViewById<TextView>(R.id.float_music_artist)?.text = artist
-        floatingView?.findViewById<ImageView>(R.id.float_music_play)?.setImageResource(
+        floatingView?.findViewById<TextView>(R.id.lyrics_artist)?.text = artist
+        floatingView?.findViewById<ImageView>(R.id.lyrics_play)?.setImageResource(
             if (isPlaying) R.drawable.ic_pause else R.drawable.ic_play
         )
-        
-        // 歌词显示（如果有）
-        // floatingView?.findViewById<TextView>(R.id.float_music_lyrics)?.text = getLyrics()
+
+        // 歌词（模拟）
+        val lyricsText = if (title.isNotEmpty()) {
+            "♪ 正在播放 ♪\n$title\n- $artist -"
+        } else {
+            "点击播放音乐"
+        }
+        floatingView?.findViewById<TextView>(R.id.lyrics_text)?.text = lyricsText
     }
 
     private fun sendMediaAction(action: String) {
@@ -159,24 +164,6 @@ class FloatingMusicWindow(private val context: Context) {
                         controller.transportControls?.play()
                     }
                 }
-            }
-        } else {
-            // 兼容方案：发送媒体按钮广播
-            val pkg = MusicNotificationListener.currentPackageName
-            if (pkg.isNotEmpty()) {
-                try {
-                    val intent = android.content.Intent("android.intent.action.MEDIA_BUTTON").apply {
-                        putExtra("android.intent.extra.KEY_EVENT", when(action) {
-                            "prev" -> android.view.KeyEvent(android.view.KeyEvent.ACTION_DOWN, android.view.KeyEvent.KEYCODE_MEDIA_PREVIOUS)
-                            "next" -> android.view.KeyEvent(android.view.KeyEvent.ACTION_DOWN, android.view.KeyEvent.KEYCODE_MEDIA_NEXT)
-                            else -> android.view.KeyEvent(android.view.KeyEvent.ACTION_DOWN, 
-                                if (MusicNotificationListener.isPlaying) android.view.KeyEvent.KEYCODE_MEDIA_PAUSE 
-                                else android.view.KeyEvent.KEYCODE_MEDIA_PLAY)
-                        })
-                        setPackage(pkg)
-                    }
-                    context.sendBroadcast(intent)
-                } catch (_: Exception) {}
             }
         }
     }

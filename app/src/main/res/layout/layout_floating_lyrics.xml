@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:background="@drawable/bg_plugin_card"
     android:orientation="vertical"
-    android:padding="10dp"
+    android:padding="12dp"
     android:elevation="8dp">
 
     <!-- 标题栏 -->
@@ -25,13 +25,13 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginStart="6dp"
-            android:text="正在播放"
+            android:text="音乐"
             android:textColor="#FFFFFF"
             android:textSize="13sp"
             android:textStyle="bold" />
 
         <ImageView
-            android:id="@+id/float_music_close"
+            android:id="@+id/lyrics_close"
             android:layout_width="22dp"
             android:layout_height="22dp"
             android:src="@drawable/ic_close"
@@ -39,29 +39,41 @@
 
     </LinearLayout>
 
+    <!-- 歌词区域 -->
+    <TextView
+        android:id="@+id/lyrics_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp"
+        android:text="点击播放音乐"
+        android:textColor="#FFFFFF"
+        android:textSize="14sp"
+        android:lineSpacingExtra="6dp"
+        android:gravity="center" />
+
     <!-- 歌曲信息 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:orientation="vertical">
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
 
         <TextView
-            android:id="@+id/float_music_title"
-            android:layout_width="wrap_content"
+            android:id="@+id/lyrics_title"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:text="未在播放"
-            android:textColor="#FFFFFF"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            android:maxLines="2"
+            android:textColor="#00CED1"
+            android:textSize="12sp"
+            android:maxLines="1"
             android:ellipsize="end" />
 
         <TextView
-            android:id="@+id/float_music_artist"
+            android:id="@+id/lyrics_artist"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
             android:text=""
             android:textColor="#80FFFFFF"
             android:textSize="11sp"
@@ -70,31 +82,16 @@
 
     </LinearLayout>
 
-    <!-- 歌词区域 -->
-    <TextView
-        android:id="@+id/float_music_lyrics"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:layout_marginTop="10dp"
-        android:text=""
-        android:textColor="#60FFFFFF"
-        android:textSize="11sp"
-        android:lineSpacingExtra="4dp"
-        android:maxLines="6"
-        android:ellipsize="end"
-        android:gravity="center" />
-
     <!-- 播放控制 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center"
-        android:layout_marginTop="8dp">
+        android:layout_marginTop="10dp">
 
         <ImageView
-            android:id="@+id/float_music_prev"
+            android:id="@+id/lyrics_prev"
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:src="@drawable/ic_skip_prev"
@@ -102,17 +99,17 @@
             android:background="@drawable/bg_control_btn" />
 
         <ImageView
-            android:id="@+id/float_music_play"
-            android:layout_width="38dp"
-            android:layout_height="38dp"
-            android:layout_marginStart="14dp"
-            android:layout_marginEnd="14dp"
+            android:id="@+id/lyrics_play"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
             android:src="@drawable/ic_play"
             android:background="@drawable/bg_icon_cyan"
-            android:padding="9dp" />
+            android:padding="10dp" />
 
         <ImageView
-            android:id="@+id/float_music_next"
+            android:id="@+id/lyrics_next"
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:src="@drawable/ic_skip_next"
