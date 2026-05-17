@@ -16,6 +16,9 @@ import android.os.Looper
 import android.provider.Settings
 import android.util.Log
 import android.view.Gravity
+import android.webkit.WebSettings
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -236,13 +239,13 @@ class MainActivity : AppCompatActivity() {
     private fun setupBottomNavigation() {
         // 固定功能按钮
         findViewById<LinearLayout>(R.id.nav_home)?.setOnClickListener {
-            Toast.makeText(this, "主页", Toast.LENGTH_SHORT).show()
+            showHomeView()
         }
         findViewById<LinearLayout>(R.id.nav_navigation)?.setOnClickListener {
-            openFirstAvailableNavigation()
+            toggleNavigationPlugin()
         }
         findViewById<LinearLayout>(R.id.nav_music)?.setOnClickListener {
-            openFirstAvailableMusic()
+            toggleMusicPlugin()
         }
         findViewById<LinearLayout>(R.id.nav_theme)?.setOnClickListener {
             showThemeCenterDialog()
@@ -253,6 +256,205 @@ class MainActivity : AppCompatActivity() {
         
         // 设置可滑动的底部应用列表
         setupBottomAppsRecyclerView()
+    }
+
+    // ========== 插件切换逻辑 ==========
+
+    private var isNavPluginVisible = false
+    private var isMusicPluginVisible = false
+    private var currentNavType = "amap" // amap, baidu, tencent
+
+    /**
+     * 显示主页（应用网格）
+     */
+    private fun showHomeView() {
+        isNavPluginVisible = false
+        isMusicPluginVisible = false
+        updatePluginVisibility()
+        updateNavButtonStates()
+    }
+
+    /**
+     * 切换导航插件
+     */
+    private fun toggleNavigationPlugin() {
+        isNavPluginVisible = !isNavPluginVisible
+        isMusicPluginVisible = false
+        updatePluginVisibility()
+        updateNavButtonStates()
+
+        if (isNavPluginVisible) {
+            loadNavigationMap()
+        }
+    }
+
+    /**
+     * 切换音乐插件
+     */
+    private fun toggleMusicPlugin() {
+        isMusicPluginVisible = !isMusicPluginVisible
+        isNavPluginVisible = false
+        updatePluginVisibility()
+        updateNavButtonStates()
+    }
+
+    private fun updatePluginVisibility() {
+        val appGrid = findViewById<View>(R.id.rv_app_grid)
+        val navPlugin = findViewById<View>(R.id.plugin_navigation)
+        val musicPlugin = findViewById<View>(R.id.plugin_music)
+
+        appGrid?.visibility = if (!isNavPluginVisible && !isMusicPluginVisible) View.VISIBLE else View.GONE
+        navPlugin?.visibility = if (isNavPluginVisible) View.VISIBLE else View.GONE
+        musicPlugin?.visibility = if (isMusicPluginVisible) View.VISIBLE else View.GONE
+    }
+
+    private fun updateNavButtonStates() {
+        val navBtn = findViewById<View>(R.id.nav_navigation)
+        val musicBtn = findViewById<View>(R.id.nav_music)
+
+        // 导航按钮高亮
+        val navIcon = navBtn?.findViewById<ImageView>(android.R.id.icon)
+            ?: navBtn?.findViewById<ImageView>(0)
+        // 通过遍历子 View 找到 ImageView
+        if (navBtn is ViewGroup) {
+            for (i in 0 until navBtn.childCount) {
+                val child = navBtn.getChildAt(i)
+                if (child is ImageView) {
+                    child.imageTintList = if (isNavPluginVisible) getColorStateList(R.color.primary) else getColorStateList(R.color.text_secondary)
+                    break
+                }
+                if (child is ViewGroup) {
+                    for (j in 0 until child.childCount) {
+                        val sub = child.getChildAt(j)
+                        if (sub is ImageView) {
+                            sub.imageTintList = if (isNavPluginVisible) getColorStateList(R.color.primary) else getColorStateList(R.color.text_secondary)
+                            break
+                        }
+                    }
+                }
+            }
+        }
+        if (musicBtn is ViewGroup) {
+            for (i in 0 until musicBtn.childCount) {
+                val child = musicBtn.getChildAt(i)
+                if (child is ImageView) {
+                    child.imageTintList = if (isMusicPluginVisible) getColorStateList(R.color.primary) else getColorStateList(R.color.text_secondary)
+                    break
+                }
+                if (child is ViewGroup) {
+                    for (j in 0 until child.childCount) {
+                        val sub = child.getChildAt(j)
+                        if (sub is ImageView) {
+                            sub.imageTintList = if (isMusicPluginVisible) getColorStateList(R.color.primary) else getColorStateList(R.color.text_secondary)
+                            break
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * 加载导航地图到中间区域 WebView
+     */
+    @SuppressLint("SetJavaScriptEnabled")
+    private fun loadNavigationMap() {
+        val webView = findViewById<WebView>(R.id.webview_navigation) ?: return
+        val loading = findViewById<View>(R.id.nav_loading)
+        val loadingText = findViewById<TextView>(R.id.nav_loading_text)
+
+        webView.settings.apply {
+            javaScriptEnabled = true
+            domStorageEnabled = true
+            loadWithOverviewMode = true
+            useWideViewPort = true
+            mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+        }
+
+        webView.webViewClient = object : WebViewClient() {
+            override fun onPageFinished(view: WebView?, url: String?) {
+                loading?.visibility = View.GONE
+            }
+            override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
+                loadingText?.text = "加载失败"
+            }
+        }
+
+        loading?.visibility = View.VISIBLE
+        val url = when (currentNavType) {
+            "baidu" -> "https://map.baidu.com/mobile/webapp/index/index"
+            "tencent" -> "https://map.qq.com/m/"
+            else -> "https://m.amap.com/navi/"
+        }
+        loadingText?.text = "正在加载${when(currentNavType) {"baidu"->"百度" "tencent"->"腾讯" else->"高德"}}导航..."
+        webView.loadUrl(url)
+    }
+
+    /**
+     * 切换导航类型
+     */
+    private fun showNavSwitchDialog() {
+        val options = arrayOf("高德地图", "百度地图", "腾讯地图")
+        AlertDialog.Builder(this)
+            .setTitle("选择导航")
+            .setItems(options) { _, which ->
+                currentNavType = when (which) {
+                    1 -> "baidu"
+                    2 -> "tencent"
+                    else -> "amap"
+                }
+                loadNavigationMap()
+            }
+            .show()
+    }
+
+    /**
+     * 切换音乐应用
+     */
+    private fun showMusicSwitchDialog() {
+        val musicApps = getInstalledMusicApps()
+        if (musicApps.isEmpty()) {
+            Toast.makeText(this, "未检测到音乐应用", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val names = musicApps.map { it.second }.toTypedArray()
+        AlertDialog.Builder(this)
+            .setTitle("选择音乐应用")
+            .setItems(names) { _, which ->
+                val (pkg, name) = musicApps[which]
+                openMusicApp(pkg)
+            }
+            .show()
+    }
+
+    private fun getInstalledMusicApps(): List<Pair<String, String>> {
+        val apps = mutableListOf<Pair<String, String>>()
+        val musicPackages = mapOf(
+            "cn.kuwo.player" to "酷我音乐",
+            "com.tencent.qqmusic" to "QQ音乐",
+            "com.netease.cloudmusic" to "网易云音乐",
+            "com.kugou.android" to "酷狗音乐"
+        )
+        for ((pkg, name) in musicPackages) {
+            try {
+                if (packageManager.getPackageInfo(pkg, 0) != null) {
+                    apps.add(pkg to name)
+                }
+            } catch (_: Exception) {}
+        }
+        return apps
+    }
+
+    private fun openMusicApp(pkg: String) {
+        try {
+            val intent = packageManager.getLaunchIntentForPackage(pkg)
+            if (intent != null) {
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                startActivity(intent)
+            }
+        } catch (e: Exception) {
+            Toast.makeText(this, "启动失败", Toast.LENGTH_SHORT).show()
+        }
     }
     
     private fun setupBottomAppsRecyclerView() {
@@ -304,12 +506,22 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupCardClicks() {
-        findViewById<View>(R.id.card_map)?.setOnClickListener { openFirstAvailableNavigation() }
-        findViewById<View>(R.id.card_music)?.setOnClickListener { openFirstAvailableMusic() }
-        
-        // 地图卡片悬浮按钮 - 选择地图后启动画中画
-        findViewById<View>(R.id.btn_float_map)?.setOnClickListener {
-            showMapPickerForFloating()
+        // 导航切换按钮
+        findViewById<View>(R.id.btn_switch_nav)?.setOnClickListener {
+            showNavSwitchDialog()
+        }
+        // 音乐切换按钮
+        findViewById<View>(R.id.btn_switch_music)?.setOnClickListener {
+            showMusicSwitchDialog()
+        }
+        // 音乐播放控制
+        findViewById<View>(R.id.plugin_btn_play)?.setOnClickListener {
+            val musicApps = getInstalledMusicApps()
+            if (musicApps.isNotEmpty()) {
+                openMusicApp(musicApps[0].first)
+            } else {
+                showMusicSwitchDialog()
+            }
         }
     }
 
