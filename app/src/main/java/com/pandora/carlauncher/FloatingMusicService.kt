@@ -272,9 +272,8 @@ class FloatingMusicService : Service() {
             }
 
             // Android 10+ 使用 getActiveSessions 需要通知监听权限
-            // 这里通过 component 获取
             val notificationListener = ComponentName(this, FloatingMusicService::class.java)
-            val sessions = try {
+            val controllers = try {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
                     mediaSessionManager.getActiveSessions(notificationListener)
                 } else {
@@ -282,7 +281,6 @@ class FloatingMusicService : Service() {
                 }
             } catch (e: SecurityException) {
                 Log.w(TAG, "没有通知监听权限，尝试其他方式", e)
-                // 尝试不带参数
                 try {
                     @Suppress("DEPRECATION")
                     mediaSessionManager.getActiveSessions(null)
@@ -292,10 +290,9 @@ class FloatingMusicService : Service() {
                 }
             }
 
-            // 找到活跃的媒体会话
-            for (sessionToken in sessions) {
+            // 找到活跃的媒体控制器
+            for (controller in controllers) {
                 try {
-                    val controller = android.media.session.MediaController(this@FloatingMusicService, sessionToken)
                     val metadata = controller.metadata
                     if (metadata != null) {
                         mediaController?.unregisterCallback(sessionCallback)
