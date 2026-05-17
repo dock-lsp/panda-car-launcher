@@ -3,6 +3,7 @@ package com.pandora.carlauncher
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.graphics.PixelFormat
 import android.os.Build
 import android.provider.Settings

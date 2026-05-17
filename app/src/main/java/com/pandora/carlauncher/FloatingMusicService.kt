@@ -294,18 +294,20 @@ class FloatingMusicService : Service() {
 
             // 找到活跃的媒体会话
             for (sessionToken in sessions) {
-                val controller = android.media.session.MediaController(this, sessionToken)
-                val metadata = controller.metadata
-                if (metadata != null) {
-                    mediaController?.unregisterCallback(sessionCallback)
-                    mediaController = controller
-                    mediaController?.registerCallback(sessionCallback)
+                try {
+                    val controller = android.media.session.MediaController(this@FloatingMusicService, sessionToken)
+                    val metadata = controller.metadata
+                    if (metadata != null) {
+                        mediaController?.unregisterCallback(sessionCallback)
+                        mediaController = controller
+                        mediaController?.registerCallback(sessionCallback)
                     // 立即更新一次
                     sessionCallback.onMetadataChanged(metadata)
                     sessionCallback.onPlaybackStateChanged(controller.playbackState)
                     Log.d(TAG, "已连接到媒体会话: ${controller.packageName}")
                     break
                 }
+                } catch (_: Exception) {}
             }
         } catch (e: Exception) {
             Log.e(TAG, "setupMediaSession 失败", e)
