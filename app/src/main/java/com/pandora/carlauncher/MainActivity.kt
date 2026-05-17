@@ -50,14 +50,11 @@ class MainActivity : AppCompatActivity() {
     private var customApps = mutableListOf<CustomApp>()
     private lateinit var gridAdapter: AppGridAdapter
 
-    // 当前显示的插件: "", "nav", "music"
-    private var currentPlugin = ""
+    // 分屏模式标志
+    private var isSplitMode = false
 
     // 导航类型
     private var currentNavType = "amap" // amap, baidu, tencent
-
-    // 歌词悬浮窗口
-    private var floatingLyricsWindow: FloatingLyricsWindow? = null
 
     private val updateTimeRunnable = object : Runnable {
         override fun run() {
@@ -93,7 +90,7 @@ class MainActivity : AppCompatActivity() {
             loadCustomApps()
             setupAppGrid()
             setupBottomNavigation()
-            setupPluginContainers()
+            setupSplitButtons()
             startMusicRefresh()
         } catch (e: Exception) {
             Log.e(TAG, "onCreate 初始化失败", e)
@@ -255,16 +252,13 @@ class MainActivity : AppCompatActivity() {
     private fun setupBottomNavigation() {
         // 固定功能按钮
         findViewById<LinearLayout>(R.id.nav_home)?.setOnClickListener {
-            // 关闭歌词悬浮窗，回到桌面
-            floatingLyricsWindow?.hide()
-            floatingLyricsWindow = null
             showAppGrid()
         }
         findViewById<LinearLayout>(R.id.nav_navigation)?.setOnClickListener {
-            enterMapMode()
+            enterSplitMode()
         }
         findViewById<LinearLayout>(R.id.nav_music)?.setOnClickListener {
-            toggleMusicPlugin()
+            enterSplitMode()
         }
         findViewById<LinearLayout>(R.id.nav_theme)?.setOnClickListener {
             showThemeCenterDialog()
@@ -277,114 +271,54 @@ class MainActivity : AppCompatActivity() {
         setupBottomAppsRecyclerView()
     }
 
-    // 进入地图模式
-    private fun enterMapMode() {
-        // 检查悬浮窗权限
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
-            Toast.makeText(this, "请授予悬浮窗权限", Toast.LENGTH_SHORT).show()
-            startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION))
-            return
-        }
-
-        // 1. 隐藏应用网格
-        showAppGrid() // 先回到主页
-
-        // 2. 启动地图APP
-        openMapApp()
-
-        // 3. 显示歌词悬浮窗
-        if (floatingLyricsWindow == null) {
-            floatingLyricsWindow = FloatingLyricsWindow(this)
-        }
-        floatingLyricsWindow?.show()
-    }
-
-    // ========== 插件显示控制 ==========
+    // ========== 分屏模式 ==========
 
     /**
-     * 显示应用网格（隐藏所有插件）
+     * 显示应用网格（退出分屏模式）
      */
     private fun showAppGrid() {
-        currentPlugin = ""
-        updatePluginVisibility()
+        isSplitMode = false
+        updateVisibility()
     }
 
     /**
-     * 切换导航插件
+     * 进入分屏模式
      */
-    private fun toggleNavPlugin() {
-        if (currentPlugin == "nav") {
-            showAppGrid()
-        } else {
-            currentPlugin = "nav"
-            updatePluginVisibility()
-            // 发送广播打开高德悬浮版
-            try {
-                sendBroadcast(Intent("com.autonavi.plus.openmap").apply {
-                    putExtra("x", 0); putExtra("y", 0)
-                    putExtra("w", 0); putExtra("h", 0)
-                })
-            } catch (_: Exception) {}
-        }
+    private fun enterSplitMode() {
+        isSplitMode = true
+        updateVisibility()
+        // 发送广播打开高德导航
+        try {
+            sendBroadcast(Intent("com.autonavi.plus.openmap").apply {
+                putExtra("x", 0); putExtra("y", 0)
+                putExtra("w", 0); putExtra("h", 0)
+            })
+        } catch (_: Exception) {}
     }
 
     /**
-     * 切换音乐插件
+     * 更新界面可见性
      */
-    private fun toggleMusicPlugin() {
-        if (currentPlugin == "music") {
-            showAppGrid()
-        } else {
-            currentPlugin = "music"
-            updatePluginVisibility()
-        }
-    }
-
-    /**
-     * 更新插件可见性
-     */
-    private fun updatePluginVisibility() {
+    private fun updateVisibility() {
         val appGrid = findViewById<View>(R.id.rv_app_grid)
-        val navContainer = findViewById<View>(R.id.nav_plugin_container)
-        val musicContainer = findViewById<View>(R.id.music_plugin_container)
+        val splitContainer = findViewById<View>(R.id.split_plugin_container)
 
-        // 显示/隐藏逻辑
-        when (currentPlugin) {
-            "nav" -> {
-                appGrid?.visibility = View.GONE
-                navContainer?.visibility = View.VISIBLE
-                musicContainer?.visibility = View.GONE
-            }
-            "music" -> {
-                appGrid?.visibility = View.GONE
-                navContainer?.visibility = View.GONE
-                musicContainer?.visibility = View.VISIBLE
-            }
-            else -> {
-                appGrid?.visibility = View.VISIBLE
-                navContainer?.visibility = View.GONE
-                musicContainer?.visibility = View.GONE
-            }
-        }
+        appGrid?.visibility = if (isSplitMode) View.GONE else View.VISIBLE
+        splitContainer?.visibility = if (isSplitMode) View.VISIBLE else View.GONE
     }
 
     /**
-     * 设置插件容器按钮
+     * 设置分屏界面按钮点击事件
      */
-    private fun setupPluginContainers() {
+    private fun setupSplitButtons() {
         // 导航切换
         findViewById<TextView>(R.id.nav_switch)?.setOnClickListener {
             showNavSwitchDialog()
         }
-        
-        // 导航状态点击打开导航
-        findViewById<View>(R.id.nav_remain)?.setOnClickListener {
+        // 打开导航
+        findViewById<Button>(R.id.nav_open)?.setOnClickListener {
             openMapApp()
         }
-        findViewById<View>(R.id.nav_road)?.setOnClickListener {
-            openMapApp()
-        }
-        
         // 音乐控制
         findViewById<ImageView>(R.id.music_prev)?.setOnClickListener {
             sendMediaAction("prev")
@@ -421,7 +355,7 @@ class MainActivity : AppCompatActivity() {
                     else -> "高德"
                 }
                 findViewById<TextView>(R.id.nav_switch)?.text = "$navName ▼"
-                findViewById<TextView>(R.id.nav_remain)?.text = "${navName}导航运行中"
+                findViewById<TextView>(R.id.nav_status)?.text = "${navName}导航运行中"
                 dialog.dismiss()
             }
             .setNegativeButton("取消", null)
@@ -446,7 +380,7 @@ class MainActivity : AppCompatActivity() {
         Toast.makeText(this, "未找到地图应用", Toast.LENGTH_SHORT).show()
     }
 
-    // ========== 音乐插件 ==========
+    // ========== 音乐控制 ==========
 
     /**
      * 启动音乐刷新
@@ -456,7 +390,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * 更新音乐插件信息
+     * 更新音乐信息
      */
     private fun updateMusicInfo() {
         val title = MusicNotificationListener.currentTitle
@@ -801,9 +735,6 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
         handler.removeCallbacks(updateTimeRunnable)
         musicRefreshHandler.removeCallbacks(musicRefreshRunnable)
-        // 清理歌词悬浮窗口
-        floatingLyricsWindow?.hide()
-        floatingLyricsWindow = null
     }
 
     data class CustomApp(val packageName: String, val appName: String)
