@@ -22,21 +22,23 @@ import android.widget.ImageView
 import android.widget.TextView
 
 /**
- * 悬浮音乐服务（布丁桌面架构版）
- * - 通过 MusicNotificationListener（NotificationListenerService）获取音乐数据
- * - 显示歌曲名、歌手、播放控制
+ * 悬浮音乐服务
+ * - 使用 WindowManager TYPE_APPLICATION_OVERLAY 显示悬浮窗
+ * - 悬浮窗大小：宽度 35% 屏幕，高度 70% 屏幕
+ * - 位置：屏幕右侧居中
  * - 支持拖动
+ * - 前台 Service 保活
+ * - 从 MusicNotificationListener 获取播放数据
  */
 class FloatingMusicService : Service() {
 
     companion object {
-        private const val TAG = "FloatingMusicService"
-        private const val NOTIFICATION_ID = 2002
-        private const val CHANNEL_ID = "floating_music_service"
+        private const val TAG = "FloatingMusic"
+        private const val NOTIFICATION_ID = 1002
+        private const val CHANNEL_ID = "floating_music"
         private const val PREF_NAME = "floating_music_prefs"
 
-        const val ACTION_START = "com.pandora.carlauncher.FloatingMusicService.START"
-        const val ACTION_STOP = "com.pandora.carlauncher.FloatingMusicService.STOP"
+        const val ACTION_CLOSE = "action_close"
     }
 
     private var windowManager: WindowManager? = null
@@ -75,20 +77,15 @@ class FloatingMusicService : Service() {
                 tvTitle?.text = if (title.isNotEmpty()) title else "未在播放"
                 tvArtist?.text = artist
                 ivPlayPause?.setImageResource(if (isPlaying) R.drawable.ic_pause else R.drawable.ic_play)
-                // 更新前台通知
                 updateNotification(title, artist)
             }
         }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d(TAG, "onStartCommand")
-
-        when (intent?.action) {
-            ACTION_STOP -> {
-                stopSelf()
-                return START_NOT_STICKY
-            }
+        if (intent?.action == ACTION_CLOSE) {
+            stopSelf()
+            return START_NOT_STICKY
         }
 
         startForeground(NOTIFICATION_ID, buildNotification())
@@ -103,65 +100,39 @@ class FloatingMusicService : Service() {
         return START_STICKY
     }
 
-    /**
-     * 从 MusicNotificationListener 获取音乐数据并更新UI
-     */
-    private fun updateMusicInfo() {
-        handler.postDelayed({
-            // 从 MusicNotificationListener 获取数据
-            val title = MusicNotificationListener.currentTitle
-            val artist = MusicNotificationListener.currentArtist
-            val playing = MusicNotificationListener.isPlaying
-
-            handler.post {
-                tvTitle?.text = if (title.isNotEmpty()) title else "未在播放"
-                tvArtist?.text = artist
-                ivPlayPause?.setImageResource(if (playing) R.drawable.ic_pause else R.drawable.ic_play)
-            }
-
-            // 继续轮询
-            handler.postDelayed(refreshRunnable, 2000)
-        }, 0)
-    }
-
     @SuppressLint("ClickableViewAccessibility", "InflateParams")
     private fun createFloatingWindow() {
-        Log.d(TAG, "createFloatingWindow")
         val inflater = LayoutInflater.from(this)
         floatingView = inflater.inflate(R.layout.layout_floating_music, null)
 
-        val type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-        } else {
-            @Suppress("DEPRECATION")
-            WindowManager.LayoutParams.TYPE_PHONE
-        }
-
-        // 加载保存的位置
-        val savedX = prefs.getInt("pos_x", 0)
-        val savedY = prefs.getInt("pos_y", 0)
         val dm = resources.displayMetrics
-        val defaultX = (dm.widthPixels - 320) / 2
-        val defaultY = dm.heightPixels - 300
+        val width = (dm.widthPixels * 0.35).toInt()
+        val height = (dm.heightPixels * 0.70).toInt()
+
+        // 加载保存的位置，默认右侧居中
+        val savedX = prefs.getInt("pos_x", Int.MIN_VALUE)
+        val savedY = prefs.getInt("pos_y", Int.MIN_VALUE)
+        val defaultX = (dm.widthPixels - width) * 3 / 4  // 偏右侧
+        val defaultY = (dm.heightPixels - height) / 2
 
         params = WindowManager.LayoutParams(
-            320,
-            WindowManager.LayoutParams.WRAP_CONTENT,
-            type,
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                    WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
+            width, height,
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+            else @Suppress("DEPRECATION") WindowManager.LayoutParams.TYPE_PHONE,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.TOP or Gravity.START
-            x = if (savedX != 0) savedX else defaultX
-            y = if (savedY != 0) savedY else defaultY
+            x = if (savedX != Int.MIN_VALUE) savedX else defaultX
+            y = if (savedY != Int.MIN_VALUE) savedY else defaultY
         }
 
         try {
             windowManager?.addView(floatingView, params)
             Log.d(TAG, "悬浮音乐窗已添加")
         } catch (e: Exception) {
-            Log.e(TAG, "创建悬浮音乐窗失败", e)
+            Log.e(TAG, "创建悬浮窗失败", e)
             stopSelf()
             return
         }
@@ -207,6 +178,26 @@ class FloatingMusicService : Service() {
     }
 
     /**
+     * 从 MusicNotificationListener 获取音乐数据并更新UI
+     */
+    private fun updateMusicInfo() {
+        handler.postDelayed({
+            val title = MusicNotificationListener.currentTitle
+            val artist = MusicNotificationListener.currentArtist
+            val playing = MusicNotificationListener.isPlaying
+
+            handler.post {
+                tvTitle?.text = if (title.isNotEmpty()) title else "未在播放"
+                tvArtist?.text = artist
+                ivPlayPause?.setImageResource(if (playing) R.drawable.ic_pause else R.drawable.ic_play)
+            }
+
+            // 继续轮询
+            handler.postDelayed(refreshRunnable, 2000)
+        }, 0)
+    }
+
+    /**
      * 通过 MusicNotificationListener 中的 activeMediaController 发送媒体控制指令
      */
     private fun sendMediaAction(action: Long) {
@@ -226,7 +217,6 @@ class FloatingMusicService : Service() {
                 MusicNotificationListener.activeMediaController = null
             }
         } else {
-            // 没有 MediaController，尝试发送广播方式控制
             trySendMediaBroadcast(action)
         }
     }
@@ -295,6 +285,7 @@ class FloatingMusicService : Service() {
                 }
                 MotionEvent.ACTION_UP -> {
                     if (isDragging) {
+                        // 保存位置
                         params?.let { p ->
                             prefs.edit()
                                 .putInt("pos_x", p.x)
@@ -373,8 +364,6 @@ class FloatingMusicService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         handler.removeCallbacks(refreshRunnable)
-
-        // 清除回调
         MusicNotificationListener.onMusicUpdate = null
 
         floatingView?.let {

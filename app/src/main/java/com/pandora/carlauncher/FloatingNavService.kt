@@ -10,36 +10,39 @@ import android.content.Intent
 import android.graphics.PixelFormat
 import android.os.Build
 import android.os.IBinder
+import android.util.DisplayMetrics
 import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
+import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 
 /**
- * 悬浮导航服务（简化版）
- * - 启动时发送广播打开高德悬浮版
- * - 显示简单状态卡片
+ * 悬浮导航服务
+ * - 使用 WindowManager TYPE_APPLICATION_OVERLAY 显示悬浮窗
+ * - 悬浮窗大小：宽度 45% 屏幕，高度 70% 屏幕
+ * - 位置：屏幕水平居中，垂直居中
  * - 支持拖动
+ * - 前台 Service 保活
+ * - 广播协议打开高德悬浮版
  */
 class FloatingNavService : Service() {
 
     companion object {
-        private const val TAG = "FloatingNavService"
-        private const val NOTIFICATION_ID = 2001
-        private const val CHANNEL_ID = "floating_nav_service"
+        private const val TAG = "FloatingNav"
+        private const val NOTIFICATION_ID = 1001
+        private const val CHANNEL_ID = "floating_nav"
         private const val PREF_NAME = "floating_nav_prefs"
 
-        const val ACTION_START = "com.pandora.carlauncher.FloatingNavService.START"
-        const val ACTION_STOP = "com.pandora.carlauncher.FloatingNavService.STOP"
+        const val ACTION_CLOSE = "action_close"
 
         // 高德悬浮版广播 Action
         private const val ACTION_AMAP_OPEN = "com.autonavi.plus.openmap"
-        private const val ACTION_AMAP_CLOSE = "com.autonavi.plus.closemap"
     }
 
     private var windowManager: WindowManager? = null
@@ -61,21 +64,17 @@ class FloatingNavService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d(TAG, "onStartCommand")
-
-        when (intent?.action) {
-            ACTION_STOP -> {
-                stopSelf()
-                return START_NOT_STICKY
-            }
+        if (intent?.action == ACTION_CLOSE) {
+            stopSelf()
+            return START_NOT_STICKY
         }
 
         startForeground(NOTIFICATION_ID, buildNotification())
 
         if (floatingView == null) {
             createFloatingWindow()
-            // 启动时自动打开高德悬浮导航
-            openNavigation()
+            // 发送广播打开高德悬浮版
+            openAmapFloating()
         }
 
         return START_STICKY
@@ -83,42 +82,37 @@ class FloatingNavService : Service() {
 
     @SuppressLint("ClickableViewAccessibility", "InflateParams")
     private fun createFloatingWindow() {
-        Log.d(TAG, "createFloatingWindow")
         val inflater = LayoutInflater.from(this)
         floatingView = inflater.inflate(R.layout.layout_floating_nav, null)
 
-        val type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-        } else {
-            @Suppress("DEPRECATION")
-            WindowManager.LayoutParams.TYPE_PHONE
-        }
-
-        // 加载保存的位置
-        val savedX = prefs.getInt("pos_x", 0)
-        val savedY = prefs.getInt("pos_y", 0)
         val dm = resources.displayMetrics
-        val defaultX = (dm.widthPixels - 300) / 2
-        val defaultY = 80
+        val width = (dm.widthPixels * 0.45).toInt()
+        val height = (dm.heightPixels * 0.70).toInt()
+
+        // 加载保存的位置，默认居中
+        val savedX = prefs.getInt("pos_x", Int.MIN_VALUE)
+        val savedY = prefs.getInt("pos_y", Int.MIN_VALUE)
+        val defaultX = (dm.widthPixels - width) / 2
+        val defaultY = (dm.heightPixels - height) / 2
 
         params = WindowManager.LayoutParams(
-            300,
-            WindowManager.LayoutParams.WRAP_CONTENT,
-            type,
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                    WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
+            width, height,
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+            else @Suppress("DEPRECATION") WindowManager.LayoutParams.TYPE_PHONE,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.TOP or Gravity.START
-            x = if (savedX != 0) savedX else defaultX
-            y = if (savedY != 0) savedY else defaultY
+            x = if (savedX != Int.MIN_VALUE) savedX else defaultX
+            y = if (savedY != Int.MIN_VALUE) savedY else defaultY
         }
 
         try {
             windowManager?.addView(floatingView, params)
             Log.d(TAG, "悬浮导航窗已添加")
         } catch (e: Exception) {
-            Log.e(TAG, "创建悬浮导航窗失败", e)
+            Log.e(TAG, "创建悬浮窗失败", e)
             stopSelf()
             return
         }
@@ -130,58 +124,98 @@ class FloatingNavService : Service() {
     private fun setupButtons() {
         val rootView = floatingView ?: return
 
-        // 关闭悬浮窗
+        // 关闭按钮
         rootView.findViewById<ImageView>(R.id.nav_close)?.setOnClickListener {
             stopSelf()
         }
 
-        // 点击卡片打开导航
+        // 打开导航按钮
+        rootView.findViewById<Button>(R.id.nav_open)?.setOnClickListener {
+            openMapApp()
+        }
+
+        // 切换导航类型
+        rootView.findViewById<TextView>(R.id.nav_switch)?.setOnClickListener {
+            showNavSwitchDialog()
+        }
+
+        // 点击导航状态区域也可以打开导航
         rootView.findViewById<TextView>(R.id.nav_status)?.setOnClickListener {
-            openNavigation()
+            openMapApp()
         }
 
         rootView.findViewById<TextView>(R.id.nav_hint)?.setOnClickListener {
-            openNavigation()
+            openMapApp()
         }
     }
 
-    private fun openNavigation() {
-        // 尝试通过广播打开高德悬浮版
+    /**
+     * 发送广播打开高德悬浮版
+     */
+    private fun openAmapFloating() {
         try {
             val intent = Intent(ACTION_AMAP_OPEN)
             intent.setPackage("com.autonavi.amapauto")
+            intent.putExtra("x", 0)
+            intent.putExtra("y", 0)
+            intent.putExtra("w", 0)
+            intent.putExtra("h", 0)
             sendBroadcast(intent)
-            updateNavStatus(true)
-            Toast.makeText(this, "正在打开高德悬浮导航", Toast.LENGTH_SHORT).show()
-            Log.d(TAG, "已发送高德悬浮导航广播")
+            Log.d(TAG, "已发送高德悬浮版广播")
         } catch (e: Exception) {
-            Log.e(TAG, "发送高德广播失败，尝试直接启动", e)
-            // 回退方案：直接启动高德地图
+            Log.e(TAG, "发送高德广播失败", e)
+        }
+    }
+
+    /**
+     * 打开地图应用（依次尝试高德车机版、高德手机版、百度、腾讯）
+     */
+    private fun openMapApp() {
+        val packages = arrayOf(
+            "com.autonavi.amapauto",
+            "com.autonavi.minimap",
+            "com.baidu.BaiduMap",
+            "com.tencent.map"
+        )
+        for (pkg in packages) {
             try {
-                val launchIntent = packageManager.getLaunchIntentForPackage("com.autonavi.amapauto")
-                if (launchIntent != null) {
-                    launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    startActivity(launchIntent)
+                val intent = packageManager.getLaunchIntentForPackage(pkg)
+                if (intent != null) {
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    startActivity(intent)
                     updateNavStatus(true)
-                    Toast.makeText(this, "已启动高德地图", Toast.LENGTH_SHORT).show()
-                } else {
-                    // 尝试手机版高德
-                    val phoneIntent = packageManager.getLaunchIntentForPackage("com.autonavi.minimap")
-                    if (phoneIntent != null) {
-                        phoneIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        startActivity(phoneIntent)
-                        updateNavStatus(true)
-                        Toast.makeText(this, "已启动高德地图(手机版)", Toast.LENGTH_SHORT).show()
-                    } else {
-                        Toast.makeText(this, "未检测到高德地图，请先安装", Toast.LENGTH_LONG).show()
-                        updateNavStatus(false)
-                    }
+                    return
                 }
-            } catch (e2: Exception) {
-                Log.e(TAG, "启动高德地图失败", e2)
-                Toast.makeText(this, "打开导航失败", Toast.LENGTH_SHORT).show()
-                updateNavStatus(false)
-            }
+            } catch (_: Exception) {}
+        }
+        Toast.makeText(this, "未找到地图应用", Toast.LENGTH_SHORT).show()
+        updateNavStatus(false)
+    }
+
+    /**
+     * 显示导航切换对话框（通过 Toast 提示）
+     */
+    private fun showNavSwitchDialog() {
+        // 简单实现：显示已安装的导航应用列表
+        val navApps = mutableListOf<String>()
+        val navPackages = mapOf(
+            "com.autonavi.amapauto" to "高德地图(车机版)",
+            "com.autonavi.minimap" to "高德地图(手机版)",
+            "com.baidu.BaiduMap" to "百度地图",
+            "com.tencent.map" to "腾讯地图"
+        )
+        for ((pkg, name) in navPackages) {
+            try {
+                if (packageManager.getPackageInfo(pkg, 0) != null) {
+                    navApps.add(name)
+                }
+            } catch (_: Exception) {}
+        }
+
+        if (navApps.isNotEmpty()) {
+            Toast.makeText(this, "已安装导航: ${navApps.joinToString(", ")}", Toast.LENGTH_LONG).show()
+        } else {
+            Toast.makeText(this, "未检测到导航应用", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -192,10 +226,10 @@ class FloatingNavService : Service() {
 
         if (isActive) {
             tvStatus?.text = "导航运行中"
-            tvHint?.text = "点击返回高德导航"
+            tvHint?.text = "点击返回导航"
         } else {
             tvStatus?.text = "导航未启动"
-            tvHint?.text = "点击打开高德导航"
+            tvHint?.text = "点击打开导航"
         }
     }
 
@@ -230,6 +264,7 @@ class FloatingNavService : Service() {
                 }
                 MotionEvent.ACTION_UP -> {
                     if (isDragging) {
+                        // 保存位置
                         params?.let { p ->
                             prefs.edit()
                                 .putInt("pos_x", p.x)
@@ -259,15 +294,13 @@ class FloatingNavService : Service() {
     private fun buildNotification(): Notification {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             Notification.Builder(this, CHANNEL_ID)
-                .setContentTitle("悬浮导航")
-                .setContentText("导航服务运行中")
+                .setContentTitle("悬浮导航运行中")
                 .setSmallIcon(R.drawable.ic_navigation)
                 .build()
         } else {
             @Suppress("DEPRECATION")
             Notification.Builder(this)
-                .setContentTitle("悬浮导航")
-                .setContentText("导航服务运行中")
+                .setContentTitle("悬浮导航运行中")
                 .setSmallIcon(R.drawable.ic_navigation)
                 .build()
         }

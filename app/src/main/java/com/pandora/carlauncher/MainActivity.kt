@@ -50,6 +50,10 @@ class MainActivity : AppCompatActivity() {
     private var customApps = mutableListOf<CustomApp>()
     private lateinit var gridAdapter: AppGridAdapter
 
+    // 悬浮窗状态
+    private var isNavFloating = false
+    private var isMusicFloating = false
+
     private val updateTimeRunnable = object : Runnable {
         override fun run() {
             updateTime()
@@ -74,7 +78,6 @@ class MainActivity : AppCompatActivity() {
             loadCustomApps()
             setupAppGrid()
             setupBottomNavigation()
-            setupCardClicks()
         } catch (e: Exception) {
             Log.e(TAG, "onCreate 初始化失败", e)
             Toast.makeText(this, "初始化异常: ${e.message}", Toast.LENGTH_LONG).show()
@@ -240,10 +243,10 @@ class MainActivity : AppCompatActivity() {
             showHomeView()
         }
         findViewById<LinearLayout>(R.id.nav_navigation)?.setOnClickListener {
-            startFloatingNavService()
+            toggleFloatingNav()
         }
         findViewById<LinearLayout>(R.id.nav_music)?.setOnClickListener {
-            startFloatingMusicService()
+            toggleFloatingMusic()
         }
         findViewById<LinearLayout>(R.id.nav_theme)?.setOnClickListener {
             showThemeCenterDialog()
@@ -256,53 +259,65 @@ class MainActivity : AppCompatActivity() {
         setupBottomAppsRecyclerView()
     }
 
-    // ========== 悬浮服务启动 ==========
+    // ========== 悬浮服务切换 ==========
 
     /**
-     * 启动悬浮导航服务
+     * 切换悬浮导航服务 显示/隐藏
      */
-    private fun startFloatingNavService() {
-        // 检查悬浮窗权限
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
-            Toast.makeText(this, "请先授予悬浮窗权限", Toast.LENGTH_SHORT).show()
-            startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION))
-            return
-        }
-        try {
-            val intent = Intent(this, FloatingNavService::class.java)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                startForegroundService(intent)
-            } else {
-                startService(intent)
+    private fun toggleFloatingNav() {
+        if (isNavFloating) {
+            stopService(Intent(this, FloatingNavService::class.java))
+            isNavFloating = false
+            Toast.makeText(this, "悬浮导航已关闭", Toast.LENGTH_SHORT).show()
+        } else {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+                Toast.makeText(this, "请先授予悬浮窗权限", Toast.LENGTH_SHORT).show()
+                startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION))
+                return
             }
-            Toast.makeText(this, "悬浮导航已启动", Toast.LENGTH_SHORT).show()
-        } catch (e: Exception) {
-            Log.e(TAG, "启动悬浮导航服务失败", e)
-            Toast.makeText(this, "启动悬浮导航失败", Toast.LENGTH_SHORT).show()
+            try {
+                val intent = Intent(this, FloatingNavService::class.java)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    startForegroundService(intent)
+                } else {
+                    startService(intent)
+                }
+                isNavFloating = true
+                Toast.makeText(this, "悬浮导航已启动", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Log.e(TAG, "启动悬浮导航服务失败", e)
+                Toast.makeText(this, "启动悬浮导航失败", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
     /**
-     * 启动悬浮音乐服务
+     * 切换悬浮音乐服务 显示/隐藏
      */
-    private fun startFloatingMusicService() {
-        // 检查悬浮窗权限
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
-            Toast.makeText(this, "请先授予悬浮窗权限", Toast.LENGTH_SHORT).show()
-            startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION))
-            return
-        }
-        try {
-            val intent = Intent(this, FloatingMusicService::class.java)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                startForegroundService(intent)
-            } else {
-                startService(intent)
+    private fun toggleFloatingMusic() {
+        if (isMusicFloating) {
+            stopService(Intent(this, FloatingMusicService::class.java))
+            isMusicFloating = false
+            Toast.makeText(this, "悬浮音乐已关闭", Toast.LENGTH_SHORT).show()
+        } else {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+                Toast.makeText(this, "请先授予悬浮窗权限", Toast.LENGTH_SHORT).show()
+                startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION))
+                return
             }
-            Toast.makeText(this, "悬浮音乐已启动", Toast.LENGTH_SHORT).show()
-        } catch (e: Exception) {
-            Log.e(TAG, "启动悬浮音乐服务失败", e)
-            Toast.makeText(this, "启动悬浮音乐失败", Toast.LENGTH_SHORT).show()
+            try {
+                val intent = Intent(this, FloatingMusicService::class.java)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    startForegroundService(intent)
+                } else {
+                    startService(intent)
+                }
+                isMusicFloating = true
+                Toast.makeText(this, "悬浮音乐已启动", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Log.e(TAG, "启动悬浮音乐服务失败", e)
+                Toast.makeText(this, "启动悬浮音乐失败", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -359,43 +374,6 @@ class MainActivity : AppCompatActivity() {
         }
         
         return apps
-    }
-
-    private fun setupCardClicks() {
-        // 导航卡片点击 -> 启动悬浮导航服务
-        findViewById<View>(R.id.card_navigation)?.setOnClickListener {
-            startFloatingNavService()
-        }
-
-        // 导航卡片上的"打开地图"按钮
-        findViewById<View>(R.id.btn_open_map)?.setOnClickListener {
-            startFloatingNavService()
-        }
-
-        // 导航卡片上的悬浮按钮
-        findViewById<View>(R.id.btn_float_map)?.setOnClickListener {
-            startFloatingNavService()
-        }
-
-        // 音乐卡片点击 -> 启动悬浮音乐服务
-        findViewById<View>(R.id.card_music)?.setOnClickListener {
-            startFloatingMusicService()
-        }
-
-        // 音乐卡片上的播放按钮
-        findViewById<View>(R.id.btn_play_pause)?.setOnClickListener {
-            startFloatingMusicService()
-        }
-
-        // 音乐卡片上的上一首
-        findViewById<View>(R.id.btn_prev)?.setOnClickListener {
-            startFloatingMusicService()
-        }
-
-        // 音乐卡片上的下一首
-        findViewById<View>(R.id.btn_next)?.setOnClickListener {
-            startFloatingMusicService()
-        }
     }
 
     /**
