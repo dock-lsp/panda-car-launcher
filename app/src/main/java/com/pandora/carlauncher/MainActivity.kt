@@ -9,6 +9,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
 import android.media.AudioManager
+import android.media.session.PlaybackState
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -50,9 +51,14 @@ class MainActivity : AppCompatActivity() {
     private var customApps = mutableListOf<CustomApp>()
     private lateinit var gridAdapter: AppGridAdapter
 
-    // 悬浮窗状态
-    private var isNavFloating = false
-    private var isMusicFloating = false
+    // 布丁桌面面板状态
+    private var isNavPanelVisible = false
+    private var isMusicPanelVisible = false
+
+    // 音乐面板 UI 元素
+    private var musicPanelTitle: TextView? = null
+    private var musicPanelArtist: TextView? = null
+    private var musicPanelPlay: ImageView? = null
 
     private val updateTimeRunnable = object : Runnable {
         override fun run() {
@@ -61,12 +67,18 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // 音乐信息刷新
+    private val refreshMusicRunnable = object : Runnable {
+        override fun run() {
+            updateMusicPanelInfo()
+            handler.postDelayed(this, 2000)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         try {
             setContentView(R.layout.activity_main)
-            // 应用壁纸和主题背景
-            applyAppBackground()
             setupFullScreen()
 
             audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
@@ -78,39 +90,26 @@ class MainActivity : AppCompatActivity() {
             loadCustomApps()
             setupAppGrid()
             setupBottomNavigation()
+            setupPanelButtons()
+            setupMusicPanel()
+
+            // 启动音乐信息轮询
+            handler.postDelayed(refreshMusicRunnable, 1000)
         } catch (e: Exception) {
             Log.e(TAG, "onCreate 初始化失败", e)
             Toast.makeText(this, "初始化异常: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
 
-    /**
-     * 应用壁纸或主题背景到壁纸层 ImageView
-     */
-    private fun applyAppBackground() {
-        val ivWallpaper = findViewById<ImageView>(R.id.iv_wallpaper)
-        if (ivWallpaper != null) {
-            val wallpaperDrawable = WallpaperManager.getWallpaperDrawable(this)
-            if (wallpaperDrawable != null) {
-                ivWallpaper.setImageDrawable(wallpaperDrawable)
-                ivWallpaper.visibility = View.VISIBLE
-            } else {
-                // 没有自定义壁纸，使用主题背景色
-                ivWallpaper.setImageDrawable(null)
-                ivWallpaper.setBackgroundColor(ThemeManager.getBackgroundColor(this))
-                ivWallpaper.visibility = View.VISIBLE
-            }
-        }
-    }
-
     override fun onResume() {
         super.onResume()
         setupFullScreen()
-        applyAppBackground()
         loadCustomApps()
         gridAdapter.notifyDataSetChanged()
         // 刷新底部应用列表
         setupBottomAppsRecyclerView()
+        // 刷新音乐面板信息
+        updateMusicPanelInfo()
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
@@ -240,13 +239,13 @@ class MainActivity : AppCompatActivity() {
     private fun setupBottomNavigation() {
         // 固定功能按钮
         findViewById<LinearLayout>(R.id.nav_home)?.setOnClickListener {
-            showHomeView()
+            showAppGrid()
         }
         findViewById<LinearLayout>(R.id.nav_navigation)?.setOnClickListener {
-            toggleFloatingNav()
+            toggleNavPanel()
         }
         findViewById<LinearLayout>(R.id.nav_music)?.setOnClickListener {
-            toggleFloatingMusic()
+            toggleMusicPanel()
         }
         findViewById<LinearLayout>(R.id.nav_theme)?.setOnClickListener {
             showThemeCenterDialog()
@@ -259,73 +258,185 @@ class MainActivity : AppCompatActivity() {
         setupBottomAppsRecyclerView()
     }
 
-    // ========== 悬浮服务切换 ==========
+    // ========== 布丁桌面面板切换 ==========
 
     /**
-     * 切换悬浮导航服务 显示/隐藏
+     * 显示应用网格（主页）
      */
-    private fun toggleFloatingNav() {
-        if (isNavFloating) {
-            stopService(Intent(this, FloatingNavService::class.java))
-            isNavFloating = false
-            Toast.makeText(this, "悬浮导航已关闭", Toast.LENGTH_SHORT).show()
-        } else {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
-                Toast.makeText(this, "请先授予悬浮窗权限", Toast.LENGTH_SHORT).show()
-                startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION))
-                return
-            }
-            try {
-                val intent = Intent(this, FloatingNavService::class.java)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    startForegroundService(intent)
-                } else {
-                    startService(intent)
-                }
-                isNavFloating = true
-                Toast.makeText(this, "悬浮导航已启动", Toast.LENGTH_SHORT).show()
-            } catch (e: Exception) {
-                Log.e(TAG, "启动悬浮导航服务失败", e)
-                Toast.makeText(this, "启动悬浮导航失败", Toast.LENGTH_SHORT).show()
-            }
+    private fun showAppGrid() {
+        isNavPanelVisible = false
+        isMusicPanelVisible = false
+        updatePanelVisibility()
+    }
+
+    /**
+     * 切换导航面板 显示/隐藏
+     */
+    private fun toggleNavPanel() {
+        isNavPanelVisible = !isNavPanelVisible
+        isMusicPanelVisible = false
+        updatePanelVisibility()
+        if (isNavPanelVisible) {
+            openMapApp()
         }
     }
 
     /**
-     * 切换悬浮音乐服务 显示/隐藏
+     * 切换音乐面板 显示/隐藏
      */
-    private fun toggleFloatingMusic() {
-        if (isMusicFloating) {
-            stopService(Intent(this, FloatingMusicService::class.java))
-            isMusicFloating = false
-            Toast.makeText(this, "悬浮音乐已关闭", Toast.LENGTH_SHORT).show()
-        } else {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
-                Toast.makeText(this, "请先授予悬浮窗权限", Toast.LENGTH_SHORT).show()
-                startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION))
-                return
-            }
-            try {
-                val intent = Intent(this, FloatingMusicService::class.java)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    startForegroundService(intent)
-                } else {
-                    startService(intent)
-                }
-                isMusicFloating = true
-                Toast.makeText(this, "悬浮音乐已启动", Toast.LENGTH_SHORT).show()
-            } catch (e: Exception) {
-                Log.e(TAG, "启动悬浮音乐服务失败", e)
-                Toast.makeText(this, "启动悬浮音乐失败", Toast.LENGTH_SHORT).show()
-            }
+    private fun toggleMusicPanel() {
+        isMusicPanelVisible = !isMusicPanelVisible
+        isNavPanelVisible = false
+        updatePanelVisibility()
+    }
+
+    /**
+     * 更新面板可见性（应用网格和面板互斥显示）
+     */
+    private fun updatePanelVisibility() {
+        val appGrid = findViewById<View>(R.id.rv_app_grid)
+        val navPanel = findViewById<View>(R.id.nav_panel)
+        val musicPanel = findViewById<View>(R.id.music_panel)
+
+        // 只要有面板显示就隐藏应用网格
+        appGrid?.visibility = if (isNavPanelVisible || isMusicPanelVisible) View.GONE else View.VISIBLE
+        navPanel?.visibility = if (isNavPanelVisible) View.VISIBLE else View.GONE
+        musicPanel?.visibility = if (isMusicPanelVisible) View.VISIBLE else View.GONE
+    }
+
+    /**
+     * 设置面板内按钮事件
+     */
+    private fun setupPanelButtons() {
+        // 导航面板关闭按钮
+        findViewById<ImageView>(R.id.nav_panel_close)?.setOnClickListener {
+            isNavPanelVisible = false
+            updatePanelVisibility()
+        }
+
+        // 导航面板打开导航按钮
+        findViewById<Button>(R.id.nav_panel_open)?.setOnClickListener {
+            openMapApp()
+        }
+
+        // 音乐面板关闭按钮
+        findViewById<ImageView>(R.id.music_panel_close)?.setOnClickListener {
+            isMusicPanelVisible = false
+            updatePanelVisibility()
         }
     }
 
     /**
-     * 显示主页（应用网格）
+     * 设置音乐面板的播放控制
      */
-    private fun showHomeView() {
-        Toast.makeText(this, "主页", Toast.LENGTH_SHORT).show()
+    private fun setupMusicPanel() {
+        musicPanelTitle = findViewById(R.id.music_panel_title)
+        musicPanelArtist = findViewById(R.id.music_panel_artist)
+        musicPanelPlay = findViewById(R.id.music_panel_play)
+
+        // 上一首
+        findViewById<ImageView>(R.id.music_panel_prev)?.setOnClickListener {
+            sendMediaAction(PlaybackState.ACTION_SKIP_TO_PREVIOUS)
+        }
+
+        // 播放/暂停
+        musicPanelPlay?.setOnClickListener {
+            val playing = MusicNotificationListener.isPlaying
+            if (playing) {
+                sendMediaAction(PlaybackState.ACTION_PAUSE)
+            } else {
+                sendMediaAction(PlaybackState.ACTION_PLAY)
+            }
+        }
+
+        // 下一首
+        findViewById<ImageView>(R.id.music_panel_next)?.setOnClickListener {
+            sendMediaAction(PlaybackState.ACTION_SKIP_TO_NEXT)
+        }
+    }
+
+    /**
+     * 从 MusicNotificationListener 获取音乐数据并更新音乐面板 UI
+     */
+    private fun updateMusicPanelInfo() {
+        val title = MusicNotificationListener.currentTitle
+        val artist = MusicNotificationListener.currentArtist
+        val playing = MusicNotificationListener.isPlaying
+
+        musicPanelTitle?.text = if (title.isNotEmpty()) title else "未在播放"
+        musicPanelArtist?.text = artist
+        musicPanelPlay?.setImageResource(if (playing) R.drawable.ic_pause else R.drawable.ic_play)
+    }
+
+    /**
+     * 通过 MusicNotificationListener 中的 activeMediaController 发送媒体控制指令
+     */
+    private fun sendMediaAction(action: Long) {
+        val controller = MusicNotificationListener.activeMediaController
+        if (controller != null) {
+            try {
+                val transportControls = controller.transportControls
+                when (action) {
+                    PlaybackState.ACTION_PLAY -> transportControls.play()
+                    PlaybackState.ACTION_PAUSE -> transportControls.pause()
+                    PlaybackState.ACTION_SKIP_TO_NEXT -> transportControls.skipToNext()
+                    PlaybackState.ACTION_SKIP_TO_PREVIOUS -> transportControls.skipToPrevious()
+                }
+                Log.d(TAG, "发送媒体控制: $action")
+            } catch (e: Exception) {
+                Log.e(TAG, "发送媒体控制失败", e)
+                MusicNotificationListener.activeMediaController = null
+            }
+        } else {
+            trySendMediaBroadcast(action)
+        }
+    }
+
+    /**
+     * 通过广播方式发送媒体控制（兼容方案）
+     */
+    private fun trySendMediaBroadcast(action: Long) {
+        try {
+            val intent = when (action) {
+                PlaybackState.ACTION_PLAY -> {
+                    Intent("com.android.music.musicservicecommand").apply {
+                        putExtra("command", "play")
+                    }
+                }
+                PlaybackState.ACTION_PAUSE -> {
+                    Intent("com.android.music.musicservicecommand").apply {
+                        putExtra("command", "pause")
+                    }
+                }
+                else -> return
+            }
+            sendBroadcast(intent)
+        } catch (e: Exception) {
+            Log.e(TAG, "广播方式控制失败", e)
+        }
+    }
+
+    /**
+     * 打开地图应用（依次尝试高德车机版、高德手机版、百度、腾讯）
+     */
+    private fun openMapApp() {
+        val packages = arrayOf(
+            "com.autonavi.amapauto",
+            "com.autonavi.minimap",
+            "com.baidu.BaiduMap",
+            "com.tencent.map"
+        )
+        for (pkg in packages) {
+            try {
+                val intent = packageManager.getLaunchIntentForPackage(pkg)
+                if (intent != null) {
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    startActivity(intent)
+                    return
+                }
+            } catch (_: Exception) {}
+        }
+        Toast.makeText(this, "未找到地图应用", Toast.LENGTH_SHORT).show()
     }
 
     private fun setupBottomAppsRecyclerView() {
@@ -611,15 +722,17 @@ class MainActivity : AppCompatActivity() {
                 val newTheme = if (which == 0) ThemeManager.THEME_DARK else ThemeManager.THEME_LIGHT
                 ThemeManager.setTheme(this, newTheme)
                 dialog.dismiss()
-                // 实时应用主题背景
-                applyAppBackground()
-                Toast.makeText(this, "主题已切换，返回主页即可看到效果", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "主题已切换", Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton("取消", null)
             .show()
     }
 
-    override fun onDestroy() { super.onDestroy(); handler.removeCallbacks(updateTimeRunnable) }
+    override fun onDestroy() {
+        super.onDestroy()
+        handler.removeCallbacks(updateTimeRunnable)
+        handler.removeCallbacks(refreshMusicRunnable)
+    }
 
     data class CustomApp(val packageName: String, val appName: String)
 

@@ -69,7 +69,9 @@
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTask"
-            android:theme="@style/Theme.PandaCarLauncher">
+            android:theme="@style/Theme.PandaCarLauncher.Transparent"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:stateNotNeeded="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -186,20 +188,6 @@
             android:name=".FloatingMapService"
             android:exported="false"
             android:foregroundServiceType="location" />
-
-        <!-- 悬浮导航服务 -->
-        <service
-            android:name=".FloatingNavService"
-            android:enabled="true"
-            android:exported="false"
-            android:foregroundServiceType="location" />
-
-        <!-- 悬浮音乐服务 -->
-        <service
-            android:name=".FloatingMusicService"
-            android:enabled="true"
-            android:exported="false"
-            android:foregroundServiceType="mediaPlayback" />
 
         <!-- 音乐通知监听服务（布丁方式） -->
         <service
