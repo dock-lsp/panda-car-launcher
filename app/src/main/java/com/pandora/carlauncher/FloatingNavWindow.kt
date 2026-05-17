@@ -5,6 +5,8 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.PixelFormat
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.*
 import android.widget.*
@@ -12,6 +14,7 @@ import android.widget.*
 /**
  * 真正的悬浮导航窗口
  * 使用 WindowManager 悬浮在所有应用之上
+ * 显示真实导航信息
  */
 class FloatingNavWindow(private val context: Context) {
 
@@ -23,12 +26,20 @@ class FloatingNavWindow(private val context: Context) {
     private val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
     private var floatingView: View? = null
     private var params: WindowManager.LayoutParams? = null
+    private val handler = Handler(Looper.getMainLooper())
 
     // 拖动
     private var initialX = 0
     private var initialY = 0
     private var initialTouchX = 0f
     private var initialTouchY = 0f
+
+    init {
+        // 注册导航信息回调
+        NavInfoReceiver.onNavInfoUpdate = {
+            handler.post { updateNavInfo() }
+        }
+    }
 
     @SuppressLint("ClickableViewAccessibility", "InflateParams")
     fun show() {
@@ -94,11 +105,15 @@ class FloatingNavWindow(private val context: Context) {
             openMapApp()
         }
 
-        // 更新状态
-        updateStatus("导航运行中", "点击打开导航")
+        // 初始更新导航信息
+        updateNavInfo()
+        
+        // 开始定时刷新
+        startRefresh()
     }
 
     fun hide() {
+        stopRefresh()
         floatingView?.let {
             try { windowManager.removeView(it) } catch (_: Exception) {}
         }
@@ -110,6 +125,55 @@ class FloatingNavWindow(private val context: Context) {
     fun updateStatus(remain: String, road: String) {
         floatingView?.findViewById<TextView>(R.id.float_nav_remain)?.text = remain
         floatingView?.findViewById<TextView>(R.id.float_nav_road)?.text = road
+    }
+
+    /**
+     * 更新导航信息
+     */
+    fun updateNavInfo() {
+        if (NavInfoReceiver.isNavigating) {
+            val remain = if (NavInfoReceiver.remainDistance.isNotEmpty()) {
+                "${NavInfoReceiver.remainDistance} | ${NavInfoReceiver.remainTime}"
+            } else {
+                "导航运行中"
+            }
+            val road = if (NavInfoReceiver.currentRoad.isNotEmpty()) {
+                NavInfoReceiver.currentRoad
+            } else {
+                "点击打开导航"
+            }
+            updateStatus(remain, road)
+            
+            // 更新服务区信息
+            floatingView?.findViewById<TextView>(R.id.float_nav_service)?.text = 
+                if (NavInfoReceiver.serviceArea.isNotEmpty()) "下一服务区: ${NavInfoReceiver.serviceArea}" else ""
+            
+            // 更新下一道路信息
+            floatingView?.findViewById<TextView>(R.id.float_nav_next_road)?.text = 
+                if (NavInfoReceiver.nextRoad.isNotEmpty()) {
+                    val distance = if (NavInfoReceiver.nextDistance.isNotEmpty()) "(${NavInfoReceiver.nextDistance})" else ""
+                    "下一: ${NavInfoReceiver.nextRoad} $distance"
+                } else ""
+        } else {
+            updateStatus("未在导航", "点击开始导航")
+            floatingView?.findViewById<TextView>(R.id.float_nav_service)?.text = ""
+            floatingView?.findViewById<TextView>(R.id.float_nav_next_road)?.text = ""
+        }
+    }
+
+    private val refreshRunnable = object : Runnable {
+        override fun run() {
+            updateNavInfo()
+            handler.postDelayed(this, 2000) // 每2秒刷新一次
+        }
+    }
+
+    private fun startRefresh() {
+        handler.post(refreshRunnable)
+    }
+
+    private fun stopRefresh() {
+        handler.removeCallbacks(refreshRunnable)
     }
 
     private fun openMapApp() {

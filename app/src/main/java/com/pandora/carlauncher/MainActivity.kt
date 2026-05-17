@@ -58,6 +58,9 @@ class MainActivity : AppCompatActivity() {
 
     // 悬浮导航窗口
     private var floatingNavWindow: FloatingNavWindow? = null
+    
+    // 悬浮音乐窗口
+    private var floatingMusicWindow: FloatingMusicWindow? = null
 
     private val updateTimeRunnable = object : Runnable {
         override fun run() {
@@ -258,6 +261,8 @@ class MainActivity : AppCompatActivity() {
             // 关闭所有悬浮窗口
             floatingNavWindow?.hide()
             floatingNavWindow = null
+            floatingMusicWindow?.hide()
+            floatingMusicWindow = null
             showAppGrid()
         }
         findViewById<LinearLayout>(R.id.nav_navigation)?.setOnClickListener {
@@ -267,7 +272,8 @@ class MainActivity : AppCompatActivity() {
             // 关闭悬浮导航窗口
             floatingNavWindow?.hide()
             floatingNavWindow = null
-            toggleMusicPlugin()
+            // 切换悬浮音乐窗口
+            toggleFloatingMusicWindow()
         }
         findViewById<LinearLayout>(R.id.nav_theme)?.setOnClickListener {
             showThemeCenterDialog()
@@ -304,6 +310,26 @@ class MainActivity : AppCompatActivity() {
         } else {
             floatingNavWindow?.hide()
             floatingNavWindow = null
+        }
+    }
+
+    /**
+     * 切换悬浮音乐窗口
+     */
+    private fun toggleFloatingMusicWindow() {
+        // 检查悬浮窗权限
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+            Toast.makeText(this, "请授予悬浮窗权限", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION))
+            return
+        }
+
+        if (floatingMusicWindow == null) {
+            floatingMusicWindow = FloatingMusicWindow(this)
+            floatingMusicWindow?.show()
+        } else {
+            floatingMusicWindow?.hide()
+            floatingMusicWindow = null
         }
     }
 
@@ -813,6 +839,11 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
         handler.removeCallbacks(updateTimeRunnable)
         musicRefreshHandler.removeCallbacks(musicRefreshRunnable)
+        // 清理悬浮窗口
+        floatingNavWindow?.hide()
+        floatingNavWindow = null
+        floatingMusicWindow?.hide()
+        floatingMusicWindow = null
     }
 
     data class CustomApp(val packageName: String, val appName: String)

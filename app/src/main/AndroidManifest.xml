@@ -210,6 +210,17 @@
             </intent-filter>
         </receiver>
 
+        <!-- 导航信息广播接收器 -->
+        <receiver
+            android:name=".NavInfoReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.autonavi.amapauto.NAV_INFO"/>
+                <action android:name="com.autonavi.amapauto.NAV_STATUS"/>
+                <action android:name="com.autonavi.amapauto.NAV_END"/>
+            </intent-filter>
+        </receiver>
+
         <!-- FileProvider -->
         <provider
             android:name="androidx.core.content.FileProvider"

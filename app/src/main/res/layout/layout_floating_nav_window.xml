@@ -39,7 +39,7 @@
 
     </LinearLayout>
 
-    <!-- 状态 -->
+    <!-- 状态区域 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -59,9 +59,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="导航运行中"
+            android:text="未在导航"
             android:textColor="#00CED1"
-            android:textSize="13sp"
+            android:textSize="14sp"
             android:textStyle="bold" />
 
         <TextView
@@ -69,9 +69,31 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:text="点击打开导航"
+            android:text="点击开始导航"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/float_nav_next_road"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text=""
             android:textColor="#80FFFFFF"
-            android:textSize="10sp" />
+            android:textSize="10sp"
+            android:maxLines="1"
+            android:ellipsize="end" />
+
+        <TextView
+            android:id="@+id/float_nav_service"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text=""
+            android:textColor="#80FFFFFF"
+            android:textSize="10sp"
+            android:maxLines="1"
+            android:ellipsize="end" />
 
     </LinearLayout>
 

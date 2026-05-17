@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_plugin_card"
+    android:orientation="vertical"
+    android:padding="10dp"
+    android:elevation="8dp">
+
+    <!-- 标题栏 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <ImageView
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:src="@drawable/ic_music"
+            android:tint="#00CED1" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="6dp"
+            android:text="正在播放"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <ImageView
+            android:id="@+id/float_music_close"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:src="@drawable/ic_close"
+            android:padding="2dp" />
+
+    </LinearLayout>
+
+    <!-- 歌曲信息 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/float_music_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="未在播放"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:maxLines="2"
+            android:ellipsize="end" />
+
+        <TextView
+            android:id="@+id/float_music_artist"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text=""
+            android:textColor="#80FFFFFF"
+            android:textSize="11sp"
+            android:maxLines="1"
+            android:ellipsize="end" />
+
+    </LinearLayout>
+
+    <!-- 歌词区域 -->
+    <TextView
+        android:id="@+id/float_music_lyrics"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="10dp"
+        android:text=""
+        android:textColor="#60FFFFFF"
+        android:textSize="11sp"
+        android:lineSpacingExtra="4dp"
+        android:maxLines="6"
+        android:ellipsize="end"
+        android:gravity="center" />
+
+    <!-- 播放控制 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginTop="8dp">
+
+        <ImageView
+            android:id="@+id/float_music_prev"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_skip_prev"
+            android:padding="6dp"
+            android:background="@drawable/bg_control_btn" />
+
+        <ImageView
+            android:id="@+id/float_music_play"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:layout_marginStart="14dp"
+            android:layout_marginEnd="14dp"
+            android:src="@drawable/ic_play"
+            android:background="@drawable/bg_icon_cyan"
+            android:padding="9dp" />
+
+        <ImageView
+            android:id="@+id/float_music_next"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_skip_next"
+            android:padding="6dp"
+            android:background="@drawable/bg_control_btn" />
+
+    </LinearLayout>
+
+</LinearLayout>
