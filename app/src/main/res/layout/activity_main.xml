@@ -35,6 +35,8 @@
                 android:id="@+id/rv_app_grid"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:layout_gravity="bottom"
+                android:clipToPadding="false"
                 android:paddingStart="@dimen/card_margin"
                 android:paddingEnd="@dimen/card_margin"
                 android:paddingTop="@dimen/spacing_sm"
