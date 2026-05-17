@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_floating_card"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:elevation="8dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/ic_navigation"
+            android:tint="#00CED1" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="6dp"
+            android:text="导航"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/nav_card_switch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="高德 ▼"
+            android:textColor="#00CED1"
+            android:textSize="11sp" />
+
+        <ImageView
+            android:id="@+id/nav_card_close"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginStart="6dp"
+            android:src="@drawable/ic_close"
+            android:padding="2dp" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center">
+
+        <ImageView
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/ic_navigation"
+            android:tint="#3000CED1" />
+
+        <TextView
+            android:id="@+id/nav_card_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="导航运行中"
+            android:textColor="#00CED1"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="点击返回导航"
+            android:textColor="#80FFFFFF"
+            android:textSize="11sp" />
+
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/nav_card_open"
+        android:layout_width="match_parent"
+        android:layout_height="36dp"
+        android:text="打开导航"
+        android:textSize="12sp"
+        android:backgroundTint="#00CED1"
+        android:textColor="#FFFFFF" />
+
+</LinearLayout>
