@@ -67,8 +67,8 @@ class MainActivity : AppCompatActivity() {
     private val musicRefreshHandler = Handler(Looper.getMainLooper())
     private val musicRefreshRunnable = object : Runnable {
         override fun run() {
-            updateMusicPluginInfo()
-            musicRefreshHandler.postDelayed(this, 2000)
+            updateMusicInfo()
+            musicRefreshHandler.postDelayed(this, 1000)
         }
     }
 
@@ -90,7 +90,8 @@ class MainActivity : AppCompatActivity() {
             loadCustomApps()
             setupAppGrid()
             setupBottomNavigation()
-            setupPluginButtons()
+            setupPluginContainers()
+            startMusicRefresh()
         } catch (e: Exception) {
             Log.e(TAG, "onCreate 初始化失败", e)
             Toast.makeText(this, "初始化异常: ${e.message}", Toast.LENGTH_LONG).show()
@@ -284,9 +285,11 @@ class MainActivity : AppCompatActivity() {
      * 切换导航插件
      */
     private fun toggleNavPlugin() {
-        currentPlugin = if (currentPlugin == "nav") "" else "nav"
-        updatePluginVisibility()
         if (currentPlugin == "nav") {
+            showAppGrid()
+        } else {
+            currentPlugin = "nav"
+            updatePluginVisibility()
             // 发送广播打开高德悬浮版
             try {
                 sendBroadcast(Intent("com.autonavi.plus.openmap").apply {
@@ -301,13 +304,11 @@ class MainActivity : AppCompatActivity() {
      * 切换音乐插件
      */
     private fun toggleMusicPlugin() {
-        currentPlugin = if (currentPlugin == "music") "" else "music"
-        updatePluginVisibility()
         if (currentPlugin == "music") {
-            // 启动音乐刷新
-            startMusicRefresh()
+            showAppGrid()
         } else {
-            stopMusicRefresh()
+            currentPlugin = "music"
+            updatePluginVisibility()
         }
     }
 
@@ -316,41 +317,54 @@ class MainActivity : AppCompatActivity() {
      */
     private fun updatePluginVisibility() {
         val appGrid = findViewById<View>(R.id.rv_app_grid)
-        val navPlugin = findViewById<View>(R.id.nav_plugin)
-        val musicPlugin = findViewById<View>(R.id.music_plugin)
+        val navContainer = findViewById<View>(R.id.nav_plugin_container)
+        val musicContainer = findViewById<View>(R.id.music_plugin_container)
 
-        appGrid?.visibility = if (currentPlugin.isEmpty()) View.VISIBLE else View.GONE
-        navPlugin?.visibility = if (currentPlugin == "nav") View.VISIBLE else View.GONE
-        musicPlugin?.visibility = if (currentPlugin == "music") View.VISIBLE else View.GONE
+        // 显示/隐藏逻辑
+        when (currentPlugin) {
+            "nav" -> {
+                appGrid?.visibility = View.GONE
+                navContainer?.visibility = View.VISIBLE
+                musicContainer?.visibility = View.GONE
+            }
+            "music" -> {
+                appGrid?.visibility = View.GONE
+                navContainer?.visibility = View.GONE
+                musicContainer?.visibility = View.VISIBLE
+            }
+            else -> {
+                appGrid?.visibility = View.VISIBLE
+                navContainer?.visibility = View.GONE
+                musicContainer?.visibility = View.GONE
+            }
+        }
     }
 
     /**
-     * 设置插件按钮
+     * 设置插件容器按钮
      */
-    private fun setupPluginButtons() {
-        // 导航插件按钮
-        findViewById<View>(R.id.nav_plugin_close)?.setOnClickListener {
-            showAppGrid()
-        }
-        findViewById<View>(R.id.nav_plugin_open)?.setOnClickListener {
-            openMapApp()
-        }
-        findViewById<View>(R.id.nav_plugin_switch)?.setOnClickListener {
+    private fun setupPluginContainers() {
+        // 导航切换
+        findViewById<TextView>(R.id.nav_switch)?.setOnClickListener {
             showNavSwitchDialog()
         }
-
-        // 音乐插件按钮
-        findViewById<View>(R.id.music_plugin_close)?.setOnClickListener {
-            showAppGrid()
-            stopMusicRefresh()
+        
+        // 导航状态点击打开导航
+        findViewById<View>(R.id.nav_remain)?.setOnClickListener {
+            openMapApp()
         }
-        findViewById<View>(R.id.music_plugin_prev)?.setOnClickListener {
+        findViewById<View>(R.id.nav_road)?.setOnClickListener {
+            openMapApp()
+        }
+        
+        // 音乐控制
+        findViewById<ImageView>(R.id.music_prev)?.setOnClickListener {
             sendMediaAction("prev")
         }
-        findViewById<View>(R.id.music_plugin_play)?.setOnClickListener {
+        findViewById<ImageView>(R.id.music_play)?.setOnClickListener {
             sendMediaAction("play_pause")
         }
-        findViewById<View>(R.id.music_plugin_next)?.setOnClickListener {
+        findViewById<ImageView>(R.id.music_next)?.setOnClickListener {
             sendMediaAction("next")
         }
     }
@@ -378,8 +392,8 @@ class MainActivity : AppCompatActivity() {
                     "tencent" -> "腾讯"
                     else -> "高德"
                 }
-                findViewById<TextView>(R.id.nav_plugin_switch)?.text = "$navName ▼"
-                findViewById<TextView>(R.id.nav_plugin_status)?.text = "${navName}导航运行中"
+                findViewById<TextView>(R.id.nav_switch)?.text = "$navName ▼"
+                findViewById<TextView>(R.id.nav_remain)?.text = "${navName}导航运行中"
                 dialog.dismiss()
             }
             .setNegativeButton("取消", null)
@@ -418,23 +432,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * 停止音乐刷新
-     */
-    private fun stopMusicRefresh() {
-        musicRefreshHandler.removeCallbacks(musicRefreshRunnable)
-    }
-
-    /**
      * 更新音乐插件信息
      */
-    private fun updateMusicPluginInfo() {
+    private fun updateMusicInfo() {
         val title = MusicNotificationListener.currentTitle
         val artist = MusicNotificationListener.currentArtist
         val isPlaying = MusicNotificationListener.isPlaying
 
-        findViewById<TextView>(R.id.music_plugin_title)?.text = if (title.isNotEmpty()) title else "未在播放"
-        findViewById<TextView>(R.id.music_plugin_artist)?.text = artist
-        findViewById<ImageView>(R.id.music_plugin_play)?.setImageResource(
+        findViewById<TextView>(R.id.music_title)?.text = if (title.isNotEmpty()) title else "未在播放"
+        findViewById<TextView>(R.id.music_artist)?.text = artist
+        findViewById<ImageView>(R.id.music_play)?.setImageResource(
             if (isPlaying) R.drawable.ic_pause else R.drawable.ic_play
         )
     }
