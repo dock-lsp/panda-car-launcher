@@ -25,63 +25,19 @@
             android:layout_width="match_parent"
             android:layout_height="@dimen/status_bar_height" />
 
-        <!-- 中间区域 -->
-        <FrameLayout
+        <!-- 中间区域：导航+音乐（横向） + 应用网格 -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1">
+            android:layout_weight="1"
+            android:orientation="vertical">
 
-            <!-- 应用区域容器（带圆角） -->
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_gravity="bottom"
-                android:layout_marginStart="8dp"
-                android:layout_marginEnd="8dp"
-                android:layout_marginBottom="8dp"
-                app:cardCornerRadius="25dp"
-                app:cardElevation="0dp"
-                app:cardBackgroundColor="@color/card_bg_transparent">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="vertical">
-
-                    <!-- 空白 Dock 栏 -->
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/rv_dock"
-                        android:layout_width="match_parent"
-                        android:layout_height="72dp"
-                        android:layout_marginStart="8dp"
-                        android:layout_marginEnd="8dp"
-                        android:layout_marginTop="8dp"
-                        android:orientation="horizontal" />
-
-                    <!-- 应用网格 -->
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/rv_app_grid"
-                        android:layout_width="match_parent"
-                        android:layout_height="0dp"
-                        android:layout_weight="1"
-                        android:clipToPadding="false"
-                        android:nestedScrollingEnabled="true"
-                        android:paddingStart="@dimen/card_margin"
-                        android:paddingEnd="@dimen/card_margin"
-                        android:paddingTop="@dimen/spacing_sm"
-                        android:paddingBottom="@dimen/spacing_sm" />
-
-                </LinearLayout>
-
-            </androidx.cardview.widget.CardView>
-
-            <!-- 分屏插件容器（横屏：左右布局） -->
+            <!-- 导航+音乐（横向布局） -->
             <LinearLayout
-                android:id="@+id/split_plugin_container"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="horizontal"
-                android:visibility="gone">
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:orientation="horizontal">
 
                 <!-- 导航区域（4/5） -->
                 <FrameLayout
@@ -251,7 +207,19 @@
 
             </LinearLayout>
 
-        </FrameLayout>
+            <!-- 应用网格（一行，左右滑动） -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_app_grid"
+                android:layout_width="match_parent"
+                android:layout_height="100dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginBottom="8dp"
+                android:background="@drawable/bg_plugin_card"
+                android:clipToPadding="false"
+                android:padding="8dp" />
+
+        </LinearLayout>
 
         <!-- 底部导航栏 -->
         <include

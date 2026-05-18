@@ -25,240 +25,198 @@
             android:layout_width="match_parent"
             android:layout_height="@dimen/status_bar_height" />
 
-        <!-- 中间区域：应用网格或分屏插件 -->
-        <FrameLayout
+        <!-- 中间区域：导航+音乐 + 应用网格 -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1">
+            android:layout_weight="1"
+            android:orientation="vertical">
 
-            <!-- 应用区域容器（带圆角） -->
-            <androidx.cardview.widget.CardView
+            <!-- 导航区域（4/5） -->
+            <FrameLayout
+                android:id="@+id/nav_area"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_gravity="bottom"
-                android:layout_marginStart="8dp"
-                android:layout_marginEnd="8dp"
-                android:layout_marginBottom="8dp"
-                app:cardCornerRadius="25dp"
-                app:cardElevation="0dp"
-                app:cardBackgroundColor="@color/card_bg_transparent">
+                android:layout_height="0dp"
+                android:layout_weight="4"
+                android:background="#E61A1A2E">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:orientation="vertical">
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
-                    <!-- 空白 Dock 栏 -->
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/rv_dock"
+                    <!-- 导航标题栏 -->
+                    <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="72dp"
-                        android:layout_marginStart="8dp"
-                        android:layout_marginEnd="8dp"
-                        android:layout_marginTop="8dp"
-                        android:orientation="horizontal" />
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
 
-                    <!-- 应用网格 -->
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/rv_app_grid"
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_navigation"
+                            android:tint="#00CED1" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="8dp"
+                            android:text="导航"
+                            android:textColor="#FFFFFF"
+                            android:textSize="18sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/nav_switch"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="高德 ▼"
+                            android:textColor="#00CED1"
+                            android:textSize="14sp" />
+
+                    </LinearLayout>
+
+                    <!-- 导航状态 -->
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="0dp"
                         android:layout_weight="1"
-                        android:clipToPadding="false"
-                        android:nestedScrollingEnabled="true"
-                        android:paddingStart="@dimen/card_margin"
-                        android:paddingEnd="@dimen/card_margin"
-                        android:paddingTop="@dimen/spacing_sm"
-                        android:paddingBottom="@dimen/spacing_sm" />
+                        android:orientation="vertical"
+                        android:gravity="center">
+
+                        <ImageView
+                            android:layout_width="80dp"
+                            android:layout_height="80dp"
+                            android:src="@drawable/ic_navigation"
+                            android:tint="#3000CED1" />
+
+                        <TextView
+                            android:id="@+id/nav_status"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="16dp"
+                            android:text="导航运行中"
+                            android:textColor="#00CED1"
+                            android:textSize="22sp"
+                            android:textStyle="bold" />
+
+                        <Button
+                            android:id="@+id/nav_open"
+                            android:layout_width="200dp"
+                            android:layout_height="48dp"
+                            android:layout_marginTop="20dp"
+                            android:text="打开导航"
+                            android:textSize="16sp"
+                            android:backgroundTint="#00CED1"
+                            android:textColor="#FFFFFF" />
+
+                    </LinearLayout>
 
                 </LinearLayout>
 
-            </androidx.cardview.widget.CardView>
+            </FrameLayout>
 
-            <!-- 分屏插件容器（默认隐藏） -->
+            <!-- 音乐卡片（1/5） -->
             <LinearLayout
-                android:id="@+id/split_plugin_container"
+                android:id="@+id/music_area"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical"
-                android:visibility="gone">
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:background="#CC1A1A2E"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:padding="12dp">
 
-                <!-- 导航区域（4/5） -->
-                <FrameLayout
-                    android:id="@+id/nav_area"
-                    android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:layout_weight="4"
-                    android:background="#E61A1A2E">
+                <ImageView
+                    android:id="@+id/music_album"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/ic_music"
+                    android:background="@drawable/bg_icon_cyan"
+                    android:padding="10dp" />
 
-                    <!-- 导航内容 -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:orientation="vertical"
-                        android:padding="16dp">
-
-                        <!-- 导航标题栏 -->
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical">
-
-                            <ImageView
-                                android:layout_width="24dp"
-                                android:layout_height="24dp"
-                                android:src="@drawable/ic_navigation"
-                                android:tint="#00CED1" />
-
-                            <TextView
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:layout_marginStart="8dp"
-                                android:text="导航"
-                                android:textColor="#FFFFFF"
-                                android:textSize="18sp"
-                                android:textStyle="bold" />
-
-                            <TextView
-                                android:id="@+id/nav_switch"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="高德 ▼"
-                                android:textColor="#00CED1"
-                                android:textSize="14sp" />
-
-                        </LinearLayout>
-
-                        <!-- 导航状态 -->
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="0dp"
-                            android:layout_weight="1"
-                            android:orientation="vertical"
-                            android:gravity="center">
-
-                            <ImageView
-                                android:layout_width="80dp"
-                                android:layout_height="80dp"
-                                android:src="@drawable/ic_navigation"
-                                android:tint="#3000CED1" />
-
-                            <TextView
-                                android:id="@+id/nav_status"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="16dp"
-                                android:text="导航运行中"
-                                android:textColor="#00CED1"
-                                android:textSize="22sp"
-                                android:textStyle="bold" />
-
-                            <Button
-                                android:id="@+id/nav_open"
-                                android:layout_width="200dp"
-                                android:layout_height="48dp"
-                                android:layout_marginTop="20dp"
-                                android:text="打开导航"
-                                android:textSize="16sp"
-                                android:backgroundTint="#00CED1"
-                                android:textColor="#FFFFFF" />
-
-                        </LinearLayout>
-
-                    </LinearLayout>
-
-                </FrameLayout>
-
-                <!-- 音乐卡片（1/5） -->
                 <LinearLayout
-                    android:id="@+id/music_area"
-                    android:layout_width="match_parent"
-                    android:layout_height="0dp"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:background="#CC1A1A2E"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:padding="12dp">
+                    android:layout_marginStart="12dp"
+                    android:orientation="vertical">
 
-                    <ImageView
-                        android:id="@+id/music_album"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        android:src="@drawable/ic_music"
-                        android:background="@drawable/bg_icon_cyan"
-                        android:padding="10dp" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginStart="12dp"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:id="@+id/music_title"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="未在播放"
-                            android:textColor="#FFFFFF"
-                            android:textSize="16sp"
-                            android:textStyle="bold"
-                            android:maxLines="1"
-                            android:ellipsize="end" />
-
-                        <TextView
-                            android:id="@+id/music_artist"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:text=""
-                            android:textColor="#80FFFFFF"
-                            android:textSize="13sp"
-                            android:maxLines="1"
-                            android:ellipsize="end" />
-
-                    </LinearLayout>
-
-                    <LinearLayout
+                    <TextView
+                        android:id="@+id/music_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal">
+                        android:text="未在播放"
+                        android:textColor="#FFFFFF"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:maxLines="1"
+                        android:ellipsize="end" />
 
-                        <ImageView
-                            android:id="@+id/music_prev"
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
-                            android:src="@drawable/ic_skip_prev"
-                            android:padding="8dp"
-                            android:background="@drawable/bg_control_btn" />
+                    <TextView
+                        android:id="@+id/music_artist"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text=""
+                        android:textColor="#80FFFFFF"
+                        android:textSize="13sp"
+                        android:maxLines="1"
+                        android:ellipsize="end" />
 
-                        <ImageView
-                            android:id="@+id/music_play"
-                            android:layout_width="44dp"
-                            android:layout_height="44dp"
-                            android:layout_marginStart="8dp"
-                            android:layout_marginEnd="8dp"
-                            android:src="@drawable/ic_play"
-                            android:background="@drawable/bg_icon_cyan"
-                            android:padding="11dp" />
+                </LinearLayout>
 
-                        <ImageView
-                            android:id="@+id/music_next"
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
-                            android:src="@drawable/ic_skip_next"
-                            android:padding="8dp"
-                            android:background="@drawable/bg_control_btn" />
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
 
-                    </LinearLayout>
+                    <ImageView
+                        android:id="@+id/music_prev"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@drawable/ic_skip_prev"
+                        android:padding="8dp"
+                        android:background="@drawable/bg_control_btn" />
+
+                    <ImageView
+                        android:id="@+id/music_play"
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginEnd="8dp"
+                        android:src="@drawable/ic_play"
+                        android:background="@drawable/bg_icon_cyan"
+                        android:padding="11dp" />
+
+                    <ImageView
+                        android:id="@+id/music_next"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@drawable/ic_skip_next"
+                        android:padding="8dp"
+                        android:background="@drawable/bg_control_btn" />
 
                 </LinearLayout>
 
             </LinearLayout>
 
-        </FrameLayout>
+            <!-- 应用网格（一行，左右滑动） -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_app_grid"
+                android:layout_width="match_parent"
+                android:layout_height="100dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginBottom="8dp"
+                android:background="@drawable/bg_plugin_card"
+                android:clipToPadding="false"
+                android:padding="8dp" />
+
+        </LinearLayout>
 
         <!-- 底部导航栏 -->
         <include

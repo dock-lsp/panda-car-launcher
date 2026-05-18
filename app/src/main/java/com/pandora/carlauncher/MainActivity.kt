@@ -51,9 +51,6 @@ class MainActivity : AppCompatActivity() {
     private var customApps = mutableListOf<CustomApp>()
     private lateinit var gridAdapter: AppGridAdapter
 
-    // 分屏模式标志
-    private var isSplitMode = false
-
     // 导航类型
     private var currentNavType = "amap" // amap, baidu, tencent
 
@@ -91,7 +88,7 @@ class MainActivity : AppCompatActivity() {
             loadCustomApps()
             setupAppGrid()
             setupBottomNavigation()
-            setupSplitButtons()
+            setupNavButtons()
             startMusicRefresh()
         } catch (e: Exception) {
             Log.e(TAG, "onCreate 初始化失败", e)
@@ -191,18 +188,27 @@ class MainActivity : AppCompatActivity() {
      */
     private fun setupAppGrid() {
         val rvGrid = findViewById<RecyclerView>(R.id.rv_app_grid)
-        rvGrid?.layoutManager = GridLayoutManager(this, 6)
+        // 改为水平布局，一行，左右滑动
+        rvGrid?.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+
         val gridApps = getGridApps().toMutableList()
+        // 添加自定义应用到网格
+        for (app in customApps) {
+            val icon = try {
+                packageManager.getApplicationIcon(app.packageName)
+            } catch (e: Exception) {
+                null
+            }
+            gridApps.add(GridApp(appName = app.appName, icon = icon, iconBg = R.drawable.bg_icon_blue) {
+                openApp(app.packageName, app.appName)
+            })
+        }
         // 添加➕按钮项
         gridApps.add(GridApp(appName = "添加", iconRes = R.drawable.ic_add, iconBg = R.drawable.bg_icon_gray) {
             showAddAppDialog()
         })
         gridAdapter = AppGridAdapter(gridApps)
         rvGrid?.adapter = gridAdapter
-
-        // Dock 栏（空白，后续可添加快捷应用）
-        val rvDock = findViewById<RecyclerView>(R.id.rv_dock)
-        rvDock?.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
     }
 
     /**
@@ -262,7 +268,7 @@ class MainActivity : AppCompatActivity() {
     private fun setupBottomNavigation() {
         // 固定功能按钮
         findViewById<LinearLayout>(R.id.nav_home)?.setOnClickListener {
-            showAppGrid()
+            // 首页按钮点击事件
         }
         findViewById<LinearLayout>(R.id.nav_navigation)?.setOnClickListener {
             startFloatingNav()
@@ -281,46 +287,10 @@ class MainActivity : AppCompatActivity() {
         setupBottomAppsRecyclerView()
     }
 
-    // ========== 分屏模式 ==========
-
     /**
-     * 显示应用网格（退出分屏模式）
+     * 设置导航和音乐按钮点击事件
      */
-    private fun showAppGrid() {
-        isSplitMode = false
-        updateVisibility()
-    }
-
-    /**
-     * 进入分屏模式
-     */
-    private fun enterSplitMode() {
-        isSplitMode = true
-        updateVisibility()
-        // 发送广播打开高德导航
-        try {
-            sendBroadcast(Intent("com.autonavi.plus.openmap").apply {
-                putExtra("x", 0); putExtra("y", 0)
-                putExtra("w", 0); putExtra("h", 0)
-            })
-        } catch (_: Exception) {}
-    }
-
-    /**
-     * 更新界面可见性
-     */
-    private fun updateVisibility() {
-        val appGrid = findViewById<View>(R.id.rv_app_grid)
-        val splitContainer = findViewById<View>(R.id.split_plugin_container)
-
-        appGrid?.visibility = if (isSplitMode) View.GONE else View.VISIBLE
-        splitContainer?.visibility = if (isSplitMode) View.VISIBLE else View.GONE
-    }
-
-    /**
-     * 设置分屏界面按钮点击事件
-     */
-    private fun setupSplitButtons() {
+    private fun setupNavButtons() {
         // 导航切换
         findViewById<TextView>(R.id.nav_switch)?.setOnClickListener {
             showNavSwitchDialog()
@@ -801,6 +771,7 @@ class MainActivity : AppCompatActivity() {
                 customApps.add(CustomApp(appInfo.packageName, appInfo.appName))
                 saveCustomApps()
                 setupBottomAppsRecyclerView() // 刷新底部应用列表
+                setupAppGrid() // 刷新应用网格
                 Toast.makeText(this, "已添加: ${appInfo.appName}", Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton(R.string.cancel, null).show()
@@ -937,6 +908,7 @@ class MainActivity : AppCompatActivity() {
                             customApps.remove(customApp)
                             saveCustomApps()
                             setupBottomAppsRecyclerView()
+                            setupAppGrid() // 刷新应用网格
                             Toast.makeText(this@MainActivity, "已移除 ${app.appName}", Toast.LENGTH_SHORT).show()
                         }
                         .setNegativeButton("取消", null)
