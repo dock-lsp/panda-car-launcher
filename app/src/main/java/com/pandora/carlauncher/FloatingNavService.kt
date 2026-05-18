@@ -64,7 +64,7 @@ class FloatingNavService : Service() {
     private var initialTouchY = 0f
     
     // 当前导航类型
-    private var currentNavType = "amap" // amap, baidu
+    private var currentNavType = "amap" // amap, baidu, tencent
 
     override fun onCreate() {
         super.onCreate()
@@ -172,56 +172,109 @@ class FloatingNavService : Service() {
     }
 
     private fun startNavigation() {
-        // 通过 Intent 调起高德/百度悬浮版
+        // 通过 Intent 调起高德/百度/腾讯悬浮版
         when (currentNavType) {
             "baidu" -> startBaiduNav()
+            "tencent" -> startTencentNav()
             else -> startAmapNav()
         }
     }
 
     private fun startAmapNav() {
-        try {
-            // 尝试启动高德悬浮版
-            val intent = Intent().apply {
-                setClassName("com.autonavi.amapauto", "com.autonavi.amapauto.MainActivity")
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            startActivity(intent)
-            
-            // 发送广播打开悬浮窗
-            Handler(Looper.getMainLooper()).postDelayed({
-                sendBroadcast(Intent("com.autonavi.plus.openmap").apply {
-                    putExtra("x", params?.x ?: 0)
-                    putExtra("y", params?.y ?: 0)
-                    putExtra("w", params?.width ?: 0)
-                    putExtra("h", params?.height ?: 0)
-                })
-            }, 500)
-            
-        } catch (e: Exception) {
-            Log.e(TAG, "启动高德导航失败", e)
-            Toast.makeText(this, "请安装高德地图车机版", Toast.LENGTH_SHORT).show()
+        // 共存版高德地图车机版包名列表
+        val amapPackages = arrayOf(
+            "com.autonavi.amapauto",      // 高德地图车机版
+            "com.autonavi.amapauto.nx",    // 高德地图车机共存版
+            "com.autonavi.amapauto.u3d"    // 高德地图车机共存版U3D
+        )
+
+        for (pkg in amapPackages) {
+            try {
+                val intent = Intent().apply {
+                    setClassName(pkg, "$pkg.MainActivity")
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                startActivity(intent)
+
+                // 发送广播打开悬浮窗
+                Handler(Looper.getMainLooper()).postDelayed({
+                    try {
+                        sendBroadcast(Intent("com.autonavi.plus.openmap").apply {
+                            putExtra("x", params?.x ?: 0)
+                            putExtra("y", params?.y ?: 0)
+                            putExtra("w", params?.width ?: 0)
+                            putExtra("h", params?.height ?: 0)
+                        })
+                    } catch (_: Exception) {}
+                }, 500)
+                return
+            } catch (_: Exception) {}
         }
+        Toast.makeText(this, "请安装高德地图车机版", Toast.LENGTH_SHORT).show()
     }
 
     private fun startBaiduNav() {
-        try {
-            val intent = Intent().apply {
-                setClassName("com.baidu.BaiduMap", "com.baidu.BaiduMap.MainActivity")
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            startActivity(intent)
-        } catch (e: Exception) {
-            Log.e(TAG, "启动百度导航失败", e)
-            Toast.makeText(this, "请安装百度地图", Toast.LENGTH_SHORT).show()
+        // 百度地图车机版包名列表
+        val baiduPackages = arrayOf(
+            "com.baidu.BaiduMap",          // 百度地图
+            "com.baidu.naviauto"           // 百度地图车机版
+        )
+
+        for (pkg in baiduPackages) {
+            try {
+                val intent = Intent().apply {
+                    setClassName(pkg, "$pkg.MainActivity")
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                startActivity(intent)
+                return
+            } catch (_: Exception) {}
         }
+        Toast.makeText(this, "请安装百度地图", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun startTencentNav() {
+        // 腾讯地图车机版包名列表
+        val tencentPackages = arrayOf(
+            "com.tencent.map",              // 腾讯地图
+            "com.tencent.map.ms"            // 腾讯地图车机版
+        )
+
+        for (pkg in tencentPackages) {
+            try {
+                val intent = Intent().apply {
+                    setClassName(pkg, "$pkg.MainActivity")
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                startActivity(intent)
+                return
+            } catch (_: Exception) {}
+        }
+        Toast.makeText(this, "请安装腾讯地图", Toast.LENGTH_SHORT).show()
     }
 
     private fun switchNavType() {
-        currentNavType = if (currentNavType == "amap") "baidu" else "amap"
-        floatingView?.findViewById<TextView>(R.id.nav_switch)?.text = 
-            if (currentNavType == "amap") "高德 ▼" else "百度 ▼"
-        startNavigation()
+        when (currentNavType) {
+            "amap" -> {
+                currentNavType = "baidu"
+                startBaiduNav()
+            }
+            "baidu" -> {
+                currentNavType = "tencent"
+                startTencentNav()
+            }
+            else -> {
+                currentNavType = "amap"
+                startAmapNav()
+            }
+        }
+
+        val navName = when (currentNavType) {
+            "baidu" -> "百度"
+            "tencent" -> "腾讯"
+            else -> "高德"
+        }
+        floatingView?.findViewById<TextView>(R.id.nav_switch)?.text = "$navName ▼"
     }
 
     private fun minimizeWindow() {

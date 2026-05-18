@@ -935,6 +935,13 @@ class MainActivity : AppCompatActivity() {
     )
 
     /**
+     * dp转px
+     */
+    private fun dpToPx(dp: Int): Int {
+        return (dp * resources.displayMetrics.density).toInt()
+    }
+
+    /**
      * 应用网格适配器
      */
     inner class AppGridAdapter(private val apps: List<GridApp>) : RecyclerView.Adapter<AppGridAdapter.ViewHolder>() {
@@ -956,6 +963,14 @@ class MainActivity : AppCompatActivity() {
                 holder.ivIcon.setBackgroundResource(app.iconBg)
                 holder.ivIcon.setPadding(16, 16, 16, 16)
             }
+
+            // 设置图标间距
+            val params = holder.itemView.layoutParams as RecyclerView.LayoutParams
+            params.width = dpToPx(56)  // 图标宽度
+            params.height = dpToPx(56) // 图标高度
+            params.setMargins(dpToPx(4), dpToPx(4), dpToPx(4), dpToPx(4)) // 四周间距
+            holder.itemView.layoutParams = params
+
             holder.itemView.setOnClickListener { app.onClick() }
         }
         override fun getItemCount() = apps.size
