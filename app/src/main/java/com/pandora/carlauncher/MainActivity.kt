@@ -265,7 +265,7 @@ class MainActivity : AppCompatActivity() {
             showAppGrid()
         }
         findViewById<LinearLayout>(R.id.nav_navigation)?.setOnClickListener {
-            enterSplitMode()
+            startFloatingNav()
         }
         findViewById<LinearLayout>(R.id.nav_music)?.setOnClickListener {
             enterSplitMode()
@@ -860,6 +860,40 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
         handler.removeCallbacks(updateTimeRunnable)
         musicRefreshHandler.removeCallbacks(musicRefreshRunnable)
+    }
+
+    /**
+     * 启动悬浮导航
+     */
+    private fun startFloatingNav() {
+        // 检查权限
+        if (!FloatingNavService.canDrawOverlays(this)) {
+            // 引导用户开启权限
+            AlertDialog.Builder(this)
+                .setTitle("需要悬浮窗权限")
+                .setMessage("请允许本应用显示在其他应用上层，以使用悬浮导航功能")
+                .setPositiveButton("去开启") { _, _ ->
+                    FloatingNavService.requestOverlayPermission(this)
+                }
+                .setNegativeButton("取消", null)
+                .show()
+            return
+        }
+
+        // 启动悬浮导航服务
+        startForegroundService(Intent(this, FloatingNavService::class.java))
+    }
+
+    // 处理权限结果
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == 1001) {
+            if (FloatingNavService.canDrawOverlays(this)) {
+                startForegroundService(Intent(this, FloatingNavService::class.java))
+            } else {
+                Toast.makeText(this, "需要悬浮窗权限才能使用悬浮导航", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     data class CustomApp(val packageName: String, val appName: String)
