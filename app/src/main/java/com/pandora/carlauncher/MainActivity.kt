@@ -268,17 +268,13 @@ class MainActivity : AppCompatActivity() {
             startFloatingNav()
         }
         findViewById<LinearLayout>(R.id.nav_music)?.setOnClickListener {
-            enterSplitMode()
+            showMusicAppsDialog()
         }
         findViewById<LinearLayout>(R.id.nav_theme)?.setOnClickListener {
             showThemeCenterDialog()
         }
         findViewById<LinearLayout>(R.id.nav_add)?.setOnClickListener {
             showAddAppDialog()
-        }
-        // 音乐播放器按钮
-        findViewById<LinearLayout>(R.id.nav_music_player)?.setOnClickListener {
-            showMusicAppsDialog()
         }
 
         // 设置可滑动的底部应用列表
