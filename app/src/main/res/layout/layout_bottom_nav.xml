@@ -150,4 +150,30 @@
 
     </LinearLayout>
 
+    <!-- 音乐播放器按钮 -->
+    <LinearLayout
+        android:id="@+id/nav_music_player"
+        android:layout_width="60dp"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:padding="4dp">
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_music"
+            android:tint="#00CED1" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="音乐"
+            android:textColor="#00CED1"
+            android:textSize="@dimen/text_size_micro" />
+
+    </LinearLayout>
+
 </LinearLayout>

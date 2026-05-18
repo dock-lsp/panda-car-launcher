@@ -276,6 +276,10 @@ class MainActivity : AppCompatActivity() {
         findViewById<LinearLayout>(R.id.nav_add)?.setOnClickListener {
             showAddAppDialog()
         }
+        // 音乐播放器按钮
+        findViewById<LinearLayout>(R.id.nav_music_player)?.setOnClickListener {
+            showMusicAppsDialog()
+        }
 
         // 设置可滑动的底部应用列表
         setupBottomAppsRecyclerView()
@@ -498,6 +502,117 @@ class MainActivity : AppCompatActivity() {
         }
         
         return apps
+    }
+
+    // ========== 音乐播放器功能 ==========
+    
+    private var selectedMusicApp: String? = null
+    private var musicAppsDialog: Dialog? = null
+
+    /**
+     * 显示音乐应用选择弹窗
+     */
+    private fun showMusicAppsDialog() {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_music_apps, null)
+        val rvApps = dialogView.findViewById<RecyclerView>(R.id.rv_music_apps)
+        rvApps?.layoutManager = LinearLayoutManager(this)
+        
+        // 加载已保存的选择
+        selectedMusicApp = getSharedPreferences("music", Context.MODE_PRIVATE)
+            .getString("selected_app", null)
+        
+        // 获取本机所有音乐应用
+        val musicApps = getInstalledMusicAppsList()
+        
+        if (musicApps.isEmpty()) {
+            Toast.makeText(this, "未检测到音乐应用", Toast.LENGTH_SHORT).show()
+            return
+        }
+        
+        val adapter = MusicAppsAdapter(this, musicApps, selectedMusicApp) { app ->
+            selectedMusicApp = app.packageName
+            // 保存选择
+            getSharedPreferences("music", Context.MODE_PRIVATE).edit()
+                .putString("selected_app", app.packageName).apply()
+            // 启动音乐应用
+            try {
+                val intent = packageManager.getLaunchIntentForPackage(app.packageName)
+                intent?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                startActivity(intent)
+            } catch (_: Exception) {}
+            musicAppsDialog?.dismiss()
+        }
+        rvApps?.adapter = adapter
+        
+        musicAppsDialog = Dialog(this, R.style.Theme_PandaCarLauncher_Dialog)
+        musicAppsDialog?.setContentView(dialogView)
+        musicAppsDialog?.window?.setLayout(
+            (resources.displayMetrics.widthPixels * 0.8).toInt(),
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+        musicAppsDialog?.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        musicAppsDialog?.show()
+    }
+
+    /**
+     * 获取已安装的音乐应用列表
+     */
+    private fun getInstalledMusicAppsList(): List<MusicAppsAdapter.MusicAppInfo> {
+        val musicPackages = listOf(
+            "com.tencent.qqmusic",      // QQ音乐
+            "cn.kuwo.player",           // 酷我音乐
+            "com.kugou.android",        // 酷狗音乐
+            "com.qishui.music",         // 汽水音乐
+            "com.netease.cloudmusic",   // 网易云音乐
+            "com.kugou.android.lite",   // 酷狗音乐概念版
+            "cmccwm.mobilemusic",       // 咪咕音乐
+            "com.spotify.music",        // Spotify
+            "com.apple.android.music"   // Apple Music
+        )
+        
+        val apps = mutableListOf<MusicAppsAdapter.MusicAppInfo>()
+        for (pkg in musicPackages) {
+            try {
+                val appInfo = packageManager.getApplicationInfo(pkg, 0)
+                val appName = appInfo.loadLabel(packageManager).toString()
+                val icon = appInfo.loadIcon(packageManager)
+                apps.add(MusicAppsAdapter.MusicAppInfo(pkg, appName, icon))
+            } catch (_: Exception) {}
+        }
+        
+        return apps
+    }
+
+    /**
+     * 播放音乐
+     */
+    private fun playMusic() {
+        val controller = MusicNotificationListener.activeMediaController
+        controller?.transportControls?.play()
+    }
+
+    /**
+     * 暂停音乐
+     */
+    private fun pauseMusic() {
+        val controller = MusicNotificationListener.activeMediaController
+        controller?.transportControls?.pause()
+    }
+
+    /**
+     * 下一曲
+     */
+    private fun nextMusic() {
+        val controller = MusicNotificationListener.activeMediaController
+        controller?.transportControls?.skipToNext()
+    }
+
+    /**
+     * 上一曲
+     */
+    private fun prevMusic() {
+        val controller = MusicNotificationListener.activeMediaController
+        controller?.transportControls?.skipToPrevious()
     }
 
     /**
